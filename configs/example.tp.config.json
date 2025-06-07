@@ -1,0 +1,40 @@
+{
+  "name": "my-localnet",
+  "description": "Local Solana development environment",
+  "tokens": [
+    {
+      "symbol": "USDC",
+      "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "mintAuthority": "./keypairs/mint-authority.json",
+      "mintAmount": 1000000,
+      "recipients": [
+        {
+          "wallet": "YourWalletPublicKeyHere",
+          "amount": 1000000000
+        }
+      ]
+    },
+    {
+      "symbol": "USDT",
+      "mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+      "mintAuthority": "./keypairs/mint-authority.json",
+      "mintAmount": 1000000,
+      "recipients": [
+        {
+          "wallet": "YourWalletPublicKeyHere",
+          "amount": 500000000
+        }
+      ]
+    }
+  ],
+  "programs": [],
+  "localnet": {
+    "airdropAmount": 100,
+    "faucetAccounts": ["YourWalletPublicKeyHere"],
+    "port": 8899,
+    "faucetPort": 9900,
+    "reset": true,
+    "logLevel": "info",
+    "rpc": "https://api.mainnet-beta.solana.com"
+  }
+}
