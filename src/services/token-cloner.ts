@@ -561,39 +561,79 @@ export class TokenCloner {
       chalk.gray(`  🔄 Minting ${amount} tokens to ${recipientAddress}...`)
     );
 
-    // Create associated token account for recipient
-    const createAccountResult = await runCommand(
+    // Check if associated token account already exists
+    const checkAccountsResult = await runCommand(
       "spl-token",
       [
-        "create-account",
-        token.config.mainnetMint,
+        "accounts",
         "--owner",
         recipientAddress,
-        "--fee-payer",
-        token.mintAuthorityPath,
         "--url",
         rpcUrl,
+        "--output",
+        "json",
       ],
       { silent: true }
     );
 
-    if (!createAccountResult.success) {
-      // Account might already exist, that's fine
-      if (!createAccountResult.stderr.includes("already exists")) {
+    let tokenAccountAddress = "";
+
+    if (checkAccountsResult.success && checkAccountsResult.stdout) {
+      try {
+        const accountsData = JSON.parse(checkAccountsResult.stdout);
+
+        // Look for existing token account for this mint
+        for (const account of accountsData.accounts || []) {
+          if (account.mint === token.config.mainnetMint) {
+            tokenAccountAddress = account.address;
+            break;
+          }
+        }
+      } catch (error) {
+        // No existing accounts found or parsing error, will create new account
+      }
+    }
+
+    if (!tokenAccountAddress) {
+      // Account doesn't exist, create it
+      const createAccountResult = await runCommand(
+        "spl-token",
+        [
+          "create-account",
+          token.config.mainnetMint,
+          "--owner",
+          recipientAddress,
+          "--fee-payer",
+          token.mintAuthorityPath,
+          "--url",
+          rpcUrl,
+        ],
+        { silent: true }
+      );
+
+      if (!createAccountResult.success) {
         throw new Error(
           `Failed to create token account: ${createAccountResult.stderr}`
         );
       }
+
+      // Extract token account address from create-account output
+      const match = createAccountResult.stdout.match(/Creating account (\S+)/);
+      tokenAccountAddress = match?.[1] || "";
     }
 
-    // Mint tokens to the recipient
+    if (!tokenAccountAddress) {
+      throw new Error("Failed to determine token account address");
+    }
+
+    // Mint tokens to the specific token account
     const mintResult = await runCommand(
       "spl-token",
       [
         "mint",
         token.config.mainnetMint,
         amount.toString(),
-        recipientAddress,
+        tokenAccountAddress,
         "--mint-authority",
         token.mintAuthorityPath,
         "--fee-payer",

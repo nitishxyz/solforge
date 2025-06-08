@@ -41,6 +41,7 @@ export const LocalnetConfigSchema = z.object({
   quiet: z.boolean().default(false),
   ledgerPath: z.string().optional(),
   bindAddress: z.string().default("127.0.0.1"),
+  limitLedgerSize: z.number().int().positive().default(100000),
   rpc: z
     .string()
     .url("RPC must be a valid URL")

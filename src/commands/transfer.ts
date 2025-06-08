@@ -228,85 +228,8 @@ async function executeTransfer(
   // Load mint authority keypair path
   const sharedMintAuthorityPath = join(workDir, "shared-mint-authority.json");
 
-  // Check if recipient has a token account for this mint
-  console.log(chalk.gray("🔍 Checking recipient token account..."));
-
-  const recipientAccountsResult = await runCommand(
-    "spl-token",
-    [
-      "accounts",
-      "--owner",
-      recipientAddress,
-      "--url",
-      rpcUrl,
-      "--output",
-      "json",
-    ],
-    { silent: true }
-  );
-
-  let recipientTokenAccount = "";
-
-  if (recipientAccountsResult.success && recipientAccountsResult.stdout) {
-    try {
-      const recipientAccountsData = JSON.parse(recipientAccountsResult.stdout);
-
-      // Look for existing token account for this mint
-      for (const account of recipientAccountsData.accounts || []) {
-        if (account.mint === token.mint) {
-          recipientTokenAccount = account.address;
-          console.log(
-            chalk.gray(
-              `✅ Found existing token account: ${recipientTokenAccount}`
-            )
-          );
-          break;
-        }
-      }
-    } catch (error) {
-      // Parsing failed, recipient might not have any token accounts
-    }
-  }
-
-  // Create token account if it doesn't exist
-  if (!recipientTokenAccount) {
-    console.log(chalk.gray("🔧 Creating token account for recipient..."));
-
-    const createAccountResult = await runCommand(
-      "spl-token",
-      [
-        "create-account",
-        token.mint,
-        "--owner",
-        recipientAddress,
-        "--fee-payer",
-        sharedMintAuthorityPath,
-        "--url",
-        rpcUrl,
-      ],
-      { silent: false }
-    );
-
-    if (!createAccountResult.success) {
-      throw new Error(
-        `Failed to create token account: ${createAccountResult.stderr}`
-      );
-    }
-
-    // Extract token account address from output
-    const match = createAccountResult.stdout.match(/Creating account (\S+)/);
-    recipientTokenAccount = match?.[1] || "";
-
-    if (!recipientTokenAccount) {
-      throw new Error("Failed to extract token account address");
-    }
-
-    console.log(
-      chalk.green(`✅ Created token account: ${recipientTokenAccount}`)
-    );
-  }
-
-  // Transfer tokens
+  // Transfer tokens directly to wallet address
+  // The --fund-recipient flag will automatically create the associated token account if needed
   console.log(chalk.gray("💸 Transferring tokens..."));
 
   const transferResult = await runCommand(
@@ -315,13 +238,15 @@ async function executeTransfer(
       "transfer",
       token.mint,
       amount,
-      recipientTokenAccount,
+      recipientAddress,
       "--from",
       token.address,
       "--owner",
       sharedMintAuthorityPath,
       "--fee-payer",
       sharedMintAuthorityPath,
+      "--fund-recipient",
+      "--allow-unfunded-recipient",
       "--url",
       rpcUrl,
     ],

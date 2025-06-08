@@ -26,6 +26,7 @@ const defaultConfig: Config = {
     bindAddress: "127.0.0.1",
     quiet: false,
     rpc: "https://mainnet.helius-rpc.com/?api-key=3a3b84ef-2985-4543-9d67-535eb707b6ec",
+    limitLedgerSize: 100000,
   },
 };
 
