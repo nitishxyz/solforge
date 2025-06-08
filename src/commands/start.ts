@@ -1,10 +1,12 @@
 import chalk from "chalk";
 import ora from "ora";
 import { spawn } from "child_process";
+import { existsSync, readFileSync } from "fs";
+import { join } from "path";
 import { runCommand, checkSolanaTools } from "../utils/shell.js";
 import { configManager } from "../config/manager.js";
 import { TokenCloner } from "../services/token-cloner.js";
-import type { Config } from "../types/config.js";
+import type { Config, TokenConfig } from "../types/config.js";
 import type { ClonedToken } from "../services/token-cloner.js";
 
 export async function startCommand(debug: boolean = false): Promise<void> {
@@ -41,28 +43,64 @@ export async function startCommand(debug: boolean = false): Promise<void> {
   // Clone tokens first if any are configured
   let clonedTokens: ClonedToken[] = [];
   if (config.tokens.length > 0) {
-    console.log(chalk.yellow("📦 Cloning tokens from mainnet...\n"));
     const tokenCloner = new TokenCloner();
-    try {
-      clonedTokens = await tokenCloner.cloneTokens(
-        config.tokens,
-        config.localnet.rpc,
-        debug
-      );
+
+    // Check which tokens are already cloned and which need to be cloned
+    const { existingTokens, tokensToClone } = await checkExistingClonedTokens(
+      config.tokens,
+      tokenCloner
+    );
+
+    if (existingTokens.length > 0) {
       console.log(
-        chalk.green(`✅ Successfully cloned ${clonedTokens.length} tokens\n`)
+        chalk.green(`📁 Found ${existingTokens.length} already cloned tokens`)
       );
-    } catch (error) {
-      console.error(chalk.red("❌ Failed to clone tokens:"));
-      console.error(
-        chalk.red(error instanceof Error ? error.message : String(error))
-      );
+      if (debug) {
+        existingTokens.forEach((token: ClonedToken) => {
+          console.log(
+            chalk.gray(
+              `  ✓ ${token.config.symbol} (${token.config.mainnetMint})`
+            )
+          );
+        });
+      }
+      clonedTokens.push(...existingTokens);
+    }
+
+    if (tokensToClone.length > 0) {
       console.log(
         chalk.yellow(
-          "💡 You can start without tokens by removing them from tp.config.json"
+          `📦 Cloning ${tokensToClone.length} new tokens from mainnet...\n`
         )
       );
-      process.exit(1);
+      try {
+        const newlyClonedTokens = await tokenCloner.cloneTokens(
+          tokensToClone,
+          config.localnet.rpc,
+          debug
+        );
+        clonedTokens.push(...newlyClonedTokens);
+        console.log(
+          chalk.green(
+            `✅ Successfully cloned ${newlyClonedTokens.length} new tokens\n`
+          )
+        );
+      } catch (error) {
+        console.error(chalk.red("❌ Failed to clone tokens:"));
+        console.error(
+          chalk.red(error instanceof Error ? error.message : String(error))
+        );
+        console.log(
+          chalk.yellow(
+            "💡 You can start without tokens by removing them from tp.config.json"
+          )
+        );
+        process.exit(1);
+      }
+    } else if (existingTokens.length > 0) {
+      console.log(
+        chalk.green("✅ All tokens already cloned, skipping clone step\n")
+      );
     }
   }
 
@@ -133,9 +171,33 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       const tokenCloner = new TokenCloner();
       const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
 
+      if (debug) {
+        console.log(
+          chalk.gray(`🐛 Minting ${clonedTokens.length} tokens to recipients:`)
+        );
+        clonedTokens.forEach((token, index) => {
+          console.log(
+            chalk.gray(
+              `  ${index + 1}. ${token.config.symbol} (${
+                token.config.mainnetMint
+              }) - ${token.config.mintAmount} tokens`
+            )
+          );
+        });
+        console.log(chalk.gray(`🌐 Using RPC: ${rpcUrl}`));
+      }
+
       try {
         await tokenCloner.mintTokensToRecipients(clonedTokens, rpcUrl, debug);
         console.log(chalk.green("✅ Token minting completed!"));
+
+        if (debug) {
+          console.log(
+            chalk.gray(
+              "🐛 All tokens have been minted to their respective recipients"
+            )
+          );
+        }
       } catch (error) {
         console.error(chalk.red("❌ Failed to mint tokens:"));
         console.error(
@@ -203,9 +265,33 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       const tokenCloner = new TokenCloner();
       const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
 
+      if (debug) {
+        console.log(
+          chalk.gray(`🐛 Minting ${clonedTokens.length} tokens to recipients:`)
+        );
+        clonedTokens.forEach((token, index) => {
+          console.log(
+            chalk.gray(
+              `  ${index + 1}. ${token.config.symbol} (${
+                token.config.mainnetMint
+              }) - ${token.config.mintAmount} tokens`
+            )
+          );
+        });
+        console.log(chalk.gray(`🌐 Using RPC: ${rpcUrl}`));
+      }
+
       try {
         await tokenCloner.mintTokensToRecipients(clonedTokens, rpcUrl, debug);
         console.log(chalk.green("✅ Token minting completed!"));
+
+        if (debug) {
+          console.log(
+            chalk.gray(
+              "🐛 All tokens have been minted to their respective recipients"
+            )
+          );
+        }
       } catch (error) {
         console.error(chalk.red("❌ Failed to mint tokens:"));
         console.error(
@@ -276,6 +362,9 @@ function buildValidatorArgs(
     // Always use quiet mode to prevent log spam in background
     args.push("--quiet");
   }
+
+  // Add ledger size limit
+  args.push("--limit-ledger-size", config.localnet.limitLedgerSize.toString());
 
   // Add cloned token accounts (using modified JSON files)
   if (clonedTokens.length > 0) {
@@ -438,4 +527,75 @@ async function airdropSolToMintAuthority(
   if (debug) {
     console.log(chalk.gray("SOL airdrop completed"));
   }
+}
+
+/**
+ * Check for existing cloned tokens and return what's already cloned vs what needs to be cloned
+ */
+async function checkExistingClonedTokens(
+  tokens: TokenConfig[],
+  tokenCloner: TokenCloner
+): Promise<{ existingTokens: ClonedToken[]; tokensToClone: TokenConfig[] }> {
+  const existingTokens: ClonedToken[] = [];
+  const tokensToClone: TokenConfig[] = [];
+  const workDir = ".testpilot";
+
+  // Check for shared mint authority
+  const sharedMintAuthorityPath = join(workDir, "shared-mint-authority.json");
+  let sharedMintAuthority: { publicKey: string; secretKey: number[] } | null =
+    null;
+
+  if (existsSync(sharedMintAuthorityPath)) {
+    try {
+      const fileContent = JSON.parse(
+        readFileSync(sharedMintAuthorityPath, "utf8")
+      );
+
+      if (Array.isArray(fileContent)) {
+        // New format: file contains just the secret key array
+        const { Keypair } = await import("@solana/web3.js");
+        const keypair = Keypair.fromSecretKey(new Uint8Array(fileContent));
+        sharedMintAuthority = {
+          publicKey: keypair.publicKey.toBase58(),
+          secretKey: Array.from(keypair.secretKey),
+        };
+
+        // Check metadata for consistency
+        const metadataPath = join(workDir, "shared-mint-authority-meta.json");
+        if (existsSync(metadataPath)) {
+          const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
+          if (metadata.publicKey !== sharedMintAuthority.publicKey) {
+            sharedMintAuthority.publicKey = metadata.publicKey;
+          }
+        }
+      } else {
+        // Old format: file contains {publicKey, secretKey}
+        sharedMintAuthority = fileContent;
+      }
+    } catch (error) {
+      // If we can't read the shared mint authority, treat all tokens as needing to be cloned
+      sharedMintAuthority = null;
+    }
+  }
+
+  for (const token of tokens) {
+    const tokenDir = join(workDir, `token-${token.symbol.toLowerCase()}`);
+    const modifiedAccountPath = join(tokenDir, "modified.json");
+
+    // Check if this token has already been cloned
+    if (existsSync(modifiedAccountPath) && sharedMintAuthority) {
+      // Token appears to be already cloned
+      existingTokens.push({
+        config: token,
+        mintAuthorityPath: sharedMintAuthorityPath,
+        modifiedAccountPath,
+        mintAuthority: sharedMintAuthority,
+      });
+    } else {
+      // Token needs to be cloned
+      tokensToClone.push(token);
+    }
+  }
+
+  return { existingTokens, tokensToClone };
 }
