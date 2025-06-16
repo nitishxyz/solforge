@@ -17,6 +17,7 @@ export const TokenConfigSchema = z.object({
       })
     )
     .default([]),
+  cloneMetadata: z.boolean().default(true), // Whether to clone token metadata
 });
 
 // Program configuration schema
