@@ -6,9 +6,10 @@ import { join } from "path";
 import { runCommand, checkSolanaTools } from "../utils/shell.js";
 import { configManager } from "../config/manager.js";
 import { TokenCloner } from "../services/token-cloner.js";
+import { ProgramCloner } from "../services/program-cloner.js";
 import { processRegistry } from "../services/process-registry.js";
 import { portManager } from "../services/port-manager.js";
-import type { Config, TokenConfig } from "../types/config.js";
+import type { Config, TokenConfig, ProgramConfig } from "../types/config.js";
 import type { ClonedToken } from "../services/token-cloner.js";
 import type { RunningValidator } from "../services/process-registry.js";
 
@@ -71,7 +72,16 @@ export async function startCommand(debug: boolean = false): Promise<void> {
   console.log(chalk.gray(`📡 RPC Port: ${config.localnet.port}`));
   console.log(chalk.gray(`💰 Faucet Port: ${config.localnet.faucetPort}\n`));
 
-  // Clone tokens first if any are configured
+  // Programs will be cloned automatically by validator using --clone-program flags
+  if (config.programs.length > 0) {
+    console.log(
+      chalk.cyan(
+        `🔧 Will clone ${config.programs.length} programs from mainnet during startup\n`
+      )
+    );
+  }
+
+  // Clone tokens after programs
   let clonedTokens: ClonedToken[] = [];
   if (config.tokens.length > 0) {
     const tokenCloner = new TokenCloner();
@@ -432,16 +442,17 @@ function buildValidatorArgs(
     args.push(...tokenArgs);
   }
 
-  // Clone programs from mainnet (still using the old method for now)
+  // Clone programs from mainnet using built-in validator flags
   for (const program of config.programs) {
     if (program.upgradeable) {
       args.push("--clone-upgradeable-program", program.mainnetProgramId);
     } else {
+      // Use --clone for regular programs (non-upgradeable)
       args.push("--clone", program.mainnetProgramId);
     }
   }
 
-  // If we're cloning programs (not tokens), specify the source cluster
+  // If we're cloning programs, specify the source cluster
   if (config.programs.length > 0) {
     args.push("--url", config.localnet.rpc);
   }

@@ -10,6 +10,7 @@ import { startCommand } from "./commands/start.js";
 import { transferCommand } from "./commands/transfer.js";
 import { listCommand } from "./commands/list.js";
 import { stopCommand, killCommand } from "./commands/stop.js";
+import { addProgramCommand } from "./commands/add-program.js";
 import { checkSolanaTools } from "./utils/shell.js";
 
 const program = new Command();
@@ -74,6 +75,17 @@ program
   .option("--all", "Kill all running validators")
   .action(async (validatorId, options) => {
     await killCommand(validatorId, options);
+  });
+
+program
+  .command("add-program")
+  .description("Add a program to tp.config.json")
+
+  .option("--program-id <address>", "Mainnet program ID to clone and deploy")
+  .option("--name <name>", "Friendly name for the program")
+  .option("--no-interactive", "Run in non-interactive mode")
+  .action(async (options) => {
+    await addProgramCommand(options);
   });
 
 program

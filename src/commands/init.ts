@@ -10,9 +10,10 @@ const defaultConfig: Config = {
   tokens: [
     {
       symbol: "USDC",
-      mainnetMint: "EPjFWdd5AufqSSqeM2qM9F9fydVWYxi5g5FbwUoib6LP",
+      mainnetMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       recipients: [],
       mintAmount: 1000000,
+      cloneMetadata: true,
     },
   ],
   programs: [],

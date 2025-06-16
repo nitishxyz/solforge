@@ -29,7 +29,18 @@
       ]
     }
   ],
-  "programs": [],
+  "programs": [
+    {
+      "name": "Token Metadata",
+      "mainnetProgramId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+      "cluster": "mainnet-beta"
+    },
+    {
+      "name": "Token Program",
+      "mainnetProgramId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "cluster": "mainnet-beta"
+    }
+  ],
   "localnet": {
     "airdropAmount": 100,
     "faucetAccounts": ["YourWalletPublicKeyHere"],

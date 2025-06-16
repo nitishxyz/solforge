@@ -29,6 +29,7 @@ export const ProgramConfigSchema = z.object({
   cluster: z
     .enum(["mainnet-beta", "devnet", "testnet"])
     .default("mainnet-beta"),
+  dependencies: z.array(z.string()).default([]), // Other program IDs this program depends on
 });
 
 // Localnet configuration schema
