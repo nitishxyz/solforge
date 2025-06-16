@@ -6,8 +6,18 @@ import { join } from "path";
 import { runCommand, checkSolanaTools } from "../utils/shell.js";
 import { configManager } from "../config/manager.js";
 import { TokenCloner } from "../services/token-cloner.js";
+import { processRegistry } from "../services/process-registry.js";
+import { portManager } from "../services/port-manager.js";
 import type { Config, TokenConfig } from "../types/config.js";
 import type { ClonedToken } from "../services/token-cloner.js";
+import type { RunningValidator } from "../services/process-registry.js";
+
+function generateValidatorId(name: string): string {
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  const safeName = name.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+  return `${safeName}-${timestamp}-${randomSuffix}`;
+}
 
 export async function startCommand(debug: boolean = false): Promise<void> {
   // Check prerequisites
@@ -38,7 +48,28 @@ export async function startCommand(debug: boolean = false): Promise<void> {
     process.exit(1);
   }
 
-  console.log(chalk.blue(`🚀 Starting ${config.name}...\n`));
+  // Generate unique ID for this validator instance
+  const validatorId = generateValidatorId(config.name);
+
+  // Get available ports
+  const ports = await portManager.getRecommendedPorts(config);
+  if (
+    ports.rpcPort !== config.localnet.port ||
+    ports.faucetPort !== config.localnet.faucetPort
+  ) {
+    console.log(
+      chalk.yellow(
+        `⚠️  Configured ports not available, using: RPC ${ports.rpcPort}, Faucet ${ports.faucetPort}`
+      )
+    );
+    // Update config with available ports
+    config.localnet.port = ports.rpcPort;
+    config.localnet.faucetPort = ports.faucetPort;
+  }
+
+  console.log(chalk.blue(`🚀 Starting ${config.name} (${validatorId})...\n`));
+  console.log(chalk.gray(`📡 RPC Port: ${config.localnet.port}`));
+  console.log(chalk.gray(`💰 Faucet Port: ${config.localnet.faucetPort}\n`));
 
   // Clone tokens first if any are configured
   let clonedTokens: ClonedToken[] = [];
@@ -216,7 +247,11 @@ export async function startCommand(debug: boolean = false): Promise<void> {
 
   try {
     // Start validator in background
-    await startValidatorInBackground("solana-test-validator", args, debug);
+    const validatorProcess = await startValidatorInBackground(
+      "solana-test-validator",
+      args,
+      debug
+    );
 
     // Wait for validator to be ready
     spinner.text = "Waiting for validator to be ready...";
@@ -225,10 +260,27 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       debug
     );
 
+    // Register the running validator
+    const runningValidator: RunningValidator = {
+      id: validatorId,
+      name: config.name,
+      pid: validatorProcess.pid!,
+      rpcPort: config.localnet.port,
+      faucetPort: config.localnet.faucetPort,
+      rpcUrl: `http://127.0.0.1:${config.localnet.port}`,
+      faucetUrl: `http://127.0.0.1:${config.localnet.faucetPort}`,
+      configPath: configManager.getConfigPath() || "./tp.config.json",
+      startTime: new Date(),
+      status: "running",
+    };
+
+    processRegistry.register(runningValidator);
+
     // Validator is now ready
     spinner.succeed("Validator started successfully!");
 
     console.log(chalk.green("✅ Localnet is running!"));
+    console.log(chalk.gray(`🆔 Validator ID: ${validatorId}`));
     console.log(
       chalk.cyan(`🌐 RPC URL: http://127.0.0.1:${config.localnet.port}`)
     );
@@ -325,11 +377,18 @@ export async function startCommand(debug: boolean = false): Promise<void> {
 
     console.log(chalk.blue("\n💡 Tips:"));
     console.log(
+      chalk.gray("  - Run `testpilot list` to see all running validators")
+    );
+    console.log(
       chalk.gray("  - Run `testpilot status` to check validator status")
     );
-    console.log(chalk.gray("  - Run `testpilot stop` to stop the validator"));
     console.log(
-      chalk.gray("  - Use Ctrl+C to see logs, then `testpilot stop` to stop")
+      chalk.gray(
+        `  - Run \`testpilot stop ${validatorId}\` to stop this validator`
+      )
+    );
+    console.log(
+      chalk.gray("  - Run `testpilot stop --all` to stop all validators")
     );
   } catch (error) {
     spinner.fail("Failed to start validator");
@@ -397,7 +456,7 @@ async function startValidatorInBackground(
   command: string,
   args: string[],
   debug: boolean
-): Promise<void> {
+): Promise<{ pid: number }> {
   return new Promise((resolve, reject) => {
     if (debug) {
       console.log(chalk.gray(`Starting ${command} in background...`));
@@ -422,7 +481,7 @@ async function startValidatorInBackground(
             chalk.gray(`✅ Validator started with PID: ${child.pid}`)
           );
         }
-        resolve();
+        resolve({ pid: child.pid });
       } else {
         reject(new Error("Validator failed to start"));
       }

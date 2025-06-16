@@ -8,6 +8,8 @@ import { initCommand } from "./commands/init.js";
 import { statusCommand } from "./commands/status.js";
 import { startCommand } from "./commands/start.js";
 import { transferCommand } from "./commands/transfer.js";
+import { listCommand } from "./commands/list.js";
+import { stopCommand, killCommand } from "./commands/stop.js";
 import { checkSolanaTools } from "./utils/shell.js";
 
 const program = new Command();
@@ -49,11 +51,29 @@ program
   });
 
 program
-  .command("stop")
-  .description("Stop the running localnet")
+  .command("list")
+  .description("List all running validators")
   .action(async () => {
-    console.log(chalk.blue("🛑 Stopping localnet..."));
-    // TODO: Implement stop
+    await listCommand();
+  });
+
+program
+  .command("stop")
+  .description("Stop running validator(s)")
+  .argument("[validator-id]", "ID of validator to stop")
+  .option("--all", "Stop all running validators")
+  .option("--kill", "Force kill the validator (SIGKILL instead of SIGTERM)")
+  .action(async (validatorId, options) => {
+    await stopCommand(validatorId, options);
+  });
+
+program
+  .command("kill")
+  .description("Force kill running validator(s)")
+  .argument("[validator-id]", "ID of validator to kill")
+  .option("--all", "Kill all running validators")
+  .action(async (validatorId, options) => {
+    await killCommand(validatorId, options);
   });
 
 program

@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { runCommand, checkSolanaTools } from "../utils/shell.js";
 import { configManager } from "../config/manager.js";
+import { processRegistry } from "../services/process-registry.js";
 
 export async function statusCommand(): Promise<void> {
   console.log(chalk.blue("📊 Checking system status...\n"));
@@ -30,54 +31,55 @@ export async function statusCommand(): Promise<void> {
     console.log();
   }
 
-  // Check if validator is running
+  // Check running validators
   console.log(chalk.cyan("\n🏗️  Validator Status:"));
 
-  try {
-    // Try to load config to get port
-    const configPath = configManager.getConfigPath() || "./tp.config.json";
-    await configManager.load(configPath);
-    const config = configManager.getConfig();
+  // Clean up dead processes first
+  await processRegistry.cleanup();
 
-    const port = config.localnet.port;
-    const rpcUrl = `http://127.0.0.1:${port}`;
+  const validators = processRegistry.getRunning();
 
-    // Check if validator is running by testing health endpoint
-    const healthResult = await runCommand(
-      "curl",
-      [
-        "-X",
-        "POST",
-        "-H",
-        "Content-Type: application/json",
-        "-d",
-        '{"jsonrpc":"2.0","id":1,"method":"getHealth"}',
-        rpcUrl,
-      ],
-      { silent: true, jsonOutput: false }
+  if (validators.length === 0) {
+    console.log(`  ❌ No validators running`);
+    console.log(`  💡 Run 'testpilot start' to launch a validator`);
+  } else {
+    console.log(
+      `  ✅ ${validators.length} validator${
+        validators.length > 1 ? "s" : ""
+      } running`
     );
 
-    if (healthResult.success) {
-      console.log(`  ✅ Validator running on port ${port}`);
-      console.log(`  🌐 RPC URL: ${rpcUrl}`);
+    for (const validator of validators) {
+      const isRunning = await processRegistry.isProcessRunning(validator.pid);
+      if (isRunning) {
+        console.log(`  🔹 ${validator.name} (${validator.id}):`);
+        console.log(`     🌐 RPC: ${validator.rpcUrl}`);
+        console.log(`     💰 Faucet: ${validator.faucetUrl}`);
+        console.log(`     🆔 PID: ${validator.pid}`);
 
-      // Get additional validator info
-      const slotResult = await runCommand(
-        "solana",
-        ["slot", "--url", rpcUrl, "--output", "json"],
-        { silent: true, jsonOutput: true }
-      );
+        // Get current slot for this validator
+        try {
+          const slotResult = await runCommand(
+            "solana",
+            ["slot", "--url", validator.rpcUrl, "--output", "json"],
+            { silent: true, jsonOutput: true }
+          );
 
-      if (slotResult.success && typeof slotResult.stdout === "object") {
-        console.log(`  📊 Current slot: ${slotResult.stdout}`);
+          if (slotResult.success && typeof slotResult.stdout === "object") {
+            console.log(`     📊 Current slot: ${slotResult.stdout}`);
+          }
+        } catch {
+          // Ignore slot check errors
+        }
+      } else {
+        processRegistry.updateStatus(validator.id, "stopped");
+        console.log(
+          `  ⚠️  ${validator.name} (${validator.id}): Process stopped`
+        );
       }
-    } else {
-      console.log(`  ❌ Validator not running on port ${port}`);
-      console.log(`  💡 Run 'testpilot start' to launch the validator`);
     }
-  } catch (error) {
-    console.log(`  ❓ Status unknown - no valid config found`);
-    console.log(`  💡 Run 'testpilot init' to create a configuration`);
+
+    console.log(`  💡 Run 'testpilot list' for detailed validator information`);
   }
 
   // Check config file
