@@ -1,14 +1,18 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { resolve, join } from "path";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import chalk from "chalk";
 import { runCommand } from "../utils/shell.js";
 import type { TokenConfig } from "../types/config.js";
+
+// Metaplex Token Metadata Program ID
+const METADATA_PROGRAM_ID = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 
 export interface ClonedToken {
   config: TokenConfig;
   mintAuthorityPath: string;
   modifiedAccountPath: string;
+  metadataAccountPath?: string; // Path to cloned metadata account
   mintAuthority: {
     publicKey: string;
     secretKey: number[];
@@ -173,6 +177,7 @@ export class TokenCloner {
 
     const originalAccountPath = join(tokenDir, "original.json");
     const modifiedAccountPath = join(tokenDir, "modified.json");
+    const metadataAccountPath = join(tokenDir, "metadata.json");
 
     // Step 1: Fetch original account data from mainnet
     console.log(chalk.gray(`  📥 Fetching account data from mainnet...`));
@@ -199,33 +204,137 @@ export class TokenCloner {
       console.error(
         chalk.red(`  ❌ Failed to fetch account data for ${token.symbol}`)
       );
-      console.error(
-        chalk.red(
-          `     Command: solana account ${token.mainnetMint} --output json-compact --output-file ${originalAccountPath} --url ${rpcUrl}`
-        )
+      throw new Error(
+        `Failed to fetch account: ${fetchResult.stderr || fetchResult.stdout}`
       );
-      console.error(chalk.red(`     Exit code: ${fetchResult.exitCode}`));
-      console.error(chalk.red(`     Stderr: ${fetchResult.stderr}`));
-      if (fetchResult.stdout) {
-        console.error(chalk.red(`     Stdout: ${fetchResult.stdout}`));
-      }
-      throw new Error(`Failed to fetch account data: ${fetchResult.stderr}`);
     }
 
-    // Step 2: Modify account data to use shared mint authority
-    console.log(chalk.gray(`  🔄 Modifying mint authority...`));
+    // Step 2: Clone metadata if requested
+    let hasMetadata = false;
+    if (token.cloneMetadata !== false) {
+      // Default to true
+      try {
+        hasMetadata = await this.cloneTokenMetadata(
+          token,
+          rpcUrl,
+          metadataAccountPath,
+          debug
+        );
+        if (hasMetadata) {
+          console.log(chalk.gray(`  📋 Token metadata cloned successfully`));
+        }
+      } catch (error) {
+        console.log(
+          chalk.yellow(
+            `  ⚠️  Failed to clone metadata: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          )
+        );
+        // Don't fail the entire token cloning if metadata fails
+      }
+    }
+
+    // Step 3: Modify mint authority
+    console.log(chalk.gray(`  🔧 Modifying mint authority...`));
     await this.modifyMintAuthority(
       originalAccountPath,
       modifiedAccountPath,
       sharedMintAuthority
     );
 
-    return {
+    const result: ClonedToken = {
       config: token,
       mintAuthorityPath: sharedMintAuthorityPath,
       modifiedAccountPath,
       mintAuthority: sharedMintAuthority,
     };
+
+    // Add metadata path if we successfully cloned metadata
+    if (hasMetadata) {
+      result.metadataAccountPath = metadataAccountPath;
+    }
+
+    return result;
+  }
+
+  /**
+   * Clone token metadata from Metaplex Token Metadata program
+   */
+  private async cloneTokenMetadata(
+    token: TokenConfig,
+    rpcUrl: string,
+    metadataAccountPath: string,
+    debug: boolean = false
+  ): Promise<boolean> {
+    try {
+      // Derive metadata account address
+      const metadataAddress = await this.deriveMetadataAddress(
+        token.mainnetMint
+      );
+
+      if (debug) {
+        console.log(chalk.gray(`  🔍 Metadata PDA: ${metadataAddress}`));
+      }
+
+      // Fetch metadata account data
+      const fetchResult = await runCommand(
+        "solana",
+        [
+          "account",
+          metadataAddress,
+          "--output",
+          "json-compact",
+          "--output-file",
+          metadataAccountPath,
+          "--url",
+          rpcUrl,
+        ],
+        { silent: !debug, debug }
+      );
+
+      if (!fetchResult.success) {
+        if (debug) {
+          console.log(
+            chalk.gray(`  ℹ️  No metadata account found for ${token.symbol}`)
+          );
+        }
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      throw new Error(
+        `Failed to clone metadata: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  /**
+   * Derive the metadata account address for a given mint
+   * PDA: ["metadata", metadata_program_id, mint_address]
+   */
+  private async deriveMetadataAddress(mintAddress: string): Promise<string> {
+    try {
+      // Use web3.js to derive the actual PDA
+      const metadataProgram = new PublicKey(METADATA_PROGRAM_ID);
+      const mint = new PublicKey(mintAddress);
+
+      const [metadataAddress] = PublicKey.findProgramAddressSync(
+        [Buffer.from("metadata"), metadataProgram.toBuffer(), mint.toBuffer()],
+        metadataProgram
+      );
+
+      return metadataAddress.toBase58();
+    } catch (error) {
+      throw new Error(
+        `Failed to derive metadata PDA: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   /**
@@ -317,14 +426,63 @@ export class TokenCloner {
     const args: string[] = [];
 
     for (const token of clonedTokens) {
+      // Add the modified mint account
       args.push(
         "--account",
         token.config.mainnetMint,
         token.modifiedAccountPath
       );
+
+      // Add metadata account if it exists
+      if (token.metadataAccountPath && existsSync(token.metadataAccountPath)) {
+        try {
+          // Derive metadata address for this token
+          const metadataAddress = this.deriveMetadataAddressSync(
+            token.config.mainnetMint
+          );
+          args.push("--account", metadataAddress, token.metadataAccountPath);
+          console.log(
+            chalk.gray(
+              `  📋 Adding metadata account for ${token.config.symbol}`
+            )
+          );
+        } catch (error) {
+          console.log(
+            chalk.yellow(
+              `⚠️  Failed to add metadata account for ${token.config.symbol}: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            )
+          );
+        }
+      }
     }
 
     return args;
+  }
+
+  /**
+   * Synchronous version of deriveMetadataAddress for use in getValidatorArgs
+   */
+  private deriveMetadataAddressSync(mintAddress: string): string {
+    try {
+      // Use web3.js to derive the actual PDA
+      const metadataProgram = new PublicKey(METADATA_PROGRAM_ID);
+      const mint = new PublicKey(mintAddress);
+
+      const [metadataAddress] = PublicKey.findProgramAddressSync(
+        [Buffer.from("metadata"), metadataProgram.toBuffer(), mint.toBuffer()],
+        metadataProgram
+      );
+
+      return metadataAddress.toBase58();
+    } catch (error) {
+      throw new Error(
+        `Failed to derive metadata PDA: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   /**

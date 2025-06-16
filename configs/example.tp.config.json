@@ -7,6 +7,7 @@
       "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "mintAuthority": "./keypairs/mint-authority.json",
       "mintAmount": 1000000,
+      "cloneMetadata": true,
       "recipients": [
         {
           "wallet": "YourWalletPublicKeyHere",
@@ -19,6 +20,7 @@
       "mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       "mintAuthority": "./keypairs/mint-authority.json",
       "mintAmount": 1000000,
+      "cloneMetadata": true,
       "recipients": [
         {
           "wallet": "YourWalletPublicKeyHere",
