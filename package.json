@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir ./dist --target node",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
     "build:binary": "bun build src/index.ts --compile --outfile ./dist/testpilot",
     "install:binary": "mkdir -p ~/.local/bin && cp ./dist/testpilot ~/.local/bin/testpilot && chmod +x ~/.local/bin/testpilot",
     "start": "bun run dist/index.js",
