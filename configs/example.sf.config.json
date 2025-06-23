@@ -1,6 +1,6 @@
 {
-  "name": "my-localnet",
-  "description": "Local Solana development environment",
+  "name": "solforge-example",
+  "description": "SolForge example configuration with popular tokens and programs",
   "tokens": [
     {
       "symbol": "USDC",
