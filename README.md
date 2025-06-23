@@ -1,4 +1,4 @@
-# testpilot
+# SolForge
 
 To install dependencies:
 

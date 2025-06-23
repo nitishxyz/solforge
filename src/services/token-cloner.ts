@@ -22,7 +22,7 @@ export interface ClonedToken {
 export class TokenCloner {
   private workDir: string;
 
-  constructor(workDir: string = ".testpilot") {
+  constructor(workDir: string = ".solforge") {
     this.workDir = workDir;
     // Ensure work directory exists
     if (!existsSync(this.workDir)) {

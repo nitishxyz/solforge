@@ -34,7 +34,7 @@ export async function stopCommand(
         chalk.red(`❌ Validator with ID '${validatorId}' not found`)
       );
       console.log(
-        chalk.gray("💡 Use `testpilot list` to see running validators")
+        chalk.gray("💡 Use `solforge list` to see running validators")
       );
       return;
     }
@@ -48,13 +48,13 @@ export async function stopCommand(
     // No specific validator specified, show available options
     console.log(chalk.yellow("⚠️  Please specify which validator to stop:"));
     console.log(
-      chalk.gray("💡 Use `testpilot stop <id>` to stop a specific validator")
+      chalk.gray("💡 Use `solforge stop <id>` to stop a specific validator")
     );
     console.log(
-      chalk.gray("💡 Use `testpilot stop --all` to stop all validators")
+      chalk.gray("💡 Use `solforge stop --all` to stop all validators")
     );
     console.log(
-      chalk.gray("💡 Use `testpilot list` to see running validators")
+      chalk.gray("💡 Use `solforge list` to see running validators")
     );
     return;
   }

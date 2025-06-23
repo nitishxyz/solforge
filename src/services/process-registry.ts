@@ -23,7 +23,7 @@ export class ProcessRegistry {
     // Store registry in user's home directory
     this.registryPath = join(
       homedir(),
-      ".testpilot",
+      ".solforge",
       "running-validators.json"
     );
   }
@@ -142,7 +142,7 @@ export class ProcessRegistry {
    */
   private save(validators: RunningValidator[]): void {
     // Ensure directory exists
-    const dir = join(homedir(), ".testpilot");
+    const dir = join(homedir(), ".solforge");
     if (!existsSync(dir)) {
       require("fs").mkdirSync(dir, { recursive: true });
     }

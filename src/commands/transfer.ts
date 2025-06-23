@@ -33,11 +33,11 @@ export const transferCommand = new Command()
         chalk.gray("Send tokens from mint authority to any address\n")
       );
 
-      // Check if testpilot data exists
-      const workDir = ".testpilot";
+      // Check if solforge data exists
+      const workDir = ".solforge";
       if (!existsSync(workDir)) {
         console.error(
-          chalk.red("❌ No testpilot data found. Run 'testpilot start' first.")
+          chalk.red("❌ No solforge data found. Run 'solforge start' first.")
         );
         process.exit(1);
       }
@@ -48,7 +48,7 @@ export const transferCommand = new Command()
       if (tokens.length === 0) {
         console.error(
           chalk.red(
-            "❌ No tokens found. Run 'testpilot start' first to clone tokens."
+            "❌ No tokens found. Run 'solforge start' first to clone tokens."
           )
         );
         process.exit(1);
@@ -164,10 +164,10 @@ async function loadAvailableTokens(
     );
     const mintAuthorityAddress = mintAuthorityKeypair.publicKey.toBase58();
 
-    // Load token config from tp.config.json
-    const configPath = "tp.config.json";
+    // Load token config from sf.config.json
+    const configPath = "sf.config.json";
     if (!existsSync(configPath)) {
-      throw new Error("tp.config.json not found in current directory");
+      throw new Error("sf.config.json not found in current directory");
     }
 
     const config = JSON.parse(readFileSync(configPath, "utf8"));

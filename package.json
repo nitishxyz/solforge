@@ -1,5 +1,5 @@
 {
-  "name": "testpilot",
+  "name": "solforge",
   "version": "0.1.0",
   "description": "Solana localnet orchestration tool for cloning mainnet programs and tokens",
   "module": "index.ts",
@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "build:binary": "bun build src/index.ts --compile --outfile ./dist/testpilot",
-    "install:binary": "mkdir -p ~/.local/bin && cp ./dist/testpilot ~/.local/bin/testpilot && chmod +x ~/.local/bin/testpilot",
+    "build:binary": "bun build src/index.ts --compile --outfile ./dist/solforge",
+    "install:binary": "mkdir -p ~/.local/bin && cp ./dist/solforge ~/.local/bin/solforge && chmod +x ~/.local/bin/solforge",
     "start": "bun run dist/index.js",
     "test": "bun test",
     "lint": "bunx @biomejs/biome check src/",

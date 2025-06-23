@@ -36,15 +36,15 @@ export async function startCommand(debug: boolean = false): Promise<void> {
   // Load configuration
   let config: Config;
   try {
-    await configManager.load("./tp.config.json");
+    await configManager.load("./sf.config.json");
     config = configManager.getConfig();
   } catch (error) {
-    console.error(chalk.red("❌ Failed to load tp.config.json"));
+    console.error(chalk.red("❌ Failed to load sf.config.json"));
     console.error(
       chalk.red(error instanceof Error ? error.message : String(error))
     );
     console.log(
-      chalk.yellow("💡 Run `testpilot init` to create a configuration")
+      chalk.yellow("💡 Run `solforge init` to create a configuration")
     );
     process.exit(1);
   }
@@ -133,7 +133,7 @@ export async function startCommand(debug: boolean = false): Promise<void> {
         );
         console.log(
           chalk.yellow(
-            "💡 You can start without tokens by removing them from tp.config.json"
+            "💡 You can start without tokens by removing them from sf.config.json"
           )
         );
         process.exit(1);
@@ -279,7 +279,7 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       faucetPort: config.localnet.faucetPort,
       rpcUrl: `http://127.0.0.1:${config.localnet.port}`,
       faucetUrl: `http://127.0.0.1:${config.localnet.faucetPort}`,
-      configPath: configManager.getConfigPath() || "./tp.config.json",
+      configPath: configManager.getConfigPath() || "./sf.config.json",
       startTime: new Date(),
       status: "running",
     };
@@ -387,18 +387,18 @@ export async function startCommand(debug: boolean = false): Promise<void> {
 
     console.log(chalk.blue("\n💡 Tips:"));
     console.log(
-      chalk.gray("  - Run `testpilot list` to see all running validators")
+      chalk.gray("  - Run `solforge list` to see all running validators")
     );
     console.log(
-      chalk.gray("  - Run `testpilot status` to check validator status")
+      chalk.gray("  - Run `solforge status` to check validator status")
     );
     console.log(
       chalk.gray(
-        `  - Run \`testpilot stop ${validatorId}\` to stop this validator`
+        `  - Run \`solforge stop ${validatorId}\` to stop this validator`
       )
     );
     console.log(
-      chalk.gray("  - Run `testpilot stop --all` to stop all validators")
+      chalk.gray("  - Run `solforge stop --all` to stop all validators")
     );
   } catch (error) {
     spinner.fail("Failed to start validator");
@@ -608,7 +608,7 @@ async function checkExistingClonedTokens(
 ): Promise<{ existingTokens: ClonedToken[]; tokensToClone: TokenConfig[] }> {
   const existingTokens: ClonedToken[] = [];
   const tokensToClone: TokenConfig[] = [];
-  const workDir = ".testpilot";
+  const workDir = ".solforge";
 
   // Check for shared mint authority
   const sharedMintAuthorityPath = join(workDir, "shared-mint-authority.json");

@@ -12,7 +12,7 @@ export async function listCommand(): Promise<void> {
 
   if (validators.length === 0) {
     console.log(chalk.yellow("⚠️  No running validators found"));
-    console.log(chalk.gray("💡 Use `testpilot start` to start a validator"));
+    console.log(chalk.gray("💡 Use `solforge start` to start a validator"));
     return;
   }
 
@@ -33,7 +33,7 @@ export async function listCommand(): Promise<void> {
         "⚠️  No active validators found (all processes have stopped)"
       )
     );
-    console.log(chalk.gray("💡 Use `testpilot start` to start a validator"));
+    console.log(chalk.gray("💡 Use `solforge start` to start a validator"));
     return;
   }
 
@@ -49,10 +49,10 @@ export async function listCommand(): Promise<void> {
   displayValidatorsTable(activeValidators);
 
   console.log(
-    chalk.gray("\n💡 Use `testpilot stop <id>` to stop a specific validator")
+    chalk.gray("\n💡 Use `solforge stop <id>` to stop a specific validator")
   );
   console.log(
-    chalk.gray("💡 Use `testpilot stop --all` to stop all validators")
+    chalk.gray("💡 Use `solforge stop --all` to stop all validators")
   );
 }
 

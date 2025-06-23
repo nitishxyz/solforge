@@ -8,7 +8,7 @@ import type { ProgramConfig } from "../types/config.js";
 export class ProgramCloner {
   private workDir: string;
 
-  constructor(workDir: string = ".testpilot") {
+  constructor(workDir: string = ".solforge") {
     this.workDir = workDir;
   }
 
