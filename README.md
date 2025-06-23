@@ -26,7 +26,7 @@
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/nitishxyz/solforge.git
 cd solforge
 
 # Install dependencies
@@ -43,16 +43,19 @@ bun run install:binary
 ### Basic Usage
 
 1. **Initialize a new project**:
+
    ```bash
    solforge init
    ```
 
 2. **Start your localnet**:
+
    ```bash
    solforge start
    ```
 
 3. **Check status**:
+
    ```bash
    solforge status
    solforge list
@@ -66,12 +69,14 @@ bun run install:binary
 ## 📖 Documentation
 
 ### 📚 Additional Documentation
+
 - [Configuration Guide](docs/CONFIGURATION.md) - Detailed configuration options and examples
 - [Troubleshooting Guide](#-troubleshooting) - Common issues and solutions
 
 ### Commands
 
 #### `solforge init`
+
 Initialize a new `sf.config.json` configuration file in the current directory.
 
 ```bash
@@ -79,12 +84,14 @@ solforge init
 ```
 
 This command will prompt you for:
+
 - Project name
 - Description
 - RPC port (default: 8899)
 - Whether to include USDC token
 
 #### `solforge start [options]`
+
 Start a localnet validator with the current configuration.
 
 ```bash
@@ -93,9 +100,11 @@ solforge start --debug        # Start with debug logging
 ```
 
 **Options:**
+
 - `--debug` - Enable debug logging to see detailed command output
 
 #### `solforge list`
+
 List all running validators with detailed information.
 
 ```bash
@@ -103,6 +112,7 @@ solforge list
 ```
 
 Shows:
+
 - Validator ID and name
 - Process ID (PID)
 - RPC and Faucet ports
@@ -111,6 +121,7 @@ Shows:
 - Connection URLs
 
 #### `solforge stop [validator-id] [options]`
+
 Stop running validators.
 
 ```bash
@@ -121,10 +132,12 @@ solforge stop --kill          # Force kill (SIGKILL)
 ```
 
 **Options:**
+
 - `--all` - Stop all running validators
 - `--kill` - Force kill the validator (SIGKILL instead of SIGTERM)
 
 #### `solforge kill [validator-id] [options]`
+
 Force kill running validators with interactive selection.
 
 ```bash
@@ -135,12 +148,14 @@ solforge kill --all           # Kill all validators
 
 **Interactive Mode:**
 When run without arguments, `solforge kill` will:
+
 - Display a table of all running validators
 - Allow you to select which validator to kill using arrow keys
 - Provide options to kill individual validators, all validators, or cancel
 - No need to copy/paste validator IDs from `solforge list`
 
 #### `solforge status`
+
 Show overall localnet status and configuration summary.
 
 ```bash
@@ -148,6 +163,7 @@ solforge status
 ```
 
 #### `solforge add-program [options]`
+
 Add a program to your configuration.
 
 ```bash
@@ -157,11 +173,13 @@ solforge add-program --program-id <address> --name <name>
 ```
 
 **Options:**
+
 - `--program-id <address>` - Mainnet program ID to clone and deploy
 - `--name <name>` - Friendly name for the program
 - `--no-interactive` - Run in non-interactive mode
 
 #### `solforge transfer [options]`
+
 Interactively transfer tokens from mint authority to any address.
 
 ```bash
@@ -170,9 +188,11 @@ solforge transfer --rpc-url http://localhost:8899   # Custom RPC
 ```
 
 **Options:**
+
 - `--rpc-url <url>` - RPC URL to use (default: "http://127.0.0.1:8899")
 
 #### `solforge reset`
+
 Reset localnet ledger (coming soon).
 
 ```bash
@@ -232,8 +252,9 @@ Here's the complete schema:
 For detailed configuration options and examples, see the [Configuration Guide](docs/CONFIGURATION.md).
 
 **Quick Reference:**
+
 - `name` - Project name
-- `description` - Project description  
+- `description` - Project description
 - `tokens[]` - Tokens to clone from mainnet
 - `programs[]` - Programs to clone from mainnet
 - `localnet` - Validator settings (ports, logging, etc.)
@@ -241,6 +262,7 @@ For detailed configuration options and examples, see the [Configuration Guide](d
 ## 🎯 Use Cases
 
 ### DeFi Development
+
 Clone popular DeFi tokens and programs to test your application:
 
 ```json
@@ -253,7 +275,7 @@ Clone popular DeFi tokens and programs to test your application:
       "mintAmount": 10000000
     },
     {
-      "symbol": "USDT", 
+      "symbol": "USDT",
       "mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       "mintAmount": 10000000
     }
@@ -268,6 +290,7 @@ Clone popular DeFi tokens and programs to test your application:
 ```
 
 ### NFT Development
+
 Set up an environment for NFT projects:
 
 ```json
@@ -287,6 +310,7 @@ Set up an environment for NFT projects:
 ```
 
 ### Multi-Environment Testing
+
 Run multiple validators for different test scenarios:
 
 ```bash
@@ -294,7 +318,7 @@ Run multiple validators for different test scenarios:
 cd defi-project
 solforge start
 
-# Terminal 2 - NFT environment  
+# Terminal 2 - NFT environment
 cd nft-project
 solforge start
 
@@ -365,6 +389,7 @@ bun run install:binary # Install binary to ~/.local/bin
 ### Common Issues
 
 **Port already in use**
+
 ```bash
 # Check what's using the port
 lsof -i :8899
@@ -379,6 +404,7 @@ lsof -i :8899
 ```
 
 **Validator won't start**
+
 ```bash
 # Check Solana CLI is installed
 solana --version
@@ -391,11 +417,13 @@ solforge start --debug
 ```
 
 **Token cloning fails**
+
 - Ensure RPC URL in config is accessible
 - Check mainnet mint address is correct
 - Verify network connectivity
 
 **Program deployment fails**
+
 - Ensure program ID exists on specified cluster
 - Check if program has dependencies that need to be deployed first
 - Verify sufficient SOL for deployment
@@ -409,6 +437,7 @@ solforge start --debug
 ```
 
 This shows:
+
 - Exact solana-test-validator commands
 - Program deployment steps
 - Token cloning operations
@@ -417,6 +446,7 @@ This shows:
 ### Logs and Data
 
 SolForge stores data in:
+
 - `~/.solforge/` - Process registry and metadata
 - `.solforge/` - Local working directory for current project
 
@@ -426,9 +456,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🤝 Support
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-repo/solforge/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/solforge/discussions)
-- 📧 **Email**: your-email@example.com
+- 🐛 **Issues**: [GitHub Issues](https://github.com/nitishxyz/solforge/issues)
 
 ## 🙏 Acknowledgments
 

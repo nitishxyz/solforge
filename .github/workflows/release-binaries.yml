@@ -1,0 +1,102 @@
+name: Build and Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: darwin
+            arch: x64
+            runner: macos-latest
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+          - os: linux
+            arch: arm64
+            runner: ubuntu-latest
+          - os: win32
+            arch: x64
+            runner: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build binary
+        run: |
+          mkdir -p dist
+          bun build src/index.ts --compile --outfile ./dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'win32' && '.exe' || '' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solforge-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'win32' && '.exe' || '' }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p ./release
+          find ./artifacts -type f -exec cp {} ./release/ \;
+          ls -la ./release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "SolForge ${{ github.ref_name }}"
+          body: |
+            ## SolForge ${{ github.ref_name }}
+
+            Pre-compiled binaries for all platforms. The installation will automatically download the correct binary for your system.
+
+            ### Installation
+            ```bash
+            npm install -g solforge
+            # or
+            yarn global add solforge
+            # or
+            bun install -g solforge
+            ```
+
+            ### Manual Installation
+            Download the appropriate binary for your platform and add it to your PATH.
+
+            - **macOS (Intel)**: `solforge-darwin-x64`
+            - **macOS (Apple Silicon)**: `solforge-darwin-arm64`  
+            - **Linux (x64)**: `solforge-linux-x64`
+            - **Linux (ARM64)**: `solforge-linux-arm64`
+            - **Windows (x64)**: `solforge-win32-x64.exe`
+          files: ./release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
