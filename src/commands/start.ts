@@ -49,10 +49,168 @@ export async function startCommand(debug: boolean = false): Promise<void> {
     process.exit(1);
   }
 
+  // Check if validator is already running on configured ports first
+  const checkResult = await runCommand(
+    "curl",
+    [
+      "-s",
+      "-X",
+      "POST",
+      `http://127.0.0.1:${config.localnet.port}`,
+      "-H",
+      "Content-Type: application/json",
+      "-d",
+      '{"jsonrpc":"2.0","id":1,"method":"getHealth"}',
+    ],
+    { silent: true, debug: false }
+  );
+
+  if (checkResult.success && checkResult.stdout.includes("ok")) {
+    console.log(chalk.yellow("⚠️  Validator is already running"));
+    console.log(
+      chalk.cyan(`🌐 RPC URL: http://127.0.0.1:${config.localnet.port}`)
+    );
+    console.log(
+      chalk.cyan(
+        `💰 Faucet URL: http://127.0.0.1:${config.localnet.faucetPort}`
+      )
+    );
+
+    // Clone tokens if needed, even when validator is already running
+    let clonedTokens: ClonedToken[] = [];
+    if (config.tokens.length > 0) {
+      const tokenCloner = new TokenCloner();
+
+      // Check which tokens are already cloned and which need to be cloned
+      const { existingTokens, tokensToClone } = await checkExistingClonedTokens(
+        config.tokens,
+        tokenCloner
+      );
+
+      if (existingTokens.length > 0) {
+        console.log(
+          chalk.green(`📁 Found ${existingTokens.length} already cloned tokens`)
+        );
+        if (debug) {
+          existingTokens.forEach((token: ClonedToken) => {
+            console.log(
+              chalk.gray(
+                `  ✓ ${token.config.symbol} (${token.config.mainnetMint})`
+              )
+            );
+          });
+        }
+        clonedTokens.push(...existingTokens);
+      }
+
+      if (tokensToClone.length > 0) {
+        console.log(
+          chalk.yellow(
+            `📦 Cloning ${tokensToClone.length} new tokens from mainnet...\n`
+          )
+        );
+        try {
+          const newlyClonedTokens = await tokenCloner.cloneTokens(
+            tokensToClone,
+            config.localnet.rpc,
+            debug
+          );
+          clonedTokens.push(...newlyClonedTokens);
+          console.log(
+            chalk.green(
+              `✅ Successfully cloned ${newlyClonedTokens.length} new tokens\n`
+            )
+          );
+        } catch (error) {
+          console.error(chalk.red("❌ Failed to clone tokens:"));
+          console.error(
+            chalk.red(error instanceof Error ? error.message : String(error))
+          );
+          console.log(
+            chalk.yellow(
+              "💡 You can start without tokens by removing them from sf.config.json"
+            )
+          );
+          process.exit(1);
+        }
+      } else if (existingTokens.length > 0) {
+        console.log(
+          chalk.green("✅ All tokens already cloned, skipping clone step\n")
+        );
+      }
+    }
+
+    // Airdrop SOL to mint authority if tokens were cloned (even when validator already running)
+    if (clonedTokens.length > 0) {
+      console.log(chalk.yellow("\n💸 Airdropping SOL to mint authority..."));
+      const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
+
+      try {
+        await airdropSolToMintAuthority(clonedTokens[0], rpcUrl, debug);
+        console.log(chalk.green("✅ SOL airdropped successfully!"));
+      } catch (error) {
+        console.error(chalk.red("❌ Failed to airdrop SOL:"));
+        console.error(
+          chalk.red(error instanceof Error ? error.message : String(error))
+        );
+        console.log(
+          chalk.yellow(
+            "💡 You may need to manually airdrop SOL for fee payments"
+          )
+        );
+      }
+    }
+
+    // Still mint tokens if any were cloned
+    if (clonedTokens.length > 0) {
+      console.log(chalk.yellow("\n💰 Minting tokens..."));
+      const tokenCloner = new TokenCloner();
+      const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
+
+      if (debug) {
+        console.log(
+          chalk.gray(`🐛 Minting ${clonedTokens.length} tokens to recipients:`)
+        );
+        clonedTokens.forEach((token, index) => {
+          console.log(
+            chalk.gray(
+              `  ${index + 1}. ${token.config.symbol} (${
+                token.config.mainnetMint
+              }) - ${token.config.mintAmount} tokens`
+            )
+          );
+        });
+        console.log(chalk.gray(`🌐 Using RPC: ${rpcUrl}`));
+      }
+
+      try {
+        await tokenCloner.mintTokensToRecipients(clonedTokens, rpcUrl, debug);
+        console.log(chalk.green("✅ Token minting completed!"));
+
+        if (debug) {
+          console.log(
+            chalk.gray(
+              "🐛 All tokens have been minted to their respective recipients"
+            )
+          );
+        }
+      } catch (error) {
+        console.error(chalk.red("❌ Failed to mint tokens:"));
+        console.error(
+          chalk.red(error instanceof Error ? error.message : String(error))
+        );
+        console.log(
+          chalk.yellow("💡 Validator is still running, you can mint manually")
+        );
+      }
+    }
+    return;
+  }
+
   // Generate unique ID for this validator instance
   const validatorId = generateValidatorId(config.name);
 
-  // Get available ports
+  // Get available ports (only if validator is not already running)
   const ports = await portManager.getRecommendedPorts(config);
   if (
     ports.rpcPort !== config.localnet.port ||
@@ -156,100 +314,6 @@ export async function startCommand(debug: boolean = false): Promise<void> {
     console.log(chalk.gray("Full command details:"));
     console.log(chalk.gray(`  Command: solana-test-validator`));
     console.log(chalk.gray(`  Arguments: ${JSON.stringify(args, null, 2)}`));
-  }
-
-  // Check if validator is already running
-  const checkResult = await runCommand(
-    "curl",
-    [
-      "-s",
-      "-X",
-      "POST",
-      `http://127.0.0.1:${config.localnet.port}`,
-      "-H",
-      "Content-Type: application/json",
-      "-d",
-      '{"jsonrpc":"2.0","id":1,"method":"getHealth"}',
-    ],
-    { silent: true, debug: false }
-  );
-
-  if (checkResult.success && checkResult.stdout.includes("ok")) {
-    console.log(chalk.yellow("⚠️  Validator is already running"));
-    console.log(
-      chalk.cyan(`🌐 RPC URL: http://127.0.0.1:${config.localnet.port}`)
-    );
-    console.log(
-      chalk.cyan(
-        `💰 Faucet URL: http://127.0.0.1:${config.localnet.faucetPort}`
-      )
-    );
-
-    // Airdrop SOL to mint authority if tokens were cloned (even when validator already running)
-    if (clonedTokens.length > 0) {
-      console.log(chalk.yellow("\n💸 Airdropping SOL to mint authority..."));
-      const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
-
-      try {
-        await airdropSolToMintAuthority(clonedTokens[0], rpcUrl, debug);
-        console.log(chalk.green("✅ SOL airdropped successfully!"));
-      } catch (error) {
-        console.error(chalk.red("❌ Failed to airdrop SOL:"));
-        console.error(
-          chalk.red(error instanceof Error ? error.message : String(error))
-        );
-        console.log(
-          chalk.yellow(
-            "💡 You may need to manually airdrop SOL for fee payments"
-          )
-        );
-      }
-    }
-
-    // Still mint tokens if any were cloned
-    if (clonedTokens.length > 0) {
-      console.log(chalk.yellow("\n💰 Minting tokens..."));
-      const tokenCloner = new TokenCloner();
-      const rpcUrl = `http://127.0.0.1:${config.localnet.port}`;
-
-      if (debug) {
-        console.log(
-          chalk.gray(`🐛 Minting ${clonedTokens.length} tokens to recipients:`)
-        );
-        clonedTokens.forEach((token, index) => {
-          console.log(
-            chalk.gray(
-              `  ${index + 1}. ${token.config.symbol} (${
-                token.config.mainnetMint
-              }) - ${token.config.mintAmount} tokens`
-            )
-          );
-        });
-        console.log(chalk.gray(`🌐 Using RPC: ${rpcUrl}`));
-      }
-
-      try {
-        await tokenCloner.mintTokensToRecipients(clonedTokens, rpcUrl, debug);
-        console.log(chalk.green("✅ Token minting completed!"));
-
-        if (debug) {
-          console.log(
-            chalk.gray(
-              "🐛 All tokens have been minted to their respective recipients"
-            )
-          );
-        }
-      } catch (error) {
-        console.error(chalk.red("❌ Failed to mint tokens:"));
-        console.error(
-          chalk.red(error instanceof Error ? error.message : String(error))
-        );
-        console.log(
-          chalk.yellow("💡 Validator is still running, you can mint manually")
-        );
-      }
-    }
-    return;
   }
 
   // Start the validator
