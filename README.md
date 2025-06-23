@@ -65,6 +65,10 @@ bun run install:binary
 
 ## 📖 Documentation
 
+### 📚 Additional Documentation
+- [Configuration Guide](docs/CONFIGURATION.md) - Detailed configuration options and examples
+- [Troubleshooting Guide](#-troubleshooting) - Common issues and solutions
+
 ### Commands
 
 #### `solforge init`
@@ -121,13 +125,20 @@ solforge stop --kill          # Force kill (SIGKILL)
 - `--kill` - Force kill the validator (SIGKILL instead of SIGTERM)
 
 #### `solforge kill [validator-id] [options]`
-Force kill running validators (alias for `stop --kill`).
+Force kill running validators with interactive selection.
 
 ```bash
-solforge kill                 # Interactive selection
+solforge kill                 # Interactive selection with validator list
 solforge kill <validator-id>  # Kill specific validator
 solforge kill --all           # Kill all validators
 ```
+
+**Interactive Mode:**
+When run without arguments, `solforge kill` will:
+- Display a table of all running validators
+- Allow you to select which validator to kill using arrow keys
+- Provide options to kill individual validators, all validators, or cancel
+- No need to copy/paste validator IDs from `solforge list`
 
 #### `solforge status`
 Show overall localnet status and configuration summary.
@@ -170,7 +181,9 @@ solforge reset
 
 ### Configuration File (`sf.config.json`)
 
-The configuration file defines your localnet setup. Here's the complete schema:
+The configuration file defines your localnet setup. For detailed configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
+
+Here's the complete schema:
 
 ```json
 {
@@ -216,41 +229,14 @@ The configuration file defines your localnet setup. Here's the complete schema:
 
 #### Configuration Schema
 
-##### Root Configuration
-- `name` (string) - Name of your localnet configuration
-- `description` (string, optional) - Description of your setup
-- `tokens` (array) - Array of token configurations to clone
-- `programs` (array) - Array of program configurations to clone
-- `localnet` (object) - Localnet validator settings
+For detailed configuration options and examples, see the [Configuration Guide](docs/CONFIGURATION.md).
 
-##### Token Configuration
-- `symbol` (string) - Token symbol (e.g., "USDC")
-- `mainnetMint` (string) - Mainnet mint address to clone
-- `mintAuthority` (string, optional) - Path to mint authority keypair file
-- `mintAmount` (number) - Amount to mint to mint authority (default: 1000000)
-- `cloneMetadata` (boolean) - Whether to clone token metadata (default: true)
-- `recipients` (array) - List of wallets to receive tokens
-  - `wallet` (string) - Wallet public key
-  - `amount` (number) - Amount to transfer
-
-##### Program Configuration
-- `name` (string, optional) - Friendly name for the program
-- `mainnetProgramId` (string) - Mainnet program ID to clone
-- `deployPath` (string, optional) - Path to local .so file
-- `upgradeable` (boolean) - Whether program is upgradeable (default: false)
-- `cluster` (string) - Source cluster: "mainnet-beta", "devnet", or "testnet"
-- `dependencies` (array) - Other program IDs this program depends on
-
-##### Localnet Configuration
-- `airdropAmount` (number) - SOL amount for airdrops (default: 100)
-- `faucetAccounts` (array) - Accounts to receive initial airdrops
-- `port` (number) - RPC port (default: 8899)
-- `faucetPort` (number) - Faucet port (default: 9900)
-- `reset` (boolean) - Reset ledger on start (default: false)
-- `logLevel` (string) - Log level: "trace", "debug", "info", "warn", "error"
-- `bindAddress` (string) - Bind address (default: "127.0.0.1")
-- `limitLedgerSize` (number) - Maximum ledger size (default: 100000)
-- `rpc` (string) - Mainnet RPC URL for cloning data
+**Quick Reference:**
+- `name` - Project name
+- `description` - Project description  
+- `tokens[]` - Tokens to clone from mainnet
+- `programs[]` - Programs to clone from mainnet
+- `localnet` - Validator settings (ports, logging, etc.)
 
 ## 🎯 Use Cases
 
