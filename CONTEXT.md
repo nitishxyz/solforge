@@ -1,4 +1,4 @@
-# TestPilot Development Context
+# SolForge Development Context
 
 ## Build/Test/Lint Commands
 - **Build**: `bun build src/index.ts --outdir ./dist --target node`
@@ -21,5 +21,5 @@
 
 ## Project Structure
 - Solana localnet orchestration tool for cloning mainnet programs/tokens
-- Config-driven via `tp.config.json` files
+- Config-driven via `sf.config.json` files
 - Commands: init, start, stop, status, transfer, reset

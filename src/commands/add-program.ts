@@ -16,17 +16,17 @@ export async function addProgramCommand(
   console.log(chalk.blue("📦 Adding program to configuration...\n"));
 
   // Check if config exists
-  if (!existsSync("./tp.config.json")) {
-    console.error(chalk.red("❌ No tp.config.json found in current directory"));
-    console.log(chalk.yellow("💡 Run `testpilot init` to create one"));
+  if (!existsSync("./sf.config.json")) {
+    console.error(chalk.red("❌ No sf.config.json found in current directory"));
+    console.log(chalk.yellow("💡 Run `solforge init` to create one"));
     return;
   }
 
   // Load current config
   try {
-    await configManager.load("./tp.config.json");
+    await configManager.load("./sf.config.json");
   } catch (error) {
-    console.error(chalk.red("❌ Failed to load tp.config.json"));
+    console.error(chalk.red("❌ Failed to load sf.config.json"));
     console.error(
       chalk.red(error instanceof Error ? error.message : String(error))
     );
@@ -233,14 +233,14 @@ export async function addProgramCommand(
     config.programs.push(newProgram);
 
     // Save updated config
-    await configManager.save("./tp.config.json");
+    await configManager.save("./sf.config.json");
 
     console.log(
       chalk.green(
         `\n✅ Successfully added ${programName || programId} to configuration!`
       )
     );
-    console.log(chalk.cyan(`📝 Updated tp.config.json`));
+    console.log(chalk.cyan(`📝 Updated sf.config.json`));
     console.log(chalk.gray(`   Program ID: ${programId}`));
     console.log(chalk.gray(`   Upgradeable: ${upgradeable ? "Yes" : "No"}`));
 
@@ -258,10 +258,10 @@ export async function addProgramCommand(
       console.log(chalk.red("   ⚠️  RESET will WIPE all ledger data!"));
       console.log(
         chalk.gray(
-          `   1. Stop validators using "${config.name}": testpilot stop <validator-id>`
+          `   1. Stop validators using "${config.name}": solforge stop <validator-id>`
         )
       );
-      console.log(chalk.gray("   2. Start with reset: testpilot start"));
+      console.log(chalk.gray("   2. Start with reset: solforge start"));
 
       const { shouldRestart } = await inquirer.prompt([
         {
@@ -319,12 +319,12 @@ export async function addProgramCommand(
 
         // Restore original reset setting
         currentConfig.localnet.reset = originalReset;
-        await configManager.save("./tp.config.json");
+        await configManager.save("./sf.config.json");
       }
     } else {
       console.log(
         chalk.gray(
-          "\n💡 Start a validator to use the new program: testpilot start"
+          "\n💡 Start a validator to use the new program: solforge start"
         )
       );
     }

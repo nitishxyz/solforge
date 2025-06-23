@@ -32,7 +32,7 @@ const defaultConfig: Config = {
 };
 
 export async function initCommand(): Promise<void> {
-  const configPath = resolve(process.cwd(), "tp.config.json");
+  const configPath = resolve(process.cwd(), "sf.config.json");
 
   // Check if config already exists
   if (existsSync(configPath)) {
@@ -40,7 +40,7 @@ export async function initCommand(): Promise<void> {
       {
         type: "confirm",
         name: "overwrite",
-        message: "tp.config.json already exists. Overwrite?",
+        message: "sf.config.json already exists. Overwrite?",
         default: false,
       },
     ]);
@@ -98,22 +98,22 @@ export async function initCommand(): Promise<void> {
     // Write config file
     writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    console.log(chalk.green("✅ tp.config.json created successfully!"));
+    console.log(chalk.green("✅ sf.config.json created successfully!"));
     console.log(chalk.gray(`📄 Config saved to: ${configPath}`));
     console.log();
     console.log(chalk.blue("Next steps:"));
     console.log(
-      chalk.gray("1. Edit tp.config.json to add your tokens and programs")
+      chalk.gray("1. Edit sf.config.json to add your tokens and programs")
     );
-    console.log(chalk.gray("2. Run `testpilot start` to launch your localnet"));
+    console.log(chalk.gray("2. Run `solforge start` to launch your localnet"));
     console.log();
     console.log(
       chalk.yellow(
-        "💡 Tip: Check configs/example.tp.config.json for more examples"
+        "💡 Tip: Check configs/example.sf.config.json for more examples"
       )
     );
   } catch (error) {
-    console.error(chalk.red("❌ Failed to create tp.config.json"));
+    console.error(chalk.red("❌ Failed to create sf.config.json"));
     console.error(
       chalk.red(error instanceof Error ? error.message : String(error))
     );

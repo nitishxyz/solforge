@@ -41,7 +41,7 @@ export async function statusCommand(): Promise<void> {
 
   if (validators.length === 0) {
     console.log(`  ❌ No validators running`);
-    console.log(`  💡 Run 'testpilot start' to launch a validator`);
+    console.log(`  💡 Run 'solforge start' to launch a validator`);
   } else {
     console.log(
       `  ✅ ${validators.length} validator${
@@ -79,7 +79,7 @@ export async function statusCommand(): Promise<void> {
       }
     }
 
-    console.log(`  💡 Run 'testpilot list' for detailed validator information`);
+    console.log(`  💡 Run 'solforge list' for detailed validator information`);
   }
 
   // Check config file
@@ -92,7 +92,7 @@ export async function statusCommand(): Promise<void> {
     console.log(`  📦 Programs: ${config.programs.length}`);
   } catch (error) {
     console.log(`  ❌ No valid configuration found`);
-    console.log(`  💡 Run 'testpilot init' to create one`);
+    console.log(`  💡 Run 'solforge init' to create one`);
   }
 
   console.log();

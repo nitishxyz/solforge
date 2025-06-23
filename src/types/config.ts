@@ -52,7 +52,7 @@ export const LocalnetConfigSchema = z.object({
 
 // Complete configuration schema
 export const ConfigSchema = z.object({
-  name: z.string().default("testpilot-localnet"),
+  name: z.string().default("solforge-localnet"),
   description: z.string().optional(),
   tokens: z.array(TokenConfigSchema).default([]),
   programs: z.array(ProgramConfigSchema).default([]),
