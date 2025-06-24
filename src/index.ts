@@ -1,5 +1,14 @@
 #!/usr/bin/env bun
 
+// Suppress bigint-buffer warning
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
+  if (typeof chunk === 'string' && chunk.includes('bigint: Failed to load bindings')) {
+    return true; // Suppress this specific warning
+  }
+  return originalStderrWrite(chunk, encoding, callback);
+};
+
 import { Command } from "commander";
 import chalk from "chalk";
 import { existsSync } from "fs";
