@@ -22,11 +22,11 @@ const defaultConfig: Config = {
     faucetAccounts: [],
     port: 8899,
     faucetPort: 9900,
-    reset: true,
+    reset: false,
     logLevel: "info",
     bindAddress: "127.0.0.1",
     quiet: false,
-    rpc: "https://mainnet.helius-rpc.com/?api-key=3a3b84ef-2985-4543-9d67-535eb707b6ec",
+    rpc: "https://api.mainnet-beta.solana.com",
     limitLedgerSize: 100000,
   },
 };
