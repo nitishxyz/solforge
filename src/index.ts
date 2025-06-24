@@ -11,13 +11,14 @@ import { mintCommand } from "./commands/mint.js";
 import { listCommand } from "./commands/list.js";
 import { stopCommand, killCommand } from "./commands/stop.js";
 import { addProgramCommand } from "./commands/add-program.js";
+import packageJson from "../package.json" with { type: "json" };
 
 const program = new Command();
 
 program
   .name("solforge")
   .description("Solana localnet orchestration tool")
-  .version("0.1.0");
+  .version(packageJson.version);
 
 // Check for sf.config.json in current directory
 function findConfig(): string | null {
