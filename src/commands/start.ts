@@ -593,7 +593,7 @@ export async function startCommand(
       );
       console.log(
         chalk.gray(
-          `  - POST http://${endpointHost}:${apiServerPort}/api/tokens/{symbol}/mint - Mint tokens`
+          `  - POST http://${endpointHost}:${apiServerPort}/api/tokens/{mintAddress}/mint - Mint tokens`
         )
       );
       console.log(
