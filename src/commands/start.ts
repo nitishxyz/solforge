@@ -6,11 +6,10 @@ import { join } from "path";
 import { runCommand, checkSolanaTools } from "../utils/shell.js";
 import { configManager } from "../config/manager.js";
 import { TokenCloner } from "../services/token-cloner.js";
-import { ProgramCloner } from "../services/program-cloner.js";
 import { processRegistry } from "../services/process-registry.js";
 import { portManager } from "../services/port-manager.js";
 
-import type { Config, TokenConfig, ProgramConfig } from "../types/config.js";
+import type { Config, TokenConfig } from "../types/config.js";
 import type { ClonedToken } from "../services/token-cloner.js";
 import type { RunningValidator } from "../services/process-registry.js";
 

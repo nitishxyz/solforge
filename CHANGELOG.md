@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-01-29
+
+### Fixed
+
+- **API Server Token Discovery**: Fixed critical issue where API server couldn't find cloned tokens by mint address
+  - API server was using separate token loading logic that was inconsistent with CLI commands
+  - Created shared token loading utility to ensure consistency across all components
+  - Both CLI `mint` command and API `/api/tokens/:mintAddress/mint` endpoint now work reliably
+
+### Changed
+
+- **Centralized Token Loading**: Refactored token loading logic into shared utility
+  - Created `src/utils/token-loader.ts` with `loadClonedTokens()` function
+  - Updated `src/commands/mint.ts` to use shared `loadClonedTokens()` and `findTokenBySymbol()`
+  - Updated `src/services/api-server.ts` to use shared `loadClonedTokens()` and `findTokenByMint()`
+  - Ensures consistent token discovery across CLI and API server components
+
+### Removed
+
+- **Code Cleanup**: Removed unused imports and dependencies
+  - Removed unused `ProgramCloner` import from start command
+  - Removed unused `ProgramConfig` type import from start command
+  - Eliminated duplicate token loading implementations
+
+### Technical Details
+
+- The shared `loadClonedTokens()` function handles both new and legacy mint authority secret key formats
+- Token discovery now works consistently whether using CLI commands or API endpoints
+- Program cloning functionality remains intact and unaffected by token loading changes
+- API server and CLI now use identical logic for loading and accessing cloned tokens
+
 ## [0.1.6] - 2025-01-27
 
 ### Added

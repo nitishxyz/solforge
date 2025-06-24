@@ -1,6 +1,6 @@
 {
   "name": "solforge",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Solana localnet orchestration tool for cloning mainnet programs and tokens",
   "module": "index.ts",
   "type": "module",

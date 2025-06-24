@@ -46,7 +46,7 @@
     "faucetAccounts": ["YourWalletPublicKeyHere"],
     "port": 8899,
     "faucetPort": 9900,
-    "reset": true,
+    "reset": false,
     "logLevel": "info",
     "rpc": "https://api.mainnet-beta.solana.com"
   }

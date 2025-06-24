@@ -318,7 +318,7 @@ Here's the complete schema:
     "faucetAccounts": ["YourWalletPublicKeyHere"],
     "port": 8899,
     "faucetPort": 9900,
-    "reset": true,
+    "reset": false,
     "logLevel": "info",
     "bindAddress": "127.0.0.1",
     "limitLedgerSize": 100000,
