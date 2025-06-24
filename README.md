@@ -13,6 +13,7 @@
 - 🌐 **Port management** - Automatic port allocation and conflict resolution
 - 📝 **Configuration-driven** - JSON-based configuration for reproducible environments
 - 🎨 **Beautiful CLI** - Colorful, intuitive command-line interface
+- 🌐 **REST API** - Background API server for programmatic access to validator operations
 
 ## 🚀 Quick Start
 
@@ -66,10 +67,33 @@ bun run install:binary
    solforge stop --all
    ```
 
+### API Server
+
+SolForge automatically starts a REST API server alongside your validator, providing programmatic access to validator operations:
+
+```bash
+# API server starts automatically with the validator
+solforge start
+
+# API available at http://127.0.0.1:3000/api
+curl http://127.0.0.1:3000/api/health
+
+# Mint tokens via API
+curl -X POST http://127.0.0.1:3000/api/tokens/USDC/mint \
+  -H "Content-Type: application/json" \
+  -d '{"walletAddress": "YOUR_WALLET_ADDRESS", "amount": 1000}'
+
+# Get wallet balances
+curl http://127.0.0.1:3000/api/wallet/YOUR_WALLET_ADDRESS/balances
+```
+
+For complete API documentation, see [API Documentation](docs/API.md).
+
 ## 📖 Documentation
 
 ### 📚 Additional Documentation
 
+- [API Documentation](docs/API.md) - REST API endpoints and usage examples
 - [Configuration Guide](docs/CONFIGURATION.md) - Detailed configuration options and examples
 - [Troubleshooting Guide](#-troubleshooting) - Common issues and solutions
 
@@ -178,18 +202,31 @@ solforge add-program --program-id <address> --name <name>
 - `--name <name>` - Friendly name for the program
 - `--no-interactive` - Run in non-interactive mode
 
-#### `solforge transfer [options]`
+#### `solforge mint [options]`
 
-Interactively transfer tokens from mint authority to any address.
+Interactively mint tokens to any wallet address.
 
 ```bash
-solforge transfer                                    # Use default RPC
-solforge transfer --rpc-url http://localhost:8899   # Custom RPC
+solforge mint                                        # Interactive mode
+solforge mint --symbol USDC --wallet <address> --amount 1000  # CLI mode
+solforge mint --rpc-url http://localhost:8899       # Custom RPC
 ```
 
 **Options:**
 
 - `--rpc-url <url>` - RPC URL to use (default: "http://127.0.0.1:8899")
+- `--symbol <symbol>` - Token symbol to mint
+- `--wallet <address>` - Wallet address to mint to
+- `--amount <amount>` - Amount to mint
+
+**Interactive Mode:**
+When run without arguments, `solforge mint` will:
+
+- Display available cloned tokens
+- Allow you to select which token to mint
+- Prompt for recipient wallet address
+- Prompt for amount to mint
+- Handle SPL token account creation automatically
 
 #### `solforge reset`
 
