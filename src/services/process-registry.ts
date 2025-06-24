@@ -14,6 +14,9 @@ export interface RunningValidator {
   configPath: string;
   startTime: Date;
   status: "running" | "stopped" | "error";
+  apiServerPort?: number;
+  apiServerUrl?: string;
+  apiServerPid?: number;
 }
 
 export class ProcessRegistry {
@@ -21,11 +24,7 @@ export class ProcessRegistry {
 
   constructor() {
     // Store registry in user's home directory
-    this.registryPath = join(
-      homedir(),
-      ".solforge",
-      "running-validators.json"
-    );
+    this.registryPath = join(homedir(), ".solforge", "running-validators.json");
   }
 
   /**

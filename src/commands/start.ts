@@ -9,6 +9,7 @@ import { TokenCloner } from "../services/token-cloner.js";
 import { ProgramCloner } from "../services/program-cloner.js";
 import { processRegistry } from "../services/process-registry.js";
 import { portManager } from "../services/port-manager.js";
+
 import type { Config, TokenConfig, ProgramConfig } from "../types/config.js";
 import type { ClonedToken } from "../services/token-cloner.js";
 import type { RunningValidator } from "../services/process-registry.js";
@@ -334,6 +335,93 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       debug
     );
 
+    // Find an available port for the API server
+    let apiServerPort = 3000;
+    while (!(await portManager.isPortAvailable(apiServerPort))) {
+      apiServerPort++;
+      if (apiServerPort > 3100) {
+        throw new Error("Could not find available port for API server");
+      }
+    }
+
+    // Start the API server as a background process
+    let apiServerPid: number | undefined;
+    let apiResult: { success: boolean; error?: string } = {
+      success: false,
+      error: "Not started",
+    };
+
+    try {
+      const currentDir = process.cwd();
+      const testpilotDir = join(__dirname, "..", "..");
+      const apiServerScript = join(testpilotDir, "src", "api-server-entry.ts");
+      const configPath =
+        configManager.getConfigPath() ?? join(currentDir, "sf.config.json");
+      const workDir = join(currentDir, ".solforge");
+
+      // Start API server in background using runCommand with nohup
+      const apiServerCommand = `nohup bun run "${apiServerScript}" --port ${apiServerPort} --config "${configPath}" --rpc-url "http://127.0.0.1:${config.localnet.port}" --faucet-url "http://127.0.0.1:${config.localnet.faucetPort}" --work-dir "${workDir}" > /dev/null 2>&1 &`;
+
+      const startResult = await runCommand("sh", ["-c", apiServerCommand], {
+        silent: !debug,
+        debug: debug,
+      });
+
+      if (startResult.success) {
+        // Wait a moment for the API server to start
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        // Test if the API server is responding
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:${apiServerPort}/api/health`
+          );
+          if (response.ok) {
+            apiResult = { success: true };
+            // Get the PID of the API server process
+            const pidResult = await runCommand(
+              "pgrep",
+              ["-f", `api-server-entry.*--port ${apiServerPort}`],
+              { silent: true, debug: false }
+            );
+            if (pidResult.success && pidResult.stdout.trim()) {
+              apiServerPid = parseInt(pidResult.stdout.trim().split("\n")[0]);
+            }
+          } else {
+            apiResult = {
+              success: false,
+              error: `Health check failed: ${response.status}`,
+            };
+          }
+        } catch (error) {
+          apiResult = {
+            success: false,
+            error: `Health check failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          };
+        }
+      } else {
+        apiResult = {
+          success: false,
+          error: `Failed to start API server: ${
+            startResult.stderr || "Unknown error"
+          }`,
+        };
+      }
+    } catch (error) {
+      apiResult = {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+
+    if (!apiResult.success) {
+      console.warn(
+        chalk.yellow("⚠️  Failed to start API server:", apiResult.error)
+      );
+    }
+
     // Register the running validator
     const runningValidator: RunningValidator = {
       id: validatorId,
@@ -346,6 +434,11 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       configPath: configManager.getConfigPath() || "./sf.config.json",
       startTime: new Date(),
       status: "running",
+      apiServerPort: apiResult.success ? apiServerPort : undefined,
+      apiServerUrl: apiResult.success
+        ? `http://127.0.0.1:${apiServerPort}`
+        : undefined,
+      apiServerPid: apiResult.success ? apiServerPid : undefined,
     };
 
     processRegistry.register(runningValidator);
@@ -363,6 +456,11 @@ export async function startCommand(debug: boolean = false): Promise<void> {
         `💰 Faucet URL: http://127.0.0.1:${config.localnet.faucetPort}`
       )
     );
+    if (apiResult.success) {
+      console.log(
+        chalk.cyan(`🚀 API Server: http://127.0.0.1:${apiServerPort}/api`)
+      );
+    }
 
     // Airdrop SOL to mint authority if tokens were cloned
     if (clonedTokens.length > 0) {
@@ -464,6 +562,34 @@ export async function startCommand(debug: boolean = false): Promise<void> {
     console.log(
       chalk.gray("  - Run `solforge stop --all` to stop all validators")
     );
+    if (apiResult.success) {
+      console.log(chalk.blue("\n🔌 API Endpoints:"));
+      console.log(
+        chalk.gray(
+          `  - GET  http://127.0.0.1:${apiServerPort}/api/tokens - List cloned tokens`
+        )
+      );
+      console.log(
+        chalk.gray(
+          `  - GET  http://127.0.0.1:${apiServerPort}/api/programs - List cloned programs`
+        )
+      );
+      console.log(
+        chalk.gray(
+          `  - POST http://127.0.0.1:${apiServerPort}/api/tokens/{symbol}/mint - Mint tokens`
+        )
+      );
+      console.log(
+        chalk.gray(
+          `  - POST http://127.0.0.1:${apiServerPort}/api/airdrop - Airdrop SOL`
+        )
+      );
+      console.log(
+        chalk.gray(
+          `  - GET  http://127.0.0.1:${apiServerPort}/api/wallet/{address}/balances - Get balances`
+        )
+      );
+    }
   } catch (error) {
     spinner.fail("Failed to start validator");
     console.error(chalk.red("❌ Unexpected error:"));
