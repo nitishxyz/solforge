@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { select } from "@inquirer/prompts";
 import { processRegistry } from "../services/process-registry.js";
+
 import type { RunningValidator } from "../services/process-registry.js";
 
 export async function stopCommand(
@@ -54,9 +55,7 @@ export async function stopCommand(
     console.log(
       chalk.gray("💡 Use `solforge stop --all` to stop all validators")
     );
-    console.log(
-      chalk.gray("💡 Use `solforge list` to see running validators")
-    );
+    console.log(chalk.gray("💡 Use `solforge list` to see running validators"));
     return;
   }
 
@@ -109,6 +108,24 @@ async function stopValidator(
   forceKill: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Stop the API server first if it has a PID
+    if (validator.apiServerPid) {
+      try {
+        process.kill(validator.apiServerPid, "SIGTERM");
+        console.log(
+          chalk.gray(`📡 Stopped API server (PID: ${validator.apiServerPid})`)
+        );
+      } catch (error) {
+        console.log(
+          chalk.yellow(
+            `⚠️  Warning: Failed to stop API server: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          )
+        );
+      }
+    }
+
     // Check if process is still running
     const isRunning = await processRegistry.isProcessRunning(validator.pid);
     if (!isRunning) {
