@@ -10,11 +10,30 @@ The API server starts automatically when you run `solforge start` and is availab
 http://127.0.0.1:3000/api
 ```
 
+For network access from other devices, use the `--network` flag:
+
+```bash
+solforge start --network
+```
+
+This makes the API server accessible at:
+
+```
+http://0.0.0.0:3000/api
+```
+
 The API server will:
 
 - Start in the background when you run `solforge start`
 - Stop automatically when you run `solforge stop`
 - Use port 3000 by default (configurable)
+- Bind to localhost by default (use `--network` for network access)
+
+You can also run the API server standalone (without a validator):
+
+```bash
+solforge api-server --port 8080 --host 0.0.0.0
+```
 
 ## Base URL
 
@@ -127,12 +146,12 @@ GET /api/programs
 Mint tokens to a specific wallet address.
 
 ```http
-POST /api/tokens/:symbol/mint
+POST /api/tokens/:mintAddress/mint
 ```
 
 **Parameters:**
 
-- `symbol` (path parameter) - Token symbol (e.g., "USDC")
+- `mintAddress` (path parameter) - Token mint address (e.g., "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
 
 **Request Body:**
 
@@ -159,7 +178,7 @@ POST /api/tokens/:symbol/mint
 
 ```json
 {
-  "error": "Token INVALID not found in cloned tokens"
+  "error": "Token with mint address EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v not found in cloned tokens"
 }
 ```
 
@@ -278,7 +297,7 @@ Error responses include details:
 **Mint tokens:**
 
 ```bash
-curl -X POST http://127.0.0.1:3000/api/tokens/USDC/mint \
+curl -X POST http://127.0.0.1:3000/api/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/mint \
   -H "Content-Type: application/json" \
   -d '{
     "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",

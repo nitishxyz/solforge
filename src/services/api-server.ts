@@ -122,14 +122,23 @@ export class APIServer {
     });
 
     // Mint tokens to a wallet
-    router.post("/tokens/:symbol/mint", async (req, res) => {
+    router.post("/tokens/:mintAddress/mint", async (req, res) => {
       try {
-        const { symbol } = req.params;
+        const { mintAddress } = req.params;
         const { walletAddress, amount } = req.body;
 
         if (!walletAddress || !amount) {
           return res.status(400).json({
             error: "Missing required fields: walletAddress and amount",
+          });
+        }
+
+        // Validate mint address
+        try {
+          new PublicKey(mintAddress);
+        } catch {
+          return res.status(400).json({
+            error: "Invalid mint address",
           });
         }
 
@@ -150,7 +159,7 @@ export class APIServer {
         }
 
         const result = await this.mintTokenToWallet(
-          symbol,
+          mintAddress,
           walletAddress,
           amount
         );
@@ -327,17 +336,19 @@ export class APIServer {
   }
 
   private async mintTokenToWallet(
-    symbol: string,
+    mintAddress: string,
     walletAddress: string,
     amount: number
   ): Promise<any> {
     const clonedTokens = await this.getClonedTokens();
     const token = clonedTokens.find(
-      (t) => t.config.symbol.toLowerCase() === symbol.toLowerCase()
+      (t) => t.config.mainnetMint === mintAddress
     );
 
     if (!token) {
-      throw new Error(`Token ${symbol} not found in cloned tokens`);
+      throw new Error(
+        `Token with mint address ${mintAddress} not found in cloned tokens`
+      );
     }
 
     // Use the shared minting function from the mint command

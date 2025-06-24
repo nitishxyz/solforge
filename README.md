@@ -1,5 +1,8 @@
 # SolForge
 
+[![npm version](https://badge.fury.io/js/solforge.svg)](https://badge.fury.io/js/solforge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **SolForge** is a powerful Solana localnet orchestration tool that simplifies the process of setting up and managing local Solana development environments. It allows you to clone mainnet programs and tokens to your local validator, making it easy to develop and test Solana applications with real-world data.
 
 ## ✨ Features
@@ -15,15 +18,27 @@
 - 🎨 **Beautiful CLI** - Colorful, intuitive command-line interface
 - 🌐 **REST API** - Background API server for programmatic access to validator operations
 
-## 🚀 Quick Start
+## 📦 Installation
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime
 - [Solana CLI tools](https://docs.solana.com/cli/install-solana-cli-tools) installed and configured
-- Node.js 18+ (for compatibility)
+- Node.js 18+ or [Bun](https://bun.sh) runtime
 
-### Installation
+### Install from npm (Recommended)
+
+```bash
+# Install globally with npm
+npm install -g solforge
+
+# Or with bun
+bun install -g solforge
+
+# Or with yarn
+yarn global add solforge
+```
+
+### Install from Source
 
 ```bash
 # Clone the repository
@@ -33,13 +48,19 @@ cd solforge
 # Install dependencies
 bun install
 
-# Build the project
-bun run build
-
-# Install globally (optional)
-bun run build:binary
-bun run install:binary
+# Build and install globally
+bun run build:npm
+npm install -g .
 ```
+
+### Verify Installation
+
+```bash
+solforge --version
+solforge --help
+```
+
+## 🚀 Quick Start
 
 ### Basic Usage
 
@@ -78,8 +99,8 @@ solforge start
 # API available at http://127.0.0.1:3000/api
 curl http://127.0.0.1:3000/api/health
 
-# Mint tokens via API
-curl -X POST http://127.0.0.1:3000/api/tokens/USDC/mint \
+# Mint tokens via API (using mint address)
+curl -X POST http://127.0.0.1:3000/api/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/mint \
   -H "Content-Type: application/json" \
   -d '{"walletAddress": "YOUR_WALLET_ADDRESS", "amount": 1000}'
 
@@ -121,11 +142,14 @@ Start a localnet validator with the current configuration.
 ```bash
 solforge start                # Start with default settings
 solforge start --debug        # Start with debug logging
+solforge start --network      # Make API server accessible over network
+solforge start --debug --network  # Debug mode + network access
 ```
 
 **Options:**
 
 - `--debug` - Enable debug logging to see detailed command output
+- `--network` - Make API server accessible over network (binds to 0.0.0.0 instead of 127.0.0.1)
 
 #### `solforge list`
 
@@ -227,6 +251,25 @@ When run without arguments, `solforge mint` will:
 - Prompt for recipient wallet address
 - Prompt for amount to mint
 - Handle SPL token account creation automatically
+
+#### `solforge api-server [options]`
+
+Start the API server as a standalone service (without validator).
+
+```bash
+solforge api-server                                    # Start on default port 3000
+solforge api-server --port 8080                       # Custom port
+solforge api-server --host 0.0.0.0                    # Network accessible
+solforge api-server --rpc-url http://localhost:8899   # Custom RPC
+```
+
+**Options:**
+
+- `-p, --port <port>` - Port for API server (default: 3000)
+- `--host <host>` - Host to bind to (default: 127.0.0.1, use 0.0.0.0 for network access)
+- `--rpc-url <url>` - Validator RPC URL (default: http://127.0.0.1:8899)
+- `--faucet-url <url>` - Validator faucet URL (default: http://127.0.0.1:9900)
+- `--work-dir <dir>` - Work directory (default: ./.solforge)
 
 #### `solforge reset`
 
