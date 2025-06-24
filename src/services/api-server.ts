@@ -10,6 +10,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { runCommand } from "../utils/shell.js";
 import { TokenCloner } from "./token-cloner.js";
 import { ProgramCloner } from "./program-cloner.js";
+import { mintTokenToWallet as mintTokenToWalletShared } from "../commands/mint.js";
 import type { Config } from "../types/config.js";
 import type { ClonedToken } from "./token-cloner.js";
 
@@ -339,94 +340,13 @@ export class APIServer {
       throw new Error(`Token ${symbol} not found in cloned tokens`);
     }
 
-    // Check if associated token account already exists (same pattern as token-cloner.ts)
-    const checkAccountsResult = await runCommand(
-      "spl-token",
-      [
-        "accounts",
-        "--owner",
-        walletAddress,
-        "--url",
-        this.config.validatorRpcUrl,
-        "--output",
-        "json",
-      ],
-      { silent: true }
+    // Use the shared minting function from the mint command
+    await mintTokenToWalletShared(
+      token,
+      walletAddress,
+      amount,
+      this.config.validatorRpcUrl
     );
-
-    let tokenAccountAddress = "";
-
-    if (checkAccountsResult.success && checkAccountsResult.stdout) {
-      try {
-        const accountsData = JSON.parse(checkAccountsResult.stdout);
-
-        // Look for existing token account for this mint
-        for (const account of accountsData.accounts || []) {
-          if (account.mint === token.config.mainnetMint) {
-            tokenAccountAddress = account.address;
-            break;
-          }
-        }
-      } catch (error) {
-        // No existing accounts found or parsing error, will create new account
-      }
-    }
-
-    if (!tokenAccountAddress) {
-      // Account doesn't exist, create it (same pattern as token-cloner.ts)
-      const createAccountResult = await runCommand(
-        "spl-token",
-        [
-          "create-account",
-          token.config.mainnetMint,
-          "--owner",
-          walletAddress,
-          "--fee-payer",
-          token.mintAuthorityPath,
-          "--url",
-          this.config.validatorRpcUrl,
-        ],
-        { silent: false }
-      );
-
-      if (!createAccountResult.success) {
-        throw new Error(
-          `Failed to create token account: ${createAccountResult.stderr}`
-        );
-      }
-
-      // Extract token account address from create-account output
-      const match = createAccountResult.stdout.match(/Creating account (\S+)/);
-      tokenAccountAddress = match?.[1] || "";
-
-      if (!tokenAccountAddress) {
-        throw new Error(
-          "Failed to determine token account address from create-account output"
-        );
-      }
-    }
-
-    // Now mint to the token account (same pattern as token-cloner.ts)
-    const result = await runCommand(
-      "spl-token",
-      [
-        "mint",
-        token.config.mainnetMint,
-        amount.toString(),
-        tokenAccountAddress,
-        "--mint-authority",
-        token.mintAuthorityPath,
-        "--fee-payer",
-        token.mintAuthorityPath,
-        "--url",
-        this.config.validatorRpcUrl,
-      ],
-      { silent: false }
-    );
-
-    if (!result.success) {
-      throw new Error(`Failed to mint tokens: ${result.stderr}`);
-    }
 
     return {
       success: true,
@@ -434,8 +354,6 @@ export class APIServer {
       amount,
       walletAddress,
       mintAddress: token.config.mainnetMint,
-      signature:
-        result.stdout.match(/Signature: ([A-Za-z0-9]+)/)?.[1] || "unknown",
     };
   }
 

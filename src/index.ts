@@ -7,7 +7,7 @@ import { resolve } from "path";
 import { initCommand } from "./commands/init.js";
 import { statusCommand } from "./commands/status.js";
 import { startCommand } from "./commands/start.js";
-import { transferCommand } from "./commands/transfer.js";
+import { mintCommand } from "./commands/mint.js";
 import { listCommand } from "./commands/list.js";
 import { stopCommand, killCommand } from "./commands/stop.js";
 import { addProgramCommand } from "./commands/add-program.js";
@@ -94,7 +94,7 @@ program
     await statusCommand();
   });
 
-program.addCommand(transferCommand);
+program.addCommand(mintCommand);
 
 program
   .command("reset")
