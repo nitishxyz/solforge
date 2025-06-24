@@ -5,22 +5,12 @@ import { join } from "path";
 import { input, select } from "@inquirer/prompts";
 import { runCommand } from "../utils/shell";
 import { Keypair, PublicKey } from "@solana/web3.js";
-
-interface TokenConfig {
-  symbol: string;
-  mainnetMint: string;
-  mintAmount: number;
-}
-
-interface ClonedToken {
-  config: TokenConfig;
-  mintAuthorityPath: string;
-  modifiedAccountPath: string;
-  mintAuthority: {
-    publicKey: string;
-    secretKey: number[];
-  };
-}
+import {
+  loadClonedTokens,
+  findTokenBySymbol,
+  type ClonedToken,
+} from "../utils/token-loader.js";
+import type { TokenConfig } from "../types/config.js";
 
 export const mintCommand = new Command()
   .name("mint")
@@ -71,9 +61,7 @@ export const mintCommand = new Command()
       // Select token (or use provided symbol)
       let selectedToken: ClonedToken;
       if (options.symbol) {
-        const token = tokens.find(
-          (t) => t.config.symbol.toLowerCase() === options.symbol.toLowerCase()
-        );
+        const token = findTokenBySymbol(tokens, options.symbol);
         if (!token) {
           console.error(
             chalk.red(`❌ Token ${options.symbol} not found in cloned tokens`)
@@ -181,8 +169,6 @@ export const mintCommand = new Command()
   });
 
 async function loadAvailableTokens(workDir: string): Promise<ClonedToken[]> {
-  const tokens: ClonedToken[] = [];
-
   try {
     // Load token config from sf.config.json
     const configPath = "sf.config.json";
@@ -193,42 +179,8 @@ async function loadAvailableTokens(workDir: string): Promise<ClonedToken[]> {
     const config = JSON.parse(readFileSync(configPath, "utf8"));
     const tokenConfigs: TokenConfig[] = config.tokens || [];
 
-    // Load shared mint authority
-    const sharedMintAuthorityPath = join(workDir, "shared-mint-authority.json");
-    if (!existsSync(sharedMintAuthorityPath)) {
-      throw new Error("Shared mint authority not found");
-    }
-
-    const secretKeyArray = JSON.parse(
-      readFileSync(sharedMintAuthorityPath, "utf8")
-    );
-    const mintAuthorityKeypair = Keypair.fromSecretKey(
-      new Uint8Array(secretKeyArray)
-    );
-    const mintAuthority = {
-      publicKey: mintAuthorityKeypair.publicKey.toBase58(),
-      secretKey: Array.from(mintAuthorityKeypair.secretKey),
-    };
-
-    // Build cloned tokens list
-    for (const tokenConfig of tokenConfigs) {
-      const tokenDir = join(
-        workDir,
-        `token-${tokenConfig.symbol.toLowerCase()}`
-      );
-      const modifiedAccountPath = join(tokenDir, "modified.json");
-
-      if (existsSync(modifiedAccountPath)) {
-        tokens.push({
-          config: tokenConfig,
-          mintAuthorityPath: sharedMintAuthorityPath,
-          modifiedAccountPath,
-          mintAuthority,
-        });
-      }
-    }
-
-    return tokens;
+    // Use the shared token loader
+    return await loadClonedTokens(tokenConfigs, workDir);
   } catch (error) {
     throw new Error(`Failed to load tokens: ${error}`);
   }

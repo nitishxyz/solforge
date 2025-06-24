@@ -11,8 +11,12 @@ import { runCommand } from "../utils/shell.js";
 import { TokenCloner } from "./token-cloner.js";
 import { ProgramCloner } from "./program-cloner.js";
 import { mintTokenToWallet as mintTokenToWalletShared } from "../commands/mint.js";
+import {
+  loadClonedTokens,
+  findTokenByMint,
+  type ClonedToken,
+} from "../utils/token-loader.js";
 import type { Config } from "../types/config.js";
-import type { ClonedToken } from "./token-cloner.js";
 
 export interface APIServerConfig {
   port: number;
@@ -256,57 +260,10 @@ export class APIServer {
   }
 
   private async getClonedTokens(): Promise<ClonedToken[]> {
-    const clonedTokens: ClonedToken[] = [];
-
-    for (const tokenConfig of this.config.config.tokens) {
-      const tokenDir = join(
-        this.config.workDir,
-        `token-${tokenConfig.symbol.toLowerCase()}`
-      );
-      const modifiedAccountPath = join(tokenDir, "modified.json");
-      const sharedMintAuthorityPath = join(
-        this.config.workDir,
-        "shared-mint-authority.json"
-      );
-
-      if (
-        existsSync(modifiedAccountPath) &&
-        existsSync(sharedMintAuthorityPath)
-      ) {
-        try {
-          const mintAuthorityData = JSON.parse(
-            readFileSync(sharedMintAuthorityPath, "utf8")
-          );
-          let mintAuthority;
-
-          if (Array.isArray(mintAuthorityData)) {
-            const keypair = Keypair.fromSecretKey(
-              new Uint8Array(mintAuthorityData)
-            );
-            mintAuthority = {
-              publicKey: keypair.publicKey.toBase58(),
-              secretKey: Array.from(keypair.secretKey),
-            };
-          } else {
-            mintAuthority = mintAuthorityData;
-          }
-
-          clonedTokens.push({
-            config: tokenConfig,
-            mintAuthorityPath: sharedMintAuthorityPath,
-            modifiedAccountPath,
-            mintAuthority,
-          });
-        } catch (error) {
-          console.error(
-            `Failed to load cloned token ${tokenConfig.symbol}:`,
-            error
-          );
-        }
-      }
-    }
-
-    return clonedTokens;
+    return await loadClonedTokens(
+      this.config.config.tokens,
+      this.config.workDir
+    );
   }
 
   private async getClonedPrograms(): Promise<
@@ -341,14 +298,10 @@ export class APIServer {
     amount: number
   ): Promise<any> {
     const clonedTokens = await this.getClonedTokens();
-    const token = clonedTokens.find(
-      (t) => t.config.mainnetMint === mintAddress
-    );
+    const token = findTokenByMint(clonedTokens, mintAddress);
 
     if (!token) {
-      throw new Error(
-        `Token with mint address ${mintAddress} not found in cloned tokens`
-      );
+      throw new Error(`Token ${mintAddress} not found in cloned tokens`);
     }
 
     // Use the shared minting function from the mint command
