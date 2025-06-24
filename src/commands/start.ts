@@ -21,7 +21,10 @@ function generateValidatorId(name: string): string {
   return `${safeName}-${timestamp}-${randomSuffix}`;
 }
 
-export async function startCommand(debug: boolean = false): Promise<void> {
+export async function startCommand(
+  debug: boolean = false,
+  network: boolean = false
+): Promise<void> {
   // Check prerequisites
   const tools = await checkSolanaTools();
   if (!tools.solana) {
@@ -360,7 +363,8 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       const workDir = join(currentDir, ".solforge");
 
       // Start API server in background using runCommand with nohup
-      const apiServerCommand = `nohup bun run "${apiServerScript}" --port ${apiServerPort} --config "${configPath}" --rpc-url "http://127.0.0.1:${config.localnet.port}" --faucet-url "http://127.0.0.1:${config.localnet.faucetPort}" --work-dir "${workDir}" > /dev/null 2>&1 &`;
+      const hostFlag = network ? ` --host "0.0.0.0"` : "";
+      const apiServerCommand = `nohup bun run "${apiServerScript}" --port ${apiServerPort} --config "${configPath}" --rpc-url "http://127.0.0.1:${config.localnet.port}" --faucet-url "http://127.0.0.1:${config.localnet.faucetPort}" --work-dir "${workDir}"${hostFlag} > /dev/null 2>&1 &`;
 
       const startResult = await runCommand("sh", ["-c", apiServerCommand], {
         silent: !debug,
@@ -373,8 +377,9 @@ export async function startCommand(debug: boolean = false): Promise<void> {
 
         // Test if the API server is responding
         try {
+          const healthCheckHost = network ? "0.0.0.0" : "127.0.0.1";
           const response = await fetch(
-            `http://127.0.0.1:${apiServerPort}/api/health`
+            `http://${healthCheckHost}:${apiServerPort}/api/health`
           );
           if (response.ok) {
             apiResult = { success: true };
@@ -385,7 +390,10 @@ export async function startCommand(debug: boolean = false): Promise<void> {
               { silent: true, debug: false }
             );
             if (pidResult.success && pidResult.stdout.trim()) {
-              apiServerPid = parseInt(pidResult.stdout.trim().split("\n")[0]);
+              const pidLine = pidResult.stdout.trim().split("\n")[0];
+              if (pidLine) {
+                apiServerPid = parseInt(pidLine);
+              }
             }
           } else {
             apiResult = {
@@ -436,7 +444,7 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       status: "running",
       apiServerPort: apiResult.success ? apiServerPort : undefined,
       apiServerUrl: apiResult.success
-        ? `http://127.0.0.1:${apiServerPort}`
+        ? `http://${network ? "0.0.0.0" : "127.0.0.1"}:${apiServerPort}`
         : undefined,
       apiServerPid: apiResult.success ? apiServerPid : undefined,
     };
@@ -457,9 +465,17 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       )
     );
     if (apiResult.success) {
+      const displayHost = network ? "0.0.0.0" : "127.0.0.1";
       console.log(
-        chalk.cyan(`🚀 API Server: http://127.0.0.1:${apiServerPort}/api`)
+        chalk.cyan(`🚀 API Server: http://${displayHost}:${apiServerPort}/api`)
       );
+      if (network) {
+        console.log(
+          chalk.yellow(
+            "   🌐 Network mode enabled - API server accessible from other devices"
+          )
+        );
+      }
     }
 
     // Airdrop SOL to mint authority if tokens were cloned
@@ -563,30 +579,31 @@ export async function startCommand(debug: boolean = false): Promise<void> {
       chalk.gray("  - Run `solforge stop --all` to stop all validators")
     );
     if (apiResult.success) {
+      const endpointHost = network ? "0.0.0.0" : "127.0.0.1";
       console.log(chalk.blue("\n🔌 API Endpoints:"));
       console.log(
         chalk.gray(
-          `  - GET  http://127.0.0.1:${apiServerPort}/api/tokens - List cloned tokens`
+          `  - GET  http://${endpointHost}:${apiServerPort}/api/tokens - List cloned tokens`
         )
       );
       console.log(
         chalk.gray(
-          `  - GET  http://127.0.0.1:${apiServerPort}/api/programs - List cloned programs`
+          `  - GET  http://${endpointHost}:${apiServerPort}/api/programs - List cloned programs`
         )
       );
       console.log(
         chalk.gray(
-          `  - POST http://127.0.0.1:${apiServerPort}/api/tokens/{symbol}/mint - Mint tokens`
+          `  - POST http://${endpointHost}:${apiServerPort}/api/tokens/{symbol}/mint - Mint tokens`
         )
       );
       console.log(
         chalk.gray(
-          `  - POST http://127.0.0.1:${apiServerPort}/api/airdrop - Airdrop SOL`
+          `  - POST http://${endpointHost}:${apiServerPort}/api/airdrop - Airdrop SOL`
         )
       );
       console.log(
         chalk.gray(
-          `  - GET  http://127.0.0.1:${apiServerPort}/api/wallet/{address}/balances - Get balances`
+          `  - GET  http://${endpointHost}:${apiServerPort}/api/wallet/{address}/balances - Get balances`
         )
       );
     }
