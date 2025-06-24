@@ -47,6 +47,7 @@ program
   .command("start")
   .description("Start localnet with current sf.config.json")
   .option("--debug", "Enable debug logging to see commands and detailed output")
+  .option("--network", "Make API server accessible over network (binds to 0.0.0.0 instead of 127.0.0.1)")
   .action(async (options) => {
     const configPath = findConfig();
     if (!configPath) {
@@ -57,7 +58,7 @@ program
       process.exit(1);
     }
 
-    await startCommand(options.debug || false);
+    await startCommand(options.debug || false, options.network || false);
   });
 
 program
@@ -84,6 +85,76 @@ program
   .option("--all", "Kill all running validators")
   .action(async (validatorId, options) => {
     await killCommand(validatorId, options);
+  });
+
+program
+  .command("api-server")
+  .description("Start API server standalone")
+  .option("-p, --port <port>", "Port for API server", "3000")
+  .option("--host <host>", "Host to bind to (default: 127.0.0.1, use 0.0.0.0 for network access)")
+  .option("--rpc-url <url>", "Validator RPC URL", "http://127.0.0.1:8899")
+  .option("--faucet-url <url>", "Validator faucet URL", "http://127.0.0.1:9900")
+  .option("--work-dir <dir>", "Work directory", "./.solforge")
+  .action(async (options) => {
+    const configPath = findConfig();
+    if (!configPath) {
+      console.error(
+        chalk.red("❌ No sf.config.json found in current directory")
+      );
+      console.log(chalk.yellow("💡 Run `solforge init` to create one"));
+      process.exit(1);
+    }
+
+    // Import API server components
+    const { APIServer } = await import("./services/api-server.js");
+    const { configManager } = await import("./config/manager.js");
+
+    try {
+      await configManager.load(configPath);
+      const config = configManager.getConfig();
+
+      const apiServer = new APIServer({
+        port: parseInt(options.port),
+        host: options.host,
+        validatorRpcUrl: options.rpcUrl,
+        validatorFaucetUrl: options.faucetUrl,
+        config,
+        workDir: options.workDir,
+      });
+
+      const result = await apiServer.start();
+      if (result.success) {
+        console.log(chalk.green("✅ API Server started successfully!"));
+        
+        // Keep the process alive
+        process.on("SIGTERM", async () => {
+          console.log(chalk.yellow("📡 API Server received SIGTERM, shutting down..."));
+          await apiServer.stop();
+          process.exit(0);
+        });
+
+        process.on("SIGINT", async () => {
+          console.log(chalk.yellow("📡 API Server received SIGINT, shutting down..."));
+          await apiServer.stop();
+          process.exit(0);
+        });
+
+        // Keep process alive
+        setInterval(() => {}, 1000);
+      } else {
+        console.error(chalk.red(`❌ Failed to start API server: ${result.error}`));
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error(
+        chalk.red(
+          `❌ API Server error: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
+      );
+      process.exit(1);
+    }
   });
 
 program

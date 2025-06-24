@@ -16,6 +16,7 @@ import type { ClonedToken } from "./token-cloner.js";
 
 export interface APIServerConfig {
   port: number;
+  host?: string;
   validatorRpcUrl: string;
   validatorFaucetUrl: string;
   config: Config;
@@ -462,15 +463,16 @@ export class APIServer {
   async start(): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       try {
-        this.server = this.app.listen(this.config.port, "127.0.0.1", () => {
+        const host = this.config.host || "127.0.0.1";
+        this.server = this.app.listen(this.config.port, host, () => {
           console.log(
             chalk.green(
-              `🚀 API Server started on http://127.0.0.1:${this.config.port}`
+              `🚀 API Server started on http://${host}:${this.config.port}`
             )
           );
           console.log(
             chalk.gray(
-              `   📋 Endpoints available at http://127.0.0.1:${this.config.port}/api`
+              `   📋 Endpoints available at http://${host}:${this.config.port}/api`
             )
           );
           resolve({ success: true });

@@ -9,6 +9,7 @@ async function main() {
     // Parse command line arguments
     const args = process.argv.slice(2);
     const portIndex = args.indexOf("--port");
+    const hostIndex = args.indexOf("--host");
     const configIndex = args.indexOf("--config");
     const rpcIndex = args.indexOf("--rpc-url");
     const faucetIndex = args.indexOf("--faucet-url");
@@ -27,12 +28,14 @@ async function main() {
       !args[workDirIndex + 1]
     ) {
       console.error(
-        "Usage: api-server-entry --port <port> --config <config-path> --rpc-url <url> --faucet-url <url> --work-dir <dir>"
+        "Usage: api-server-entry --port <port> --config <config-path> --rpc-url <url> --faucet-url <url> --work-dir <dir> [--host <host>]"
       );
       process.exit(1);
     }
 
     const port = parseInt(args[portIndex + 1]!);
+    const host =
+      hostIndex !== -1 && args[hostIndex + 1] ? args[hostIndex + 1] : undefined;
     const configPath = args[configIndex + 1]!;
     const rpcUrl = args[rpcIndex + 1]!;
     const faucetUrl = args[faucetIndex + 1]!;
@@ -45,6 +48,7 @@ async function main() {
     // Create and start API server
     const apiServer = new APIServer({
       port,
+      host,
       validatorRpcUrl: rpcUrl,
       validatorFaucetUrl: faucetUrl,
       config,
