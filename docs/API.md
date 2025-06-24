@@ -1,47 +1,83 @@
-# SolForge API Server
+# SolForge API Documentation
 
-The SolForge API server runs automatically when you start a validator and provides REST endpoints to interact with your local Solana validator.
+SolForge includes a REST API server that runs alongside your local validator, providing programmatic access to validator operations and token management.
+
+## Getting Started
+
+The API server starts automatically when you run `solforge start` and is available at:
+
+```
+http://127.0.0.1:3000/api
+```
+
+The API server will:
+
+- Start in the background when you run `solforge start`
+- Stop automatically when you run `solforge stop`
+- Use port 3000 by default (configurable)
 
 ## Base URL
 
-When you start a validator, the API server will be available at `http://127.0.0.1:<PORT>/api` where `<PORT>` is automatically assigned (starting from 3000).
+All API endpoints are prefixed with `/api`:
+
+```
+Base URL: http://127.0.0.1:3000/api
+```
+
+## Authentication
+
+Currently, no authentication is required. The API server is intended for local development use only.
 
 ## Endpoints
 
 ### Health Check
 
-**GET** `/api/health`
+Check if the API server is running.
 
-Returns the health status of the API server.
+```http
+GET /api/health
+```
+
+**Response:**
 
 ```json
 {
   "status": "ok",
-  "timestamp": "2024-01-01T00:00:00.000Z"
+  "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
 
 ### Validator Information
 
-**GET** `/api/validator/info`
-
 Get information about the running validator.
+
+```http
+GET /api/validator/info
+```
+
+**Response:**
 
 ```json
 {
-  "version": { "solana-core": "1.17.0" },
-  "blockHeight": 1000,
+  "version": {
+    "solana-core": "1.17.0"
+  },
+  "blockHeight": 12345,
   "slotLeader": "11111111111111111111111111111111",
   "rpcUrl": "http://127.0.0.1:8899",
   "faucetUrl": "http://127.0.0.1:9900"
 }
 ```
 
-### Cloned Tokens
+### List Tokens
 
-**GET** `/api/tokens`
+Get all cloned tokens available on the validator.
 
-List all cloned tokens available on the validator.
+```http
+GET /api/tokens
+```
+
+**Response:**
 
 ```json
 {
@@ -49,12 +85,11 @@ List all cloned tokens available on the validator.
     {
       "symbol": "USDC",
       "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "mintAmount": 1000000,
-      "mintAuthority": "5uaZKvvxNWrHqtHUUZKUVHmLkP7k8mE7XzEtU4i5v2Wk",
+      "mintAuthority": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
       "recipients": [
         {
-          "wallet": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
-          "amount": 100000
+          "wallet": "YourWalletPublicKeyHere",
+          "amount": 1000000000
         }
       ],
       "cloneMetadata": true
@@ -64,19 +99,23 @@ List all cloned tokens available on the validator.
 }
 ```
 
-### Cloned Programs
+### List Programs
 
-**GET** `/api/programs`
+Get all cloned programs available on the validator.
 
-List all cloned programs available on the validator.
+```http
+GET /api/programs
+```
+
+**Response:**
 
 ```json
 {
   "programs": [
     {
-      "name": "Token Program",
-      "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-      "filePath": "/path/to/token-program.so"
+      "name": "Token Metadata",
+      "programId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+      "filePath": "/path/to/program.so"
     }
   ],
   "count": 1
@@ -85,15 +124,21 @@ List all cloned programs available on the validator.
 
 ### Mint Tokens
 
-**POST** `/api/tokens/{symbol}/mint`
-
 Mint tokens to a specific wallet address.
+
+```http
+POST /api/tokens/:symbol/mint
+```
+
+**Parameters:**
+
+- `symbol` (path parameter) - Token symbol (e.g., "USDC")
 
 **Request Body:**
 
 ```json
 {
-  "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
   "amount": 1000
 }
 ```
@@ -105,21 +150,36 @@ Mint tokens to a specific wallet address.
   "success": true,
   "symbol": "USDC",
   "amount": 1000,
-  "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
-  "mintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  "signature": "2xQ7..."
+  "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
+  "mintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 }
 ```
 
-### Wallet Balances
-
-**GET** `/api/wallet/{address}/balances`
-
-Get SOL and token balances for a wallet address.
+**Error Response:**
 
 ```json
 {
-  "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "error": "Token INVALID not found in cloned tokens"
+}
+```
+
+### Get Wallet Balances
+
+Get SOL and token balances for a specific wallet.
+
+```http
+GET /api/wallet/:address/balances
+```
+
+**Parameters:**
+
+- `address` (path parameter) - Wallet public key
+
+**Response:**
+
+```json
+{
+  "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
   "solBalance": {
     "lamports": 1000000000,
     "sol": 1.0
@@ -128,26 +188,28 @@ Get SOL and token balances for a wallet address.
     {
       "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       "symbol": "USDC",
-      "balance": "100000",
+      "balance": "1000000000",
       "decimals": 6,
-      "uiAmount": 100.0
+      "uiAmount": 1000
     }
   ],
-  "timestamp": "2024-01-01T00:00:00.000Z"
+  "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
 
 ### Airdrop SOL
 
-**POST** `/api/airdrop`
-
 Airdrop SOL to a wallet address.
+
+```http
+POST /api/airdrop
+```
 
 **Request Body:**
 
 ```json
 {
-  "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
   "amount": 1
 }
 ```
@@ -158,35 +220,49 @@ Airdrop SOL to a wallet address.
 {
   "success": true,
   "amount": 1,
-  "walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
-  "signature": "3xR8..."
+  "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
+  "signature": "5j7s8K9mN2pQ3rT4uV5wX6yZ7a8B9c0D1e2F3g4H5i6J7k8L9m0N1o2P3q4R5s6T7u8V9w0X1y2Z3a4B5c6D7e8F"
 }
 ```
 
-### Recent Transactions
+### Get Recent Transactions
 
-**GET** `/api/transactions/recent?limit=10`
+Get recent transactions from the validator.
 
-Get recent transactions on the validator.
+```http
+GET /api/transactions/recent?limit=10
+```
+
+**Query Parameters:**
+
+- `limit` (optional) - Number of transactions to return (max 100, default 10)
+
+**Response:**
 
 ```json
 {
   "transactions": [
     {
-      "signature": "2xQ7...",
-      "slot": 1000,
-      "err": null,
-      "memo": null,
-      "blockTime": 1640995200
+      "signature": "5j7s8K9mN2pQ3rT4uV5wX6yZ7a8B9c0D1e2F3g4H5i6J7k8L9m0N1o2P3q4R5s6T7u8V9w0X1y2Z3a4B5c6D7e8F",
+      "slot": 12345,
+      "blockTime": 1642234567,
+      "confirmationStatus": "finalized"
     }
   ],
   "count": 1
 }
 ```
 
-## Error Responses
+## Error Handling
 
-All endpoints return standard HTTP status codes and error objects:
+All endpoints return appropriate HTTP status codes:
+
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `404` - Not Found (endpoint doesn't exist)
+- `500` - Internal Server Error
+
+Error responses include details:
 
 ```json
 {
@@ -195,44 +271,90 @@ All endpoints return standard HTTP status codes and error objects:
 }
 ```
 
-## CORS
-
-The API server has CORS enabled, so you can make requests from web browsers.
-
 ## Examples
 
 ### Using curl
 
-```bash
-# Get cloned tokens
-curl http://127.0.0.1:3000/api/tokens
+**Mint tokens:**
 
-# Mint tokens
+```bash
 curl -X POST http://127.0.0.1:3000/api/tokens/USDC/mint \
   -H "Content-Type: application/json" \
-  -d '{"walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", "amount": 1000}'
+  -d '{
+    "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
+    "amount": 1000
+  }'
+```
 
-# Airdrop SOL
+**Get wallet balances:**
+
+```bash
+curl http://127.0.0.1:3000/api/wallet/HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ/balances
+```
+
+**Airdrop SOL:**
+
+```bash
 curl -X POST http://127.0.0.1:3000/api/airdrop \
   -H "Content-Type: application/json" \
-  -d '{"walletAddress": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", "amount": 1}'
+  -d '{
+    "walletAddress": "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
+    "amount": 1
+  }'
 ```
 
-### Using JavaScript fetch
+### Using JavaScript/TypeScript
 
-```javascript
-// Get cloned tokens
-const tokens = await fetch("http://127.0.0.1:3000/api/tokens").then((r) =>
-  r.json()
-);
+```typescript
+const API_BASE = "http://127.0.0.1:3000/api";
 
 // Mint tokens
-const mintResult = await fetch("http://127.0.0.1:3000/api/tokens/USDC/mint", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    walletAddress: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
-    amount: 1000,
-  }),
-}).then((r) => r.json());
+async function mintTokens(
+  symbol: string,
+  walletAddress: string,
+  amount: number
+) {
+  const response = await fetch(`${API_BASE}/tokens/${symbol}/mint`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      walletAddress,
+      amount,
+    }),
+  });
+
+  return response.json();
+}
+
+// Get wallet balances
+async function getWalletBalances(address: string) {
+  const response = await fetch(`${API_BASE}/wallet/${address}/balances`);
+  return response.json();
+}
+
+// Usage
+const result = await mintTokens(
+  "USDC",
+  "HpHke1uSs4VzA8m76Uy2aDfnhDg2Dw2vJMQvpBVU5mTJ",
+  1000
+);
+console.log(result);
 ```
+
+## Configuration
+
+The API server port can be configured by setting the `API_PORT` environment variable or by modifying the start command configuration.
+
+## CORS
+
+CORS is enabled for all origins to facilitate local web development. In production, you should configure appropriate CORS settings.
+
+## Rate Limiting
+
+Currently, no rate limiting is implemented. The API is intended for local development use only.
+
+## WebSocket Support
+
+WebSocket support is not currently implemented but may be added in future versions for real-time updates.

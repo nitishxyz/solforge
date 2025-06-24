@@ -90,7 +90,6 @@ export class APIServer {
           tokens: clonedTokens.map((token) => ({
             symbol: token.config.symbol,
             mainnetMint: token.config.mainnetMint,
-            mintAmount: token.config.mintAmount,
             mintAuthority: token.mintAuthority.publicKey,
             recipients: token.config.recipients,
             cloneMetadata: token.config.cloneMetadata,
