@@ -10,25 +10,19 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
     
     const result = context.svm.sendTransaction(tx);
     
-    if ("err" in result) {
-      return context.createErrorResponse(
-        id,
-        -32002,
-        "Transaction simulation failed",
-        result.err
-      );
-    }
+    try {
+      // If result exposes an err() method and it's non-null, treat as failure
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const maybeErr = (result as any).err?.();
+      if (maybeErr) {
+        return context.createErrorResponse(id, -32003, "Transaction failed", maybeErr);
+      }
+    } catch {}
 
     const signature = tx.signatures[0] ? 
       context.encodeBase58(tx.signatures[0]) : 
       context.encodeBase58(new Uint8Array(64).fill(0));
-
-    // Record as finalized so websocket signatureSubscribe can notify immediately
-    context.recordLocalSignature(signature, {
-      slot: context.slot,
-      err: null,
-      confirmationStatus: "finalized"
-    });
+    context.notifySignature(signature);
     
     return context.createSuccessResponse(id, signature);
   } catch (error: any) {
@@ -97,33 +91,7 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
     const sigBytes = context.decodeBase58(signature);
     const tx = context.svm.getTransaction(sigBytes);
     
-    if (!tx) {
-      // Fallback: synthesize a transaction view for locally-recorded signatures (e.g., airdrop)
-      const local = context.getLocalSignatureStatus(signature);
-      if (local) {
-        const status = local.err ? { Err: local.err } : { Ok: null };
-        return context.createSuccessResponse(id, {
-          slot: Number(local.slot ?? context.slot),
-          transaction: {
-            // Provide signatures array; message omitted for brevity
-            signatures: [signature]
-          },
-          meta: {
-            status,
-            err: local.err,
-            fee: 0,
-            preBalances: [],
-            postBalances: [],
-            innerInstructions: [],
-            logMessages: [],
-            preTokenBalances: [],
-            postTokenBalances: [],
-            rewards: []
-          }
-        });
-      }
-      return context.createSuccessResponse(id, null);
-    }
+    if (!tx) return context.createSuccessResponse(id, null);
 
     const isError = "err" in tx;
     const logs = isError ? tx.meta().logs() : tx.logs();
@@ -158,19 +126,6 @@ export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
   
   const statuses = signatures.map((sig: string) => {
     try {
-      // Check locally recorded signatures first (e.g., airdrops)
-      const local = context.getLocalSignatureStatus(sig);
-      if (local) {
-        const status = local.err ? { Err: local.err } : { Ok: null };
-        return {
-          slot: Number(local.slot),
-          confirmations: local.confirmationStatus === "finalized" ? null : 0,
-          err: local.err,
-          confirmationStatus: local.confirmationStatus,
-          status
-        };
-      }
-
       const sigBytes = context.decodeBase58(sig);
       const tx = context.svm.getTransaction(sigBytes);
       
