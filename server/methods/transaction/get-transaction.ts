@@ -167,6 +167,80 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
             },
             blockTime: row.blockTime ? Number(row.blockTime) : null
           });
+        } else if (encoding === "jsonParsed") {
+          // Build jsonParsed similar to in-memory path
+          const raw = Buffer.from(row.rawBase64, "base64");
+          const tx = VersionedTransaction.deserialize(raw);
+          const msg: any = tx.message as any;
+          const accountKeys = (msg.staticAccountKeys || []).map((k: any) => {
+            try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
+          });
+          const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
+          const compiled = msg.compiledInstructions || [];
+          const parsedInstructions = compiled.map((ci: any) => {
+            const programId = accountKeys[ci.programIdIndex];
+            let parsed: any = undefined;
+            try {
+              const data: Uint8Array = ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data);
+              // Minimal system transfer parser
+              if (programId === "11111111111111111111111111111111" && data.length >= 12) {
+                const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+                const discriminator = dv.getUint32(0, true);
+                if (discriminator === 2 && (ci.accountKeyIndexes?.length ?? 0) >= 2) {
+                  const lamports = Number(dv.getBigUint64(4, true));
+                  const source = accountKeys[ci.accountKeyIndexes[0]];
+                  const destination = accountKeys[ci.accountKeyIndexes[1]];
+                  parsed = { type: "transfer", info: { source, destination, lamports } };
+                }
+              }
+            } catch {}
+            if (parsed) return { program: "system", programId, parsed };
+            return {
+              programId,
+              accounts: (ci.accountKeyIndexes || []).map((ix: number) => accountKeys[ix]),
+              data: context.encodeBase58(ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data))
+            };
+          });
+          const accountKeysParsed = accountKeys.map((pk: string, i: number) => ({
+            pubkey: pk,
+            signer:
+              typeof msg.isAccountSigner === "function"
+                ? !!msg.isAccountSigner(i)
+                : i < (header?.numRequiredSignatures ?? 0),
+            writable:
+              typeof msg.isAccountWritable === "function"
+                ? !!msg.isAccountWritable(i)
+                : i < (header?.numRequiredSignatures ?? 0)
+          }));
+          const result: any = {
+            slot: Number(row.slot),
+            transaction: {
+              signatures: [signature],
+              message: {
+                accountKeys: accountKeysParsed,
+                header,
+                recentBlockhash: msg.recentBlockhash || "",
+                instructions: parsedInstructions,
+                addressTableLookups: msg.addressTableLookups || []
+              }
+            },
+            version: (row.version === "0" || row.version === 0) ? 0 : row.version,
+            meta: {
+              status: errVal ? { Err: errVal } : { Ok: null },
+              err: errVal,
+              fee: Number(row.fee),
+              loadedAddresses: { writable: [], readonly: [] },
+              preBalances,
+              postBalances,
+              innerInstructions: [],
+              logMessages: logs,
+              preTokenBalances: [],
+              postTokenBalances: [],
+              rewards: []
+            },
+            blockTime: row.blockTime ? Number(row.blockTime) : null
+          };
+          return context.createSuccessResponse(id, result);
         } else {
           const raw = Buffer.from(row.rawBase64, "base64");
           const tx = VersionedTransaction.deserialize(raw);
