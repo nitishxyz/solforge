@@ -15,12 +15,13 @@ SolForge is a high-performance, lightweight drop-in replacement for `solana-test
 
 ### Key Features
 
-- ✅ **Full RPC Compatibility**: Implement all standard Solana JSON-RPC methods
-- ⚡ **In-Memory Execution**: No disk I/O, no ledger storage overhead
-- 🔧 **Modular Architecture**: Easy to add new methods and features
-- 🧪 **Testing Optimized**: Perfect for unit tests, integration tests, and local development
-- 📦 **Tiny Footprint**: Minimal dependencies, fast installation
-- 🎯 **Bun Native**: Built specifically for Bun's performance characteristics
+- ✅ Broad Solana JSON‑RPC coverage (HTTP + PubSub for signatures)
+- ⚡ In‑memory execution via LiteSVM; sub‑second startup
+- 💧 Faucet-backed airdrops (real transfers, no rate limits)
+- 🗃️ Ephemeral SQLite index (Bun + Drizzle) for rich history during a run
+- 🔧 Modular architecture; one method per file
+- 🧪 Developer‑first defaults; logs and ergonomics for local workflows
+- 🎯 Bun‑native
 
 ## Architecture
 
@@ -28,7 +29,7 @@ SolForge is a high-performance, lightweight drop-in replacement for `solana-test
 SolForge
 ├── Core Server (LiteSVM wrapper)
 ├── RPC Method Handlers (modular)
-├── State Management (in-memory)
+├── State Management (LiteSVM + ephemeral DB index)
 └── Extensions (plugins, custom programs)
 ```
 
@@ -55,11 +56,8 @@ SolForge
 - Vote operations
 - Advanced queries
 
-### Phase 3: WebSocket Support
-- Subscription methods
-- Real-time updates
-- Account notifications
-- Transaction confirmations
+### Phase 3: WebSocket Support ✅ (signatures)
+- Signature subscriptions implemented; other subs stubbed
 
 ### Phase 4: Advanced Features
 - Snapshot/restore functionality
@@ -99,10 +97,9 @@ SolForge
 
 ## Non-Goals
 
-- Not a production validator replacement
-- Not for mainnet/testnet operation
+- Not a production validator; not for mainnet/testnet
 - Not for consensus participation
-- Not for long-term data persistence
+- Not for long‑term ledger persistence (DB is ephemeral by default)
 
 ## Technical Stack
 

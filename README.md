@@ -144,20 +144,19 @@ open http://127.0.0.1:42069
 
 The GUI server exposes REST endpoints backed by the same JSON-RPC methods:
 
-| Method & Path             | Description                          |
-| ------------------------- | ------------------------------------ |
-| `GET /api/status`         | Aggregated RPC stats + faucet info   |
-| `GET /api/programs`       | List the registered programs         |
-| `GET /api/tokens`         | Detailed SPL mint metadata           |
-| `POST /api/airdrop`       | Proxy to `requestAirdrop`            |
-| `POST /api/mint`          | Proxy to `solforgeMintTo`            |
-| `POST /api/clone/program` | Proxy to program clone helpers       |
-| `POST /api/clone/token`   | Proxy to token clone helpers         |
+| Method & Path             | Description                        |
+| ------------------------- | ---------------------------------- |
+| `GET /api/status`         | Aggregated RPC stats + faucet info |
+| `GET /api/programs`       | List the registered programs       |
+| `GET /api/tokens`         | Detailed SPL mint metadata         |
+| `POST /api/airdrop`       | Proxy to `requestAirdrop`          |
+| `POST /api/mint`          | Proxy to `solforgeMintTo`          |
+| `POST /api/clone/program` | Proxy to program clone helpers     |
+| `POST /api/clone/token`   | Proxy to token clone helpers       |
 
 Override the GUI port via `sf.config.json` (`gui.port`) or `SOLFORGE_GUI_PORT`.
 
 Run `bun run build:css` before `bun run build:bin` to embed the latest Tailwind styles in the standalone binary.
-
 
 ## 🔧 Configuration
 
