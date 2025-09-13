@@ -1,4 +1,5 @@
 import { LiteSVM } from "litesvm";
+import { Keypair } from "@solana/web3.js";
 import { rpcMethods } from "./methods";
 import type { JsonRpcRequest, JsonRpcResponse, RpcMethodContext } from "./types";
 
@@ -6,8 +7,8 @@ export class LiteSVMRpcServer {
   private svm: LiteSVM;
   private slot: bigint = 1n;
   private blockHeight: bigint = 1n;
-  private localSignatures: Map<string, { slot: bigint; err: any | null; confirmationStatus: "processed"|"confirmed"|"finalized" }> = new Map();
   private signatureListeners: Set<(sig: string) => void> = new Set();
+  private faucet: Keypair;
 
   constructor() {
     this.svm = new LiteSVM()
@@ -19,6 +20,13 @@ export class LiteSVMRpcServer {
       // keep some tx history so getTransaction/getSignatureStatuses can work
       .withTransactionHistory(1000n)
       .withSigverify(false);
+
+    // Create and pre-fund a faucet for real airdrop transfers
+    this.faucet = Keypair.generate();
+    try {
+      // Fund faucet using svm's internal airdrop once at startup
+      this.svm.airdrop(this.faucet.publicKey, 10_000_000_000_000n); // 10k SOL
+    } catch {}
   }
 
   private encodeBase58(bytes: Uint8Array): string {
@@ -98,11 +106,8 @@ export class LiteSVMRpcServer {
       decodeBase58: this.decodeBase58.bind(this),
       createSuccessResponse: this.createSuccessResponse.bind(this),
       createErrorResponse: this.createErrorResponse.bind(this),
-      getLocalSignatureStatus: (signature: string) => this.localSignatures.get(signature),
-      recordLocalSignature: (signature, status) => {
-        this.localSignatures.set(signature, status);
-        for (const cb of this.signatureListeners) cb(signature);
-      }
+      notifySignature: (signature: string) => { for (const cb of this.signatureListeners) cb(signature); },
+      getFaucet: () => this.faucet
     };
   }
 
@@ -112,8 +117,6 @@ export class LiteSVMRpcServer {
   }
 
   getSignatureStatus(signature: string): { slot: number; err: any | null } | null {
-    const local = this.localSignatures.get(signature);
-    if (local) return { slot: Number(local.slot), err: local.err };
     try {
       const sigBytes = this.decodeBase58(signature);
       const tx = this.svm.getTransaction(sigBytes);

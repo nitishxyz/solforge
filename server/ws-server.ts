@@ -7,22 +7,19 @@ export function createLiteSVMWebSocketServer(rpcServer: LiteSVMRpcServer, port: 
   let nextSubId = 1;
   const subs = new Map<number, Sub>();
 
-  const notifySignature = (sig: string) => {
-    const status = rpcServer.getSignatureStatus(sig);
-    if (!status) return;
+  const sockets = new Set<WebSocket>();
+  const pendingChecks = new Map<string, number>();
+
+  const sendSignatureNotification = (sig: string, slot: number, err: any) => {
     const payload = {
       jsonrpc: "2.0",
       method: "signatureNotification",
       params: {
-        result: {
-          context: { slot: status.slot },
-          value: { err: status.err }
-        }
+        result: { context: { slot }, value: { err } }
       }
     } as const;
     for (const [id, sub] of subs.entries()) {
       if (sub.type === "signature" && sub.signature === sig) {
-        // Send one-shot notification
         try {
           sockets.forEach(s => s.send(JSON.stringify({ ...payload, params: { ...payload.params, subscription: id } })));
         } catch {}
@@ -31,7 +28,31 @@ export function createLiteSVMWebSocketServer(rpcServer: LiteSVMRpcServer, port: 
     }
   };
 
-  const sockets = new Set<WebSocket>();
+  const scheduleSignatureCheck = (sig: string) => {
+    if (pendingChecks.has(sig)) return;
+    pendingChecks.set(sig, 0);
+    const tick = () => {
+      const tries = (pendingChecks.get(sig) ?? 0) + 1;
+      pendingChecks.set(sig, tries);
+      const status = rpcServer.getSignatureStatus(sig);
+      if (status) {
+        pendingChecks.delete(sig);
+        sendSignatureNotification(sig, status.slot, status.err);
+        return;
+      }
+      if (tries < 60) {
+        setTimeout(tick, 25);
+      } else {
+        pendingChecks.delete(sig);
+      }
+    };
+    setTimeout(tick, 10);
+  };
+
+  const notifySignature = (sig: string) => {
+    scheduleSignatureCheck(sig);
+  };
+
   const unsubscribe = rpcServer.onSignatureRecorded(notifySignature);
 
   const server: Server = Bun.serve({
@@ -102,4 +123,3 @@ export function createLiteSVMWebSocketServer(rpcServer: LiteSVMRpcServer, port: 
   console.log(`📣 LiteSVM RPC PubSub running on ws://localhost:${port}`);
   return { wsServer: server, stop: () => { unsubscribe(); server.stop(true); } };
 }
-
