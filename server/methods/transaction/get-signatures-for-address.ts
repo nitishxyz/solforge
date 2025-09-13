@@ -1,23 +1,20 @@
 import type { RpcMethodHandler } from "../../types";
 import { PublicKey } from "@solana/web3.js";
 
-// Minimal compatibility implementation: returns an empty list while validating params.
-// Future: index recorded transactions by address inside RpcServer context.
-export const getSignaturesForAddress: RpcMethodHandler = (id, params, context) => {
+export const getSignaturesForAddress: RpcMethodHandler = async (id, params, context) => {
   try {
     const [address, config] = params || [];
-    const _limit = Math.max(1, Math.min(Number(config?.limit ?? 1000), 1000));
-    const _before = config?.before;
-    const _until = config?.until;
-    // Validate address formats
     if (typeof address !== "string") throw new Error("Invalid address");
-    // Validate it parses as a public key
+    // Validate pubkey
     new PublicKey(address);
+    const limit = Math.max(1, Math.min(Number(config?.limit ?? 1000), 1000));
+    const before = typeof config?.before === "string" ? config.before : undefined;
+    const until = typeof config?.until === "string" ? config.until : undefined;
 
-    // Return empty list for now (no index of signatures by address)
-    return context.createSuccessResponse(id, []);
+    if (!context.store) return context.createSuccessResponse(id, []);
+    const entries = await context.store.getSignaturesForAddress(address, { before, until, limit });
+    return context.createSuccessResponse(id, entries);
   } catch (error: any) {
     return context.createErrorResponse(id, -32602, "Invalid params", error.message);
   }
 };
-

@@ -5,7 +5,7 @@ import type { RpcMethodHandler } from "../../types";
  * Implements the getAccountInfo RPC method
  * @see https://docs.solana.com/api/http#getaccountinfo
  */
-export const getAccountInfo: RpcMethodHandler = (id, params, context) => {
+export const getAccountInfo: RpcMethodHandler = async (id, params, context) => {
   const [pubkeyStr, config] = params;
   const encoding = config?.encoding || "base64";
   
@@ -21,6 +21,19 @@ export const getAccountInfo: RpcMethodHandler = (id, params, context) => {
     }
 
     const owner = new PublicKey(account.owner).toBase58();
+    // Opportunistic index update
+    try {
+      await context.store?.upsertAccounts([{ 
+        address: pubkey.toBase58(),
+        lamports: Number(account.lamports || 0n),
+        ownerProgram: owner,
+        executable: !!account.executable,
+        rentEpoch: Number(account.rentEpoch || 0),
+        dataLen: account.data?.length ?? 0,
+        dataBase64: undefined,
+        lastSlot: Number(context.slot)
+      }]);
+    } catch {}
 
     if (encoding === "jsonParsed") {
       const space = account.data?.length ?? 0;

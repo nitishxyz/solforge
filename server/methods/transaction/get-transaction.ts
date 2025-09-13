@@ -1,6 +1,7 @@
 import type { RpcMethodHandler } from "../../types";
+import { VersionedTransaction } from "@solana/web3.js";
 
-export const getTransaction: RpcMethodHandler = (id, params, context) => {
+export const getTransaction: RpcMethodHandler = async (id, params, context) => {
   const [signature, config] = params || [];
   const encoding = config?.encoding ?? "json";
 
@@ -136,6 +137,76 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
 
       return context.createSuccessResponse(id, result);
     }
+
+    // Fallback: persistent store
+    try {
+      const row = await (context.store?.getTransaction(signature));
+      if (row) {
+        const errVal = row.errJson ? JSON.parse(row.errJson) : null;
+        const preBalances = JSON.parse(row.preBalancesJson || "[]");
+        const postBalances = JSON.parse(row.postBalancesJson || "[]");
+        const logs = JSON.parse(row.logsJson || "[]");
+        const versionVal = row.version === "0" || row.version === 0 ? 0 : row.version;
+        if (encoding === "base64") {
+          return context.createSuccessResponse(id, {
+            slot: Number(row.slot),
+            transaction: [row.rawBase64, "base64"],
+            version: versionVal,
+            meta: {
+              status: errVal ? { Err: errVal } : { Ok: null },
+              err: errVal,
+              fee: Number(row.fee),
+              loadedAddresses: { writable: [], readonly: [] },
+              preBalances,
+              postBalances,
+              innerInstructions: [],
+              logMessages: logs,
+              preTokenBalances: [],
+              postTokenBalances: [],
+              rewards: []
+            },
+            blockTime: row.blockTime ? Number(row.blockTime) : null
+          });
+        } else {
+          const raw = Buffer.from(row.rawBase64, "base64");
+          const tx = VersionedTransaction.deserialize(raw);
+          const msg: any = tx.message as any;
+          const accountKeys = (msg.staticAccountKeys || []).map((k: any) => {
+            try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
+          });
+          const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
+          const compiled = msg.compiledInstructions || [];
+          const instructions = compiled.map((ci: any) => ({
+            programIdIndex: ci.programIdIndex,
+            accounts: Array.from(ci.accountKeyIndexes || ci.accounts || []),
+            data: context.encodeBase58(ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data))
+          }));
+          const result: any = {
+            slot: Number(row.slot),
+            transaction: {
+              signatures: [signature],
+              message: { accountKeys, header, recentBlockhash: msg.recentBlockhash || "", instructions, addressTableLookups: msg.addressTableLookups || [] }
+            },
+            version: versionVal,
+            meta: {
+              status: errVal ? { Err: errVal } : { Ok: null },
+              err: errVal,
+              fee: Number(row.fee),
+              loadedAddresses: { writable: [], readonly: [] },
+              preBalances,
+              postBalances,
+              innerInstructions: [],
+              logMessages: logs,
+              preTokenBalances: [],
+              postTokenBalances: [],
+              rewards: []
+            },
+            blockTime: row.blockTime ? Number(row.blockTime) : null
+          };
+          return context.createSuccessResponse(id, result);
+        }
+      }
+    } catch {}
 
     // Fallback to LiteSVM history when no local record exists
     const sigBytes = context.decodeBase58(signature);

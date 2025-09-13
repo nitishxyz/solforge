@@ -1,4 +1,5 @@
 import { LiteSVM } from "litesvm";
+import type { TxStore } from "../src/db/tx-store";
 import type { Keypair, VersionedTransaction } from "@solana/web3.js";
 
 export interface JsonRpcRequest {
@@ -23,6 +24,7 @@ export interface RpcMethodContext {
   svm: LiteSVM;
   slot: bigint;
   blockHeight: bigint;
+  store?: TxStore;
   encodeBase58: (bytes: Uint8Array) => string;
   decodeBase58: (str: string) => Uint8Array;
   createSuccessResponse: (id: string | number, result: any) => JsonRpcResponse;
