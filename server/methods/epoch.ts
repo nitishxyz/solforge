@@ -107,3 +107,13 @@ export const getHighestSnapshotSlot: RpcMethodHandler = (id, _params, context) =
 export const minimumLedgerSlot: RpcMethodHandler = (id, _params, context) => {
   return context.createSuccessResponse(id, 0);
 };
+
+export const getStakeMinimumDelegation: RpcMethodHandler = (id, _params, _context) => {
+  // Return 1 SOL in lamports as a sensible default for local dev
+  return _context.createSuccessResponse(id, 1_000_000_000);
+};
+
+export const getMaxShredInsertSlot: RpcMethodHandler = (id, _params, context) => {
+  // Track with current slot for local single-node behavior
+  return context.createSuccessResponse(id, Number(context.slot));
+};
