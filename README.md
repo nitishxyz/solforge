@@ -1,36 +1,34 @@
-# LiteSVM RPC Server
+# SolForge – LiteSVM RPC Server
 
-A local Solana RPC server powered by LiteSVM - a lightweight, in-memory Solana Virtual Machine. This serves as a drop-in replacement for `solana-test-validator` for development and testing.
+A fast, Bun-native Solana JSON‑RPC server powered by LiteSVM. Designed as a drop‑in developer replacement for solana-test-validator with sub‑second startup, rich RPC coverage, and pragmatic defaults for local workflows.
 
 ## Features
 
-- ✅ Full Solana JSON-RPC compatibility
-- ⚡ Lightning-fast in-memory execution
-- 🔧 Zero configuration required
-- 🧪 Perfect for testing and development
-- 📦 Tiny footprint compared to full validator
-- 🎯 Compatible with @solana/kit and @solana/web3.js
+- ✅ Broad Solana JSON‑RPC coverage (HTTP + PubSub for signatures)
+- ⚡ Sub‑second startup; in‑memory execution via LiteSVM
+- 💧 Real airdrops via faucet transfers (no .airdrop rate limits)
+- 🗃️ Ephemeral DB (Bun + Drizzle + SQLite) for rich history during a run
+- 🧰 Works with Solana CLI, Anchor (default settings), @solana/kit, and web3.js
 
-## Installation
+## Install
 
 ```bash
 bun install
 ```
 
-## Usage
+## Quick Start
 
-### Start the RPC Server
+### Start the RPC server
 
 ```bash
-bun run index.ts
+DEBUG_RPC_LOG=1 bun run index.ts
 ```
 
-The server will start on `http://localhost:8899` (default Solana RPC port).
+You should see a faucet line on boot:
 
-You can customize the port using environment variable:
-```bash
-RPC_PORT=3000 bun run index.ts
-```
+💧 Faucet loaded: <PUBKEY> with 1000000 SOL
+
+By default, SolForge mints 1,000,000 SOL at startup and fully funds a persistent faucet account stored at `.solforge/faucet.json`.
 
 ### Connect with Solana CLI
 
@@ -49,7 +47,7 @@ const rpc = createSolanaRpc('http://localhost:8899');
 const { value: balance } = await rpc.getBalance(address).send();
 ```
 
-### Use with @solana/web3.js (legacy)
+### Use with @solana/web3.js
 
 ```typescript
 import { Connection } from '@solana/web3.js';
@@ -60,27 +58,69 @@ const connection = new Connection('http://localhost:8899', 'confirmed');
 const balance = await connection.getBalance(publicKey);
 ```
 
-## Supported RPC Methods
+## RPC Coverage (high‑level)
 
-### Core Methods
-- ✅ `getAccountInfo` - Get account data
-- ✅ `getBalance` - Get account balance  
-- ✅ `getLatestBlockhash` - Get recent blockhash
-- ✅ `sendTransaction` - Submit transaction
-- ✅ `simulateTransaction` - Simulate without executing
-- ✅ `requestAirdrop` - Request test SOL
+- Accounts: getAccountInfo, getMultipleAccounts, getBalance, getParsedAccountInfo
+- Blocks/Slots: getLatestBlockhash, getBlock, getBlocks, getBlocksWithLimit, getBlockHeight, getBlockTime, getSlot
+- Transactions: sendTransaction, simulateTransaction, getTransaction, getParsedTransaction, getSignatureStatuses, getSignaturesForAddress
+- Fees: getFeeForMessage, getFees, getFeeCalculatorForBlockhash, getFeeRateGovernor, getRecentPrioritizationFees
+- Epoch/Cluster: getEpochInfo, getEpochSchedule, getLeaderSchedule, getSlotLeader, getSlotLeaders, getVoteAccounts, getClusterNodes, getMaxRetransmitSlot, getMaxShredInsertSlot, getHighestSnapshotSlot, minimumLedgerSlot, getStakeMinimumDelegation
+- Network/System: getHealth, getVersion, getIdentity, getGenesisHash, getFirstAvailableBlock, getBlockProduction, getBlockCommitment, getSupply, getInflationRate/Governor/Reward
+- Programs: getProgramAccounts, getParsedProgramAccounts
+- Address Lookup Table: getAddressLookupTable
 
-### Additional Methods
-- ✅ `getSlot` - Get current slot
-- ✅ `getBlockHeight` - Get block height
-- ✅ `getTransaction` - Get transaction by signature
-- ✅ `getSignatureStatuses` - Check transaction status
-- ✅ `getMinimumBalanceForRentExemption` - Rent calculation
-- ✅ `getMultipleAccounts` - Batch account fetching
-- ✅ `getHealth` - Server health check
-- ✅ `getVersion` - Get version info
+Notes
+- Signature PubSub is available on `ws://localhost:<port+1>` (signatureSubscribe/unsubscribe). Other subscriptions are stubbed to succeed without notifications.
+- Token RPCs are minimally implemented (returning empty/default values) unless driven by indexed data. We can extend these as needed.
 
-## Testing
+## Airdrops
+
+- Airdrops are implemented as real SystemProgram transfers from the server faucet to the requested address — no rate limits.
+- Each airdrop appends a memo with a random nonce to ensure a unique signature.
+- The faucet keypair is persisted at `.solforge/faucet.json` and funded at startup.
+
+To airdrop via CLI:
+
+```bash
+solana airdrop 1
+```
+
+## Data & Persistence
+
+- Ephemeral by default: a local SQLite DB (`.solforge/db.db`) is recreated on every start. This DB stores:
+  - Full raw transactions (base64) + logs + balances + fee + status + timestamps
+  - Key account snapshots (lamports, owner, data_len, last_slot)
+  - Address ↔ signature index for getSignaturesForAddress
+  - Program account scan index for getProgramAccounts
+- On restart, the DB is reset to match a fresh LiteSVM; during a run, it enables explorer‑style queries and rich getTransaction even after app restarts.
+- Migrations run automatically at startup using Drizzle.
+
+Drizzle Studio config (example):
+
+```ts
+// drizzle.config.ts
+import { defineConfig } from 'drizzle-kit';
+export default defineConfig({
+  schema: './src/db/schema/index.ts',
+  out: './drizzle',
+  dialect: 'sqlite',
+  dbCredentials: { url: `file:.solforge/db.db` },
+});
+```
+
+## Configuration (env)
+
+- `RPC_PORT` — HTTP port (default 8899); WS uses `port+1`.
+- `DEBUG_RPC_LOG=1` — logs each RPC request.
+- `SOLFORGE_DB_MODE` — `ephemeral` (default) or `persistent`.
+- `SOLFORGE_DB_PATH` — override DB path (default `.solforge/db.db`).
+- `DRIZZLE_MIGRATIONS` — migrations folder (default `drizzle`).
+- `SOLFORGE_FAUCET_PATH` — faucet key file (default `.solforge/faucet.json`).
+- `SOLFORGE_FAUCET_LAMPORTS` — faucet funding target in lamports (default 1,000,000 SOL).
+
+Runtime defaults
+- LiteSVM: `withSigverify(false)`, `withBlockhashCheck(false)`, `withTransactionHistory(1000n)`, `withLamports(1_000_000 SOL)`.
+- You can toggle stricter behavior later; see “Notes for Anchor”.
 
 Run the test client to verify functionality:
 
@@ -94,57 +134,46 @@ bun run test-client.ts
 
 ## Architecture
 
-The server uses:
-- **LiteSVM** - Lightweight Solana Virtual Machine for transaction execution
-- **Bun.serve()** - High-performance HTTP server
-- **JSON-RPC 2.0** - Standard Solana RPC protocol
+- LiteSVM for fast, in‑memory execution
+- Bun.serve() for HTTP + WebSocket
+- Drizzle + bun:sqlite for ephemeral data indexing
 
-## Key Differences from solana-test-validator
+## Key Differences vs solana-test-validator
 
-| Feature | LiteSVM RPC | solana-test-validator |
-|---------|-------------|----------------------|
-| Startup time | <1 second | 10-30 seconds |
-| Memory usage | ~50MB | 500MB+ |
-| Disk usage | None | Requires ledger storage |
-| WebSocket support | Not yet | Yes |
-| Validator features | Basic | Full |
-| Performance | Faster | Standard |
+- Startup: < 1s vs 10–30s
+- Memory: tiny vs heavy
+- Ledger: ephemeral DB vs full ledger
+- PubSub: signature notifications supported; other subs stubbed
+- Validation: by default, signature and blockhash checks are relaxed for dev speed
 
-## Configuration
+## Notes for Anchor / Strictness
 
-The LiteSVM instance is configured with:
-- System programs and builtins pre-loaded
-- 1000 SOL in airdrop account
-- Signature verification disabled for faster testing
-- Blockhash checking disabled
-- Transaction history disabled (allows duplicate txs)
+- For Anchor deploys, keep `withSigverify(false)` and `withBlockhashCheck(false)` (defaults). Enabling sigverify can cause loader transactions to fail unless every signer and message field exactly matches LiteSVM’s stricter checks.
+- If you enable stricter checks later, turn on `DEBUG_RPC_LOG=1` and capture the first failing sendTransaction to diagnose.
 
 ## Limitations
 
-- No WebSocket/subscription support yet (coming soon)
-- No persistent storage (in-memory only)
-- Limited to basic Solana programs (can add custom programs)
-- No cross-program invocation limits
+- DB is ephemeral by default (resets each start). You can opt into persistence.
+- Token RPCs are minimal unless we add token indexing (planned).
+- Some advanced RPCs are stubs or simplified for local dev.
 
-## Development
-
-### Project Structure
+## Project Structure (selected)
 ```
 solforge/
-├── index.ts              # Server entry point
+├── index.ts                         # Server entry
 ├── server/
-│   ├── index.ts          # Server module exports
-│   ├── rpc-server.ts     # Main RPC server class
-│   ├── types.ts          # Shared types and interfaces
-│   └── methods/
-│       ├── index.ts      # Method exports
-│       ├── account.ts    # Account-related methods
-│       ├── transaction.ts # Transaction methods
-│       ├── block.ts      # Block/slot methods
-│       └── system.ts     # System methods
-├── test-client.ts        # Test client using @solana/kit
-├── SOLANA_KIT_GUIDE.md   # Guide for using @solana/kit
-└── README.md             # This file
+│   ├── rpc-server.ts                # HTTP server + context
+│   ├── ws-server.ts                 # WebSocket PubSub (signatures)
+│   ├── methods/                     # RPC methods (modularized)
+│   └── lib/                         # helpers (base58, faucet)
+├── src/db/                          # Drizzle + SQLite setup
+│   ├── index.ts                     # DB connect + migrator
+│   ├── tx-store.ts                  # DB operations helper
+│   └── schema/                      # One file per table
+├── drizzle/                         # Drizzle SQL migrations
+├── docs/data-indexing-plan.md       # Indexing plan
+├── test-client.ts                   # @solana/kit smoke test
+└── README.md
 ```
 
 ### Adding Custom Programs
@@ -162,7 +191,7 @@ svm.addProgramFromFile(
 svm.addProgram(programId, programBytes);
 ```
 
-### Adding New RPC Methods
+## Adding New RPC Methods
 
 The server uses a modular architecture. To add new RPC methods:
 
@@ -191,4 +220,4 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
 };
 ```
 
-This project was created using `bun init` in bun v1.2.21. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+This project was created using `bun init` in bun v1.2.21. Bun is a fast all‑in‑one JavaScript runtime.
