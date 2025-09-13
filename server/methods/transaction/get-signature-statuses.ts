@@ -1,7 +1,10 @@
 import type { RpcMethodHandler } from "../../types";
 
-export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
+export const getSignatureStatuses: RpcMethodHandler = async (id, params, context) => {
   const [signatures] = params;
+
+  let persisted: Map<string, { slot: number; err: any | null }> = new Map();
+  try { persisted = (await context.store?.getStatuses(signatures)) || new Map(); } catch {}
 
   const statuses = signatures.map((sig: string) => {
     try {
@@ -12,6 +15,18 @@ export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
         const status = errVal ? { Err: errVal } : { Ok: null };
         return {
           slot: rec.slot,
+          confirmations: errVal ? 0 : 1,
+          err: errVal,
+          confirmationStatus: errVal ? "processed" : "confirmed",
+          status
+        };
+      }
+      const db = persisted.get(sig);
+      if (db) {
+        const errVal: any = db.err ?? null;
+        const status = errVal ? { Err: errVal } : { Ok: null };
+        return {
+          slot: db.slot,
           confirmations: errVal ? 0 : 1,
           err: errVal,
           confirmationStatus: errVal ? "processed" : "confirmed",

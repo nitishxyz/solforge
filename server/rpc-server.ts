@@ -1,7 +1,9 @@
 import { LiteSVM } from "litesvm";
-import { Keypair, VersionedTransaction } from "@solana/web3.js";
+import { Keypair, VersionedTransaction, PublicKey } from "@solana/web3.js";
 import { rpcMethods } from "./methods";
 import type { JsonRpcRequest, JsonRpcResponse, RpcMethodContext } from "./types";
+import { TxStore } from "../src/db/tx-store";
+import { encodeBase58, decodeBase58 } from "./lib/base58";
 
 export class LiteSVMRpcServer {
   private svm: LiteSVM;
@@ -11,6 +13,7 @@ export class LiteSVMRpcServer {
   private signatureListeners: Set<(sig: string) => void> = new Set();
   private faucet: Keypair;
   private txRecords: Map<string, { tx: VersionedTransaction; logs: string[]; err: unknown; fee: number; slot: number; blockTime?: number; preBalances?: number[]; postBalances?: number[] } > = new Map();
+  private store: TxStore;
 
   constructor() {
     this.svm = new LiteSVM()
@@ -22,6 +25,7 @@ export class LiteSVMRpcServer {
       // keep some tx history so getTransaction/getSignatureStatuses can work
       .withTransactionHistory(1000n)
       .withSigverify(false);
+    this.store = new TxStore();
 
     // Create and pre-fund a faucet for real airdrop transfers
     this.faucet = Keypair.generate();
@@ -31,52 +35,7 @@ export class LiteSVMRpcServer {
     } catch {}
   }
 
-  private encodeBase58(bytes: Uint8Array): string {
-    const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    const base = BigInt(ALPHABET.length);
-    
-    let num = 0n;
-    for (let i = 0; i < bytes.length; i++) {
-      num = num * 256n + BigInt(bytes[i] || 0);
-    }
-    
-    let encoded = "";
-    while (num > 0n) {
-      const remainder = num % base;
-      num = num / base;
-      encoded = ALPHABET[Number(remainder)] + encoded;
-    }
-    
-    for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-      encoded = "1" + encoded;
-    }
-    
-    return encoded || "1";
-  }
-
-  private decodeBase58(str: string): Uint8Array {
-    const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    const base = BigInt(ALPHABET.length);
-    
-    let num = 0n;
-    for (const char of str) {
-      const index = ALPHABET.indexOf(char);
-      if (index === -1) throw new Error("Invalid base58 character");
-      num = num * base + BigInt(index);
-    }
-    
-    const bytes = [];
-    while (num > 0n) {
-      bytes.unshift(Number(num % 256n));
-      num = num / 256n;
-    }
-    
-    for (let i = 0; i < str.length && str[i] === "1"; i++) {
-      bytes.unshift(0);
-    }
-    
-    return new Uint8Array(bytes.length > 0 ? bytes : [0]);
-  }
+  // base58 helpers moved to server/lib/base58
 
   private createSuccessResponse(id: string | number, result: any): JsonRpcResponse {
     return {
@@ -104,8 +63,9 @@ export class LiteSVMRpcServer {
       svm: this.svm,
       slot: this.slot,
       blockHeight: this.blockHeight,
-      encodeBase58: this.encodeBase58.bind(this),
-      decodeBase58: this.decodeBase58.bind(this),
+      store: this.store,
+      encodeBase58,
+      decodeBase58,
       createSuccessResponse: this.createSuccessResponse.bind(this),
       createErrorResponse: this.createErrorResponse.bind(this),
       notifySignature: (signature: string) => { for (const cb of this.signatureListeners) cb(signature); },
@@ -122,6 +82,66 @@ export class LiteSVMRpcServer {
           preBalances: meta?.preBalances,
           postBalances: meta?.postBalances
         });
+
+        // Persist to SQLite for durability and history queries
+        try {
+          const msg: any = tx.message as any;
+          const keys: string[] = (msg.staticAccountKeys || []).map((k: any) => {
+            try { return typeof k === "string" ? k : (k as PublicKey).toBase58(); } catch { return String(k); }
+          });
+          const header = msg.header || { numRequiredSignatures: (tx.signatures || []).length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
+          const numReq = Number(header.numRequiredSignatures || 0);
+          const numRoSigned = Number(header.numReadonlySignedAccounts || 0);
+          const numRoUnsigned = Number(header.numReadonlyUnsignedAccounts || 0);
+          const total = keys.length;
+          const unsignedCount = Math.max(0, total - numReq);
+          const writableSignedCutoff = Math.max(0, numReq - numRoSigned);
+          const writableUnsignedCount = Math.max(0, unsignedCount - numRoUnsigned);
+
+          const accounts = keys.map((addr, i) => {
+            const signer = typeof msg.isAccountSigner === "function" ? !!msg.isAccountSigner(i) : i < numReq;
+            let writable = true;
+            if (typeof msg.isAccountWritable === "function") writable = !!msg.isAccountWritable(i);
+            else {
+              if (i < numReq) writable = i < writableSignedCutoff; else writable = (i - numReq) < writableUnsignedCount;
+            }
+            return { address: addr, index: i, signer, writable };
+          });
+          const version: 0 | "legacy" = (typeof msg.version === "number" ? (msg.version === 0 ? 0 : "legacy") : 0);
+          const rawBase64 = Buffer.from(tx.serialize()).toString("base64");
+          this.store.insertTransactionBundle({
+            signature,
+            slot: Number(this.slot),
+            blockTime: meta?.blockTime,
+            version,
+            fee: Number(meta?.fee ?? 5000),
+            err: meta?.err ?? null,
+            rawBase64,
+            preBalances: Array.isArray(meta?.preBalances) ? meta!.preBalances! : [],
+            postBalances: Array.isArray(meta?.postBalances) ? meta!.postBalances! : [],
+            logs: Array.isArray(meta?.logs) ? meta!.logs! : [],
+            accounts
+          }).catch(() => {});
+
+          // Upsert account snapshots for static keys
+          const snapshots = keys.map((addr) => {
+            try {
+              const acc = this.svm.getAccount(new PublicKey(addr));
+              if (!acc) return null;
+              return {
+                address: addr,
+                lamports: Number(acc.lamports || 0n),
+                ownerProgram: new PublicKey(acc.owner).toBase58(),
+                executable: !!acc.executable,
+                rentEpoch: Number(acc.rentEpoch || 0),
+                dataLen: (acc.data?.length ?? 0),
+                dataBase64: undefined,
+                lastSlot: Number(this.slot)
+              };
+            } catch { return null; }
+          }).filter(Boolean) as any[];
+          if (snapshots.length > 0) this.store.upsertAccounts(snapshots).catch(() => {});
+        } catch {}
       },
       getRecordedTransaction: (signature) => this.txRecords.get(signature)
     };
@@ -139,7 +159,7 @@ export class LiteSVMRpcServer {
       return { slot: rec.slot, err: rec.err ?? null };
     }
     try {
-      const sigBytes = this.decodeBase58(signature);
+      const sigBytes = decodeBase58(signature);
       const tx = this.svm.getTransaction(sigBytes);
       if (!tx) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

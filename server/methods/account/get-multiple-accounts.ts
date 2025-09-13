@@ -5,7 +5,7 @@ import type { RpcMethodHandler } from "../../types";
  * Implements the getMultipleAccounts RPC method
  * @see https://docs.solana.com/api/http#getmultipleaccounts
  */
-export const getMultipleAccounts: RpcMethodHandler = (id, params, context) => {
+export const getMultipleAccounts: RpcMethodHandler = async (id, params, context) => {
   const [pubkeys, config] = params;
   const encoding = config?.encoding || "base64";
   
@@ -46,6 +46,30 @@ export const getMultipleAccounts: RpcMethodHandler = (id, params, context) => {
       return null;
     }
   });
+
+  // Opportunistic index update
+  try {
+    const snaps: any[] = [];
+    for (const pubkeyStr of pubkeys) {
+      try {
+        const pubkey = new PublicKey(pubkeyStr);
+        const acc = context.svm.getAccount(pubkey);
+        if (!acc) continue;
+        const owner = new PublicKey(acc.owner).toBase58();
+        snaps.push({
+          address: pubkey.toBase58(),
+          lamports: Number(acc.lamports || 0n),
+          ownerProgram: owner,
+          executable: !!acc.executable,
+          rentEpoch: Number(acc.rentEpoch || 0),
+          dataLen: acc.data?.length ?? 0,
+          dataBase64: undefined,
+          lastSlot: Number(context.slot)
+        });
+      } catch {}
+    }
+    if (snaps.length) await context.store?.upsertAccounts(snaps);
+  } catch {}
 
   return context.createSuccessResponse(id, {
     context: { slot: Number(context.slot) },
