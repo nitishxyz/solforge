@@ -3,6 +3,7 @@ import { Keypair, VersionedTransaction, PublicKey } from "@solana/web3.js";
 import { rpcMethods } from "./methods";
 import type { JsonRpcRequest, JsonRpcResponse, RpcMethodContext } from "./types";
 import { TxStore } from "../src/db/tx-store";
+import { sqlite } from "../src/db/index";
 import { encodeBase58, decodeBase58 } from "./lib/base58";
 
 export class LiteSVMRpcServer {
@@ -26,6 +27,20 @@ export class LiteSVMRpcServer {
       .withTransactionHistory(1000n)
       .withSigverify(false);
     this.store = new TxStore();
+    // Seed slot/blockHeight/txCount from DB if available for continuity
+    try {
+      const maxRow = sqlite.prepare("SELECT MAX(slot) as m FROM transactions").get() as { m?: number } | undefined;
+      const cntRow = sqlite.prepare("SELECT COUNT(1) as c FROM transactions").get() as { c?: number } | undefined;
+      const maxSlot = (maxRow?.m ?? 0) as number;
+      const txc = (cntRow?.c ?? 0) as number;
+      if (maxSlot > 0) {
+        this.slot = BigInt(maxSlot + 1);
+        this.blockHeight = BigInt(maxSlot + 1);
+      }
+      if (txc > 0) {
+        this.txCount = BigInt(txc);
+      }
+    } catch {}
 
     // Create and pre-fund a faucet for real airdrop transfers
     this.faucet = Keypair.generate();

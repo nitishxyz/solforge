@@ -173,6 +173,16 @@ export class TxStore {
       .limit(Math.min(Math.max(limit, 1), 1000));
     return rows;
   }
+
+  async getBlockTimeForSlot(slot: number): Promise<number | null> {
+    const rows = await db
+      .select({ bt: transactions.blockTime })
+      .from(transactions)
+      .where(eq(transactions.slot, slot))
+      .limit(1);
+    const r = rows[0];
+    return r?.bt != null ? Number(r.bt) : null;
+  }
 }
 
 function safeParse<T = any>(s: string): T | null {
