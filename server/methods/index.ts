@@ -18,7 +18,8 @@ import {
 import {
   getLatestBlockhash,
   getSlot,
-  getBlockHeight
+  getBlockHeight,
+  isBlockhashValid
 } from "./block";
 
 import {
@@ -44,6 +45,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getLatestBlockhash,
   getSlot,
   getBlockHeight,
+  isBlockhashValid,
   
   // System methods
   getMinimumBalanceForRentExemption,
@@ -63,6 +65,7 @@ export {
   getLatestBlockhash,
   getSlot,
   getBlockHeight,
+  isBlockhashValid,
   getMinimumBalanceForRentExemption,
   getHealth,
   getVersion
