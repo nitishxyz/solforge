@@ -1,5 +1,5 @@
 import { LiteSVM } from "litesvm";
-import type { Keypair } from "@solana/web3.js";
+import type { Keypair, VersionedTransaction } from "@solana/web3.js";
 
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -34,6 +34,22 @@ export interface RpcMethodContext {
   ) => JsonRpcResponse;
   notifySignature: (signature: string) => void;
   getFaucet: () => Keypair;
+  getTxCount: () => bigint;
+  recordTransaction: (
+    signature: string,
+    tx: VersionedTransaction,
+    meta?: { logs?: string[]; err?: unknown; fee?: number; blockTime?: number; preBalances?: number[]; postBalances?: number[] }
+  ) => void;
+  getRecordedTransaction: (signature: string) => {
+    tx: VersionedTransaction;
+    logs: string[];
+    err: unknown;
+    fee: number;
+    slot: number;
+    blockTime?: number;
+    preBalances?: number[];
+    postBalances?: number[];
+  } | undefined;
 }
 
 export type RpcMethodHandler = (
