@@ -1,0 +1,519 @@
+import { LiteSVM } from "litesvm";
+import { 
+  PublicKey, 
+  VersionedTransaction
+} from "@solana/web3.js";
+
+interface JsonRpcRequest {
+  jsonrpc: "2.0";
+  id: string | number;
+  method: string;
+  params?: any;
+}
+
+interface JsonRpcResponse {
+  jsonrpc: "2.0";
+  id: string | number;
+  result?: any;
+  error?: {
+    code: number;
+    message: string;
+    data?: any;
+  };
+}
+
+class LiteSVMRpcServer {
+  private svm: LiteSVM;
+  private slot: bigint = 1n;
+  private blockHeight: bigint = 1n;
+
+  constructor() {
+    this.svm = new LiteSVM()
+      .withSysvars()
+      .withBuiltins()
+      .withDefaultPrograms()
+      .withLamports(1000000000000n)
+      .withBlockhashCheck(false)
+      .withTransactionHistory(0n)
+      .withSigverify(false);
+  }
+
+  private encodeBase58(bytes: Uint8Array): string {
+    const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    const base = BigInt(ALPHABET.length);
+    
+    let num = 0n;
+    for (let i = 0; i < bytes.length; i++) {
+      num = num * 256n + BigInt(bytes[i] || 0);
+    }
+    
+    let encoded = "";
+    while (num > 0n) {
+      const remainder = num % base;
+      num = num / base;
+      encoded = ALPHABET[Number(remainder)] + encoded;
+    }
+    
+    for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
+      encoded = "1" + encoded;
+    }
+    
+    return encoded || "1";
+  }
+
+  private decodeBase58(str: string): Uint8Array {
+    const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    const base = BigInt(ALPHABET.length);
+    
+    let num = 0n;
+    for (const char of str) {
+      const index = ALPHABET.indexOf(char);
+      if (index === -1) throw new Error("Invalid base58 character");
+      num = num * base + BigInt(index);
+    }
+    
+    const bytes = [];
+    while (num > 0n) {
+      bytes.unshift(Number(num % 256n));
+      num = num / 256n;
+    }
+    
+    for (let i = 0; i < str.length && str[i] === "1"; i++) {
+      bytes.unshift(0);
+    }
+    
+    return new Uint8Array(bytes.length > 0 ? bytes : [0]);
+  }
+
+  private createSuccessResponse(id: string | number, result: any): JsonRpcResponse {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result
+    };
+  }
+
+  private createErrorResponse(
+    id: string | number, 
+    code: number, 
+    message: string, 
+    data?: any
+  ): JsonRpcResponse {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: { code, message, data }
+    };
+  }
+
+  async handleRequest(request: JsonRpcRequest): Promise<JsonRpcResponse> {
+    const { method, params, id } = request;
+
+    try {
+      switch (method) {
+        case "getAccountInfo":
+          return this.handleGetAccountInfo(id, params);
+        
+        case "getBalance":
+          return this.handleGetBalance(id, params);
+        
+        case "getLatestBlockhash":
+          return this.handleGetLatestBlockhash(id, params);
+        
+        case "sendTransaction":
+          return this.handleSendTransaction(id, params);
+        
+        case "simulateTransaction":
+          return this.handleSimulateTransaction(id, params);
+        
+        case "requestAirdrop":
+          return this.handleRequestAirdrop(id, params);
+        
+        case "getSlot":
+          return this.handleGetSlot(id, params);
+        
+        case "getBlockHeight":
+          return this.handleGetBlockHeight(id, params);
+        
+        case "getTransaction":
+          return this.handleGetTransaction(id, params);
+        
+        case "getSignatureStatuses":
+          return this.handleGetSignatureStatuses(id, params);
+        
+        case "getMinimumBalanceForRentExemption":
+          return this.handleGetMinimumBalanceForRentExemption(id, params);
+        
+        case "getMultipleAccounts":
+          return this.handleGetMultipleAccounts(id, params);
+
+        case "getHealth":
+          return this.createSuccessResponse(id, "ok");
+
+        case "getVersion":
+          return this.createSuccessResponse(id, {
+            "solana-core": "1.18.0",
+            "feature-set": 1
+          });
+
+        default:
+          return this.createErrorResponse(
+            id,
+            -32601,
+            `Method not found: ${method}`
+          );
+      }
+    } catch (error: any) {
+      return this.createErrorResponse(
+        id,
+        -32603,
+        "Internal error",
+        error.message
+      );
+    }
+  }
+
+  private handleGetAccountInfo(id: string | number, params: any): JsonRpcResponse {
+    const [pubkeyStr, config] = params;
+    const encoding = config?.encoding || "base64";
+    
+    try {
+      const pubkey = new PublicKey(pubkeyStr);
+      const account = this.svm.getAccount(pubkey);
+      
+      if (!account) {
+        return this.createSuccessResponse(id, {
+          context: { slot: Number(this.slot) },
+          value: null
+        });
+      }
+
+      const accountInfo = {
+        lamports: Number(account.lamports),
+        owner: new PublicKey(account.owner).toBase58(),
+        data: encoding === "base64" 
+          ? [Buffer.from(account.data).toString("base64"), encoding]
+          : Array.from(account.data),
+        executable: account.executable,
+        rentEpoch: Number(account.rentEpoch || 0)
+      };
+
+      return this.createSuccessResponse(id, {
+        context: { slot: Number(this.slot) },
+        value: accountInfo
+      });
+    } catch (error: any) {
+      return this.createErrorResponse(id, -32602, "Invalid params", error.message);
+    }
+  }
+
+  private handleGetBalance(id: string | number, params: any): JsonRpcResponse {
+    const [pubkeyStr] = params;
+    
+    try {
+      const pubkey = new PublicKey(pubkeyStr);
+      const balance = this.svm.getBalance(pubkey);
+      
+      return this.createSuccessResponse(id, {
+        context: { slot: Number(this.slot) },
+        value: Number(balance || 0n)
+      });
+    } catch (error: any) {
+      return this.createErrorResponse(id, -32602, "Invalid params", error.message);
+    }
+  }
+
+  private handleGetLatestBlockhash(id: string | number, params: any): JsonRpcResponse {
+    const blockhash = this.svm.latestBlockhash();
+    
+    return this.createSuccessResponse(id, {
+      context: { slot: Number(this.slot) },
+      value: {
+        blockhash,
+        lastValidBlockHeight: Number(this.blockHeight + 150n)
+      }
+    });
+  }
+
+  private handleSendTransaction(id: string | number, params: any): JsonRpcResponse {
+    const [encodedTx, config] = params;
+    
+    try {
+      const txData = Buffer.from(encodedTx, "base64");
+      const tx = VersionedTransaction.deserialize(txData);
+      
+      const result = this.svm.sendTransaction(tx);
+      
+      if ("err" in result) {
+        return this.createErrorResponse(
+          id,
+          -32002,
+          "Transaction simulation failed",
+          result.err
+        );
+      }
+
+      const signature = tx.signatures[0] ? this.encodeBase58(tx.signatures[0]) : this.encodeBase58(new Uint8Array(64).fill(0));
+      
+      this.slot += 1n;
+      this.blockHeight += 1n;
+      
+      return this.createSuccessResponse(id, signature);
+    } catch (error: any) {
+      return this.createErrorResponse(
+        id,
+        -32003,
+        "Transaction failed",
+        error.message
+      );
+    }
+  }
+
+  private handleSimulateTransaction(id: string | number, params: any): JsonRpcResponse {
+    const [encodedTx, config] = params;
+    
+    try {
+      const txData = Buffer.from(encodedTx, "base64");
+      const tx = VersionedTransaction.deserialize(txData);
+      
+      const result = this.svm.simulateTransaction(tx);
+      
+      if ("err" in result) {
+        const errorMeta = result.meta();
+        return this.createSuccessResponse(id, {
+          context: { slot: Number(this.slot) },
+          value: {
+            err: result.err(),
+            logs: errorMeta.logs(),
+            accounts: null,
+            unitsConsumed: Number(errorMeta.computeUnitsConsumed()),
+            returnData: null
+          }
+        });
+      }
+
+      const meta = result.meta();
+      const returnData = meta.returnData();
+      
+      return this.createSuccessResponse(id, {
+        context: { slot: Number(this.slot) },
+        value: {
+          err: null,
+          logs: meta.logs(),
+          accounts: null,
+          unitsConsumed: Number(meta.computeUnitsConsumed()),
+          returnData: returnData ? {
+            programId: this.encodeBase58(returnData.programId()),
+            data: [Buffer.from(returnData.data()).toString("base64"), "base64"]
+          } : null
+        }
+      });
+    } catch (error: any) {
+      return this.createErrorResponse(
+        id,
+        -32003,
+        "Simulation failed",
+        error.message
+      );
+    }
+  }
+
+  private handleRequestAirdrop(id: string | number, params: any): JsonRpcResponse {
+    const [pubkeyStr, lamports] = params;
+    
+    try {
+      const pubkey = new PublicKey(pubkeyStr);
+      const result = this.svm.airdrop(pubkey, BigInt(lamports));
+      
+      if (!result || "err" in result) {
+        return this.createErrorResponse(
+          id,
+          -32003,
+          "Airdrop failed",
+          result?.err || "Unknown error"
+        );
+      }
+
+      const signature = this.encodeBase58(new Uint8Array(64).fill(1));
+      
+      this.slot += 1n;
+      this.blockHeight += 1n;
+      
+      return this.createSuccessResponse(id, signature);
+    } catch (error: any) {
+      return this.createErrorResponse(id, -32602, "Invalid params", error.message);
+    }
+  }
+
+  private handleGetSlot(id: string | number, params: any): JsonRpcResponse {
+    return this.createSuccessResponse(id, Number(this.slot));
+  }
+
+  private handleGetBlockHeight(id: string | number, params: any): JsonRpcResponse {
+    return this.createSuccessResponse(id, Number(this.blockHeight));
+  }
+
+  private handleGetTransaction(id: string | number, params: any): JsonRpcResponse {
+    const [signature] = params;
+    
+    try {
+      const sigBytes = this.decodeBase58(signature);
+      const tx = this.svm.getTransaction(sigBytes);
+      
+      if (!tx) {
+        return this.createSuccessResponse(id, null);
+      }
+
+      const isError = "err" in tx;
+      const logs = isError ? tx.meta().logs() : tx.logs();
+      
+      return this.createSuccessResponse(id, {
+        slot: Number(this.slot),
+        transaction: {
+          signatures: [signature]
+        },
+        meta: {
+          err: isError ? tx.err() : null,
+          fee: 5000,
+          preBalances: [],
+          postBalances: [],
+          innerInstructions: [],
+          logMessages: logs,
+          preTokenBalances: [],
+          postTokenBalances: [],
+          rewards: []
+        }
+      });
+    } catch (error: any) {
+      return this.createErrorResponse(id, -32602, "Invalid params", error.message);
+    }
+  }
+
+  private handleGetSignatureStatuses(id: string | number, params: any): JsonRpcResponse {
+    const [signatures, config] = params;
+    
+    const statuses = signatures.map((sig: string) => {
+      try {
+        const sigBytes = this.decodeBase58(sig);
+        const tx = this.svm.getTransaction(sigBytes);
+        
+        if (!tx) {
+          return null;
+        }
+
+        return {
+          slot: Number(this.slot),
+          confirmations: 0,
+          err: "err" in tx ? tx.err : null,
+          confirmationStatus: "finalized"
+        };
+      } catch {
+        return null;
+      }
+    });
+
+    return this.createSuccessResponse(id, {
+      context: { slot: Number(this.slot) },
+      value: statuses
+    });
+  }
+
+  private handleGetMinimumBalanceForRentExemption(
+    id: string | number, 
+    params: any
+  ): JsonRpcResponse {
+    const [dataLength] = params;
+    const minBalance = this.svm.minimumBalanceForRentExemption(BigInt(dataLength));
+    
+    return this.createSuccessResponse(id, Number(minBalance));
+  }
+
+  private handleGetMultipleAccounts(id: string | number, params: any): JsonRpcResponse {
+    const [pubkeys, config] = params;
+    const encoding = config?.encoding || "base64";
+    
+    const accounts = pubkeys.map((pubkeyStr: string) => {
+      try {
+        const pubkey = new PublicKey(pubkeyStr);
+        const account = this.svm.getAccount(pubkey);
+        
+        if (!account) {
+          return null;
+        }
+
+        return {
+          lamports: Number(account.lamports),
+          owner: new PublicKey(account.owner).toBase58(),
+          data: encoding === "base64"
+            ? [Buffer.from(account.data).toString("base64"), encoding]
+            : Array.from(account.data),
+          executable: account.executable,
+          rentEpoch: Number(account.rentEpoch || 0)
+        };
+      } catch {
+        return null;
+      }
+    });
+
+    return this.createSuccessResponse(id, {
+      context: { slot: Number(this.slot) },
+      value: accounts
+    });
+  }
+}
+
+export function createLiteSVMRpcServer(port: number = 8899) {
+  const server = new LiteSVMRpcServer();
+
+  const bunServer = Bun.serve({
+    port,
+    async fetch(req) {
+      if (req.method === "POST") {
+        try {
+          const body = await req.json();
+          
+          if (Array.isArray(body)) {
+            const responses = await Promise.all(
+              body.map(request => server.handleRequest(request))
+            );
+            return Response.json(responses);
+          } else {
+            const response = await server.handleRequest(body as JsonRpcRequest);
+            return Response.json(response);
+          }
+        } catch (error) {
+          return Response.json({
+            jsonrpc: "2.0",
+            id: null,
+            error: {
+              code: -32700,
+              message: "Parse error"
+            }
+          });
+        }
+      }
+
+      if (req.method === "OPTIONS") {
+        return new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+          }
+        });
+      }
+
+      return new Response("Method not allowed", { status: 405 });
+    },
+    error(error) {
+      console.error("Server error:", error);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+  });
+
+  console.log(`🚀 LiteSVM RPC Server running on http://localhost:${port}`);
+  console.log(`   Compatible with Solana RPC API`);
+  console.log(`   Use with: solana config set -u http://localhost:${port}`);
+  
+  return bunServer;
+}
