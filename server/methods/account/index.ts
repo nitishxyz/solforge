@@ -9,3 +9,4 @@ export { getAccountInfo } from "./get-account-info";
 export { getBalance } from "./get-balance";
 export { getMultipleAccounts } from "./get-multiple-accounts";
 export { requestAirdrop } from "./request-airdrop";
+export { getParsedAccountInfo } from "./get-parsed-account-info";
