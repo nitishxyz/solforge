@@ -1,4 +1,5 @@
 import { LiteSVM } from "litesvm";
+import type { Keypair } from "@solana/web3.js";
 
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -31,19 +32,8 @@ export interface RpcMethodContext {
     message: string, 
     data?: any
   ) => JsonRpcResponse;
-  getLocalSignatureStatus: (signature: string) => {
-    slot: bigint;
-    err: any | null;
-    confirmationStatus: "processed" | "confirmed" | "finalized";
-  } | undefined;
-  recordLocalSignature: (
-    signature: string,
-    status: {
-      slot: bigint;
-      err: any | null;
-      confirmationStatus: "processed" | "confirmed" | "finalized";
-    }
-  ) => void;
+  notifySignature: (signature: string) => void;
+  getFaucet: () => Keypair;
 }
 
 export type RpcMethodHandler = (
