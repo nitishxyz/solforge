@@ -14,7 +14,8 @@ import {
   simulateTransaction,
   getTransaction,
   getSignatureStatuses,
-  getParsedTransaction
+  getParsedTransaction,
+  getSignaturesForAddress
 } from "./transaction";
 
 import {
@@ -22,7 +23,8 @@ import {
   getSlot,
   getBlockHeight,
   isBlockhashValid,
-  getBlock
+  getBlock,
+  getBlocksWithLimit
 } from "./block";
 
 import {
@@ -39,9 +41,18 @@ import {
   getIdentity,
   getInflationGovernor,
   getInflationRate,
+  getInflationReward,
   getSupply,
   getBlockProduction,
-  getParsedProgramAccounts
+  getParsedProgramAccounts,
+  getProgramAccounts,
+  getTokenAccountBalance,
+  getTokenAccountsByOwner,
+  getTokenAccountsByDelegate,
+  getTokenLargestAccounts,
+  getTokenSupply,
+  getBlockCommitment,
+  getLargestAccounts
 } from "./program";
 
 import {
@@ -55,7 +66,9 @@ import {
   getStakeActivation,
   getMaxRetransmitSlot,
   getHighestSnapshotSlot,
-  minimumLedgerSlot
+  minimumLedgerSlot,
+  getStakeMinimumDelegation,
+  getMaxShredInsertSlot
 } from "./epoch";
 
 import {
@@ -87,6 +100,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getTransaction,
   getParsedTransaction,
   getSignatureStatuses,
+  getSignaturesForAddress,
   
   // Block methods
   getLatestBlockhash,
@@ -94,6 +108,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getBlockHeight,
   isBlockhashValid,
   getBlock,
+  getBlocksWithLimit,
   
   // System methods
   getMinimumBalanceForRentExemption,
@@ -107,9 +122,18 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getIdentity,
   getInflationGovernor,
   getInflationRate,
+  getInflationReward,
   getSupply,
   getBlockProduction,
   getParsedProgramAccounts,
+  getProgramAccounts,
+  getTokenAccountBalance,
+  getTokenAccountsByOwner,
+  getTokenAccountsByDelegate,
+  getTokenLargestAccounts,
+  getTokenSupply,
+  getBlockCommitment,
+  getLargestAccounts,
   
   // Epoch/cluster methods
   getEpochSchedule,
@@ -123,6 +147,8 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getMaxRetransmitSlot,
   getHighestSnapshotSlot,
   minimumLedgerSlot,
+  getStakeMinimumDelegation,
+  getMaxShredInsertSlot,
   // Performance metrics
   getRecentPerformanceSamples,
   getTransactionCount,
@@ -145,11 +171,13 @@ export {
   simulateTransaction,
   getTransaction,
   getSignatureStatuses,
+  getSignaturesForAddress,
   getLatestBlockhash,
   getSlot,
   getBlockHeight,
   isBlockhashValid,
   getBlock,
+  getBlocksWithLimit,
   getMinimumBalanceForRentExemption,
   getHealth,
   getVersion,
@@ -160,9 +188,18 @@ export {
   getIdentity,
   getInflationGovernor,
   getInflationRate,
+  getInflationReward,
   getSupply,
   getBlockProduction,
   getParsedProgramAccounts,
+  getProgramAccounts,
+  getTokenAccountBalance,
+  getTokenAccountsByOwner,
+  getTokenAccountsByDelegate,
+  getTokenLargestAccounts,
+  getTokenSupply,
+  getBlockCommitment,
+  getLargestAccounts,
   getEpochSchedule,
   getEpochInfo,
   getLeaderSchedule,
@@ -174,6 +211,8 @@ export {
   getMaxRetransmitSlot,
   getHighestSnapshotSlot,
   minimumLedgerSlot,
+  getStakeMinimumDelegation,
+  getMaxShredInsertSlot,
   getRecentPerformanceSamples,
   getTransactionCount,
   getAddressLookupTable,
