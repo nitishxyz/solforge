@@ -5,7 +5,8 @@ import {
   getAccountInfo,
   getBalance,
   getMultipleAccounts,
-  requestAirdrop
+  requestAirdrop,
+  getParsedAccountInfo
 } from "./account";
 
 import {
@@ -39,7 +40,8 @@ import {
   getInflationGovernor,
   getInflationRate,
   getSupply,
-  getBlockProduction
+  getBlockProduction,
+  getParsedProgramAccounts
 } from "./program";
 
 import {
@@ -69,12 +71,15 @@ import {
   getTransactionCount
 } from "./performance";
 
+import { getAddressLookupTable } from "./get-address-lookup-table";
+
 export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Account methods
   getAccountInfo,
   getBalance,
   getMultipleAccounts,
   requestAirdrop,
+  getParsedAccountInfo,
   
   // Transaction methods
   sendTransaction,
@@ -104,6 +109,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getInflationRate,
   getSupply,
   getBlockProduction,
+  getParsedProgramAccounts,
   
   // Epoch/cluster methods
   getEpochSchedule,
@@ -120,6 +126,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Performance metrics
   getRecentPerformanceSamples,
   getTransactionCount,
+  getAddressLookupTable,
   
   // Fee methods
   getRecentPrioritizationFees,
@@ -155,6 +162,7 @@ export {
   getInflationRate,
   getSupply,
   getBlockProduction,
+  getParsedProgramAccounts,
   getEpochSchedule,
   getEpochInfo,
   getLeaderSchedule,
@@ -168,6 +176,7 @@ export {
   minimumLedgerSlot,
   getRecentPerformanceSamples,
   getTransactionCount,
+  getAddressLookupTable,
   getRecentPrioritizationFees,
   getFeeForMessage,
   getFees,

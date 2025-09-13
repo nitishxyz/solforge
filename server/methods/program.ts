@@ -185,3 +185,9 @@ export const getTokenLargestAccounts: RpcMethodHandler = (id, params, context) =
     value: []
   });
 };
+
+export const getParsedProgramAccounts: RpcMethodHandler = (id, params, context) => {
+  // Minimal implementation: accept params and return empty set for compatibility
+  // params: [programId, config]
+  return context.createSuccessResponse(id, []);
+};

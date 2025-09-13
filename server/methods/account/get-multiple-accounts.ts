@@ -18,12 +18,27 @@ export const getMultipleAccounts: RpcMethodHandler = (id, params, context) => {
         return null;
       }
 
+      const owner = new PublicKey(account.owner).toBase58();
+      if (encoding === "jsonParsed") {
+        const program = owner === "11111111111111111111111111111111" ? "system" : "unknown";
+        const space = account.data?.length ?? 0;
+        return {
+          lamports: Number(account.lamports),
+          owner,
+          executable: account.executable,
+          rentEpoch: Number(account.rentEpoch || 0),
+          data: {
+            program,
+            parsed: program === "system" ? { type: "account", info: {} } : null,
+            space
+          }
+        };
+      }
+
       return {
         lamports: Number(account.lamports),
-        owner: new PublicKey(account.owner).toBase58(),
-        data: encoding === "base64"
-          ? [Buffer.from(account.data).toString("base64"), encoding]
-          : Array.from(account.data),
+        owner,
+        data: [Buffer.from(account.data).toString("base64"), "base64"] as const,
         executable: account.executable,
         rentEpoch: Number(account.rentEpoch || 0)
       };
