@@ -6,6 +6,8 @@ export class LiteSVMRpcServer {
   private svm: LiteSVM;
   private slot: bigint = 1n;
   private blockHeight: bigint = 1n;
+  private localSignatures: Map<string, { slot: bigint; err: any | null; confirmationStatus: "processed"|"confirmed"|"finalized" }> = new Map();
+  private signatureListeners: Set<(sig: string) => void> = new Set();
 
   constructor() {
     this.svm = new LiteSVM()
@@ -14,7 +16,8 @@ export class LiteSVMRpcServer {
       .withDefaultPrograms()
       .withLamports(1000000000000n)
       .withBlockhashCheck(false)
-      .withTransactionHistory(0n)
+      // keep some tx history so getTransaction/getSignatureStatuses can work
+      .withTransactionHistory(1000n)
       .withSigverify(false);
   }
 
@@ -94,8 +97,34 @@ export class LiteSVMRpcServer {
       encodeBase58: this.encodeBase58.bind(this),
       decodeBase58: this.decodeBase58.bind(this),
       createSuccessResponse: this.createSuccessResponse.bind(this),
-      createErrorResponse: this.createErrorResponse.bind(this)
+      createErrorResponse: this.createErrorResponse.bind(this),
+      getLocalSignatureStatus: (signature: string) => this.localSignatures.get(signature),
+      recordLocalSignature: (signature, status) => {
+        this.localSignatures.set(signature, status);
+        for (const cb of this.signatureListeners) cb(signature);
+      }
     };
+  }
+
+  onSignatureRecorded(cb: (sig: string) => void) {
+    this.signatureListeners.add(cb);
+    return () => this.signatureListeners.delete(cb);
+  }
+
+  getSignatureStatus(signature: string): { slot: number; err: any | null } | null {
+    const local = this.localSignatures.get(signature);
+    if (local) return { slot: Number(local.slot), err: local.err };
+    try {
+      const sigBytes = this.decodeBase58(signature);
+      const tx = this.svm.getTransaction(sigBytes);
+      if (!tx) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let errVal: any = null;
+      try { errVal = ("err" in tx) ? (tx as any).err() : null; } catch { errVal = null; }
+      return { slot: Number(this.slot), err: errVal };
+    } catch {
+      return null;
+    }
   }
 
   async handleRequest(request: JsonRpcRequest): Promise<JsonRpcResponse> {
@@ -186,5 +215,5 @@ export function createLiteSVMRpcServer(port: number = 8899) {
   console.log(`   Compatible with Solana RPC API`);
   console.log(`   Use with: solana config set -u http://localhost:${port}`);
   
-  return bunServer;
+  return { httpServer: bunServer, rpcServer: server };
 }

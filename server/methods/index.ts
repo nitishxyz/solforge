@@ -28,6 +28,28 @@ import {
   getVersion
 } from "./system";
 
+import {
+  getEpochSchedule,
+  getEpochInfo,
+  getLeaderSchedule,
+  getSlotLeader,
+  getSlotLeaders,
+  getVoteAccounts,
+  getClusterNodes,
+  getStakeActivation,
+  getMaxRetransmitSlot,
+  getHighestSnapshotSlot,
+  minimumLedgerSlot
+} from "./epoch";
+
+import {
+  getRecentPrioritizationFees,
+  getFeeForMessage,
+  getFees,
+  getFeeCalculatorForBlockhash,
+  getFeeRateGovernor
+} from "./fee";
+
 export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Account methods
   getAccountInfo,
@@ -50,7 +72,27 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   // System methods
   getMinimumBalanceForRentExemption,
   getHealth,
-  getVersion
+  getVersion,
+  
+  // Epoch/cluster methods
+  getEpochSchedule,
+  getEpochInfo,
+  getLeaderSchedule,
+  getSlotLeader,
+  getSlotLeaders,
+  getVoteAccounts,
+  getClusterNodes,
+  getStakeActivation,
+  getMaxRetransmitSlot,
+  getHighestSnapshotSlot,
+  minimumLedgerSlot,
+  
+  // Fee methods
+  getRecentPrioritizationFees,
+  getFeeForMessage,
+  getFees,
+  getFeeCalculatorForBlockhash,
+  getFeeRateGovernor
 };
 
 export {
@@ -68,5 +110,21 @@ export {
   isBlockhashValid,
   getMinimumBalanceForRentExemption,
   getHealth,
-  getVersion
+  getVersion,
+  getEpochSchedule,
+  getEpochInfo,
+  getLeaderSchedule,
+  getSlotLeader,
+  getSlotLeaders,
+  getVoteAccounts,
+  getClusterNodes,
+  getStakeActivation,
+  getMaxRetransmitSlot,
+  getHighestSnapshotSlot,
+  minimumLedgerSlot,
+  getRecentPrioritizationFees,
+  getFeeForMessage,
+  getFees,
+  getFeeCalculatorForBlockhash,
+  getFeeRateGovernor
 };
