@@ -12,14 +12,16 @@ import {
   sendTransaction,
   simulateTransaction,
   getTransaction,
-  getSignatureStatuses
+  getSignatureStatuses,
+  getParsedTransaction
 } from "./transaction";
 
 import {
   getLatestBlockhash,
   getSlot,
   getBlockHeight,
-  isBlockhashValid
+  isBlockhashValid,
+  getBlock
 } from "./block";
 
 import {
@@ -27,6 +29,18 @@ import {
   getHealth,
   getVersion
 } from "./system";
+
+import {
+  getBlockTime,
+  getBlocks,
+  getFirstAvailableBlock,
+  getGenesisHash,
+  getIdentity,
+  getInflationGovernor,
+  getInflationRate,
+  getSupply,
+  getBlockProduction
+} from "./program";
 
 import {
   getEpochSchedule,
@@ -50,6 +64,11 @@ import {
   getFeeRateGovernor
 } from "./fee";
 
+import {
+  getRecentPerformanceSamples,
+  getTransactionCount
+} from "./performance";
+
 export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Account methods
   getAccountInfo,
@@ -61,6 +80,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   sendTransaction,
   simulateTransaction,
   getTransaction,
+  getParsedTransaction,
   getSignatureStatuses,
   
   // Block methods
@@ -68,11 +88,22 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getSlot,
   getBlockHeight,
   isBlockhashValid,
+  getBlock,
   
   // System methods
   getMinimumBalanceForRentExemption,
   getHealth,
   getVersion,
+  // Program/network info methods
+  getBlockTime,
+  getBlocks,
+  getFirstAvailableBlock,
+  getGenesisHash,
+  getIdentity,
+  getInflationGovernor,
+  getInflationRate,
+  getSupply,
+  getBlockProduction,
   
   // Epoch/cluster methods
   getEpochSchedule,
@@ -86,6 +117,9 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getMaxRetransmitSlot,
   getHighestSnapshotSlot,
   minimumLedgerSlot,
+  // Performance metrics
+  getRecentPerformanceSamples,
+  getTransactionCount,
   
   // Fee methods
   getRecentPrioritizationFees,
@@ -108,9 +142,19 @@ export {
   getSlot,
   getBlockHeight,
   isBlockhashValid,
+  getBlock,
   getMinimumBalanceForRentExemption,
   getHealth,
   getVersion,
+  getBlockTime,
+  getBlocks,
+  getFirstAvailableBlock,
+  getGenesisHash,
+  getIdentity,
+  getInflationGovernor,
+  getInflationRate,
+  getSupply,
+  getBlockProduction,
   getEpochSchedule,
   getEpochInfo,
   getLeaderSchedule,
@@ -122,6 +166,8 @@ export {
   getMaxRetransmitSlot,
   getHighestSnapshotSlot,
   minimumLedgerSlot,
+  getRecentPerformanceSamples,
+  getTransactionCount,
   getRecentPrioritizationFees,
   getFeeForMessage,
   getFees,
