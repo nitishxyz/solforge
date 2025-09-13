@@ -1,549 +1,523 @@
-# SolForge
+# SolForge – Lightning-Fast Solana Development Server
 
-[![npm version](https://badge.fury.io/js/solforge.svg)](https://badge.fury.io/js/solforge)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A blazing-fast, drop-in replacement for `solana-test-validator` built on LiteSVM. Get a full Solana development environment running in under 1 second with comprehensive RPC support and zero configuration.
 
-**SolForge** is a powerful Solana localnet orchestration tool that simplifies the process of setting up and managing local Solana development environments. It allows you to clone mainnet programs and tokens to your local validator, making it easy to develop and test Solana applications with real-world data.
+## 🚀 Why SolForge?
+
+| Feature           | solana-test-validator | SolForge         |
+| ----------------- | --------------------- | ---------------- |
+| **Startup Time**  | 10-30 seconds         | < 1 second       |
+| **Memory Usage**  | 500MB+                | ~50MB            |
+| **Configuration** | Complex setup         | Zero config      |
+| **Airdrops**      | Rate limited          | Unlimited        |
+| **Database**      | Full ledger           | Ephemeral SQLite |
 
 ## ✨ Features
 
-- 🚀 **One-command setup** - Initialize and start a localnet with a single command
-- 🔄 **Mainnet cloning** - Clone tokens and programs from Solana mainnet to your localnet
-- 🎯 **Multi-validator support** - Run multiple validators simultaneously with different configurations
-- 💰 **Token management** - Mint tokens with custom amounts and distribute to specific wallets
-- 🔧 **Program deployment** - Deploy and manage Solana programs on your localnet
-- 📊 **Process management** - Monitor, start, stop, and manage validator processes
-- 🌐 **Port management** - Automatic port allocation and conflict resolution
-- 📝 **Configuration-driven** - JSON-based configuration for reproducible environments
-- 🎨 **Beautiful CLI** - Colorful, intuitive command-line interface
-- 🌐 **REST API** - Background API server for programmatic access to validator operations
+- ⚡ **Sub-second startup** with LiteSVM in-memory execution
+- 🔄 **Drop-in replacement** for solana-test-validator
+- 💧 **Unlimited airdrops** via real faucet transfers
+- 🗃️ **Smart persistence** with ephemeral SQLite + Drizzle
+- 🔌 **WebSocket support** for signature subscriptions
+- 🧰 **Universal compatibility** with Solana CLI, Anchor, @solana/kit, web3.js
+- 📊 **Rich RPC coverage** (90+ methods implemented)
+- 🖥️ **Built-in GUI dashboard** for airdrops, mints, and asset management
+- 🎯 **CLI tools** for tokens, programs, and accounts
 
-## 📦 Installation
+## 📦 Installation & Quick Start
 
-### Prerequisites
-
-- [Solana CLI tools](https://docs.solana.com/cli/install-solana-cli-tools) installed and configured
-- Node.js 18+ or [Bun](https://bun.sh) runtime
-
-### Install from npm (Recommended)
+### Option 1: From Source (Recommended)
 
 ```bash
-# Install globally with npm
-npm install -g solforge
-
-# Or with bun
-bun install -g solforge
-
-# Or with yarn
-yarn global add solforge
-```
-
-### Install from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/nitishxyz/solforge.git
+# Clone and install
+git clone https://github.com/nitishxyz/solforge
 cd solforge
-
-# Install dependencies
 bun install
 
-# Build and install globally
-bun run build:npm
-npm install -g .
+# Start the server
+bun start
+# or with debug logging
+DEBUG_RPC_LOG=1 bun start
 ```
 
-### Verify Installation
+### Option 2: Compiled Binary (Coming Soon)
 
 ```bash
-solforge --version
-solforge --help
+# Download and run
+curl -L https://github.com/nitishxyz/solforge/releases/latest/download/solforge-$(uname -s)-$(uname -m) -o solforge
+chmod +x solforge
+./solforge  # first run guides you through setup
 ```
 
-## 🚀 Quick Start
-
-### Basic Usage
-
-1. **Initialize a new project**:
-
-   ```bash
-   solforge init
-   ```
-
-2. **Start your localnet**:
-
-   ```bash
-   solforge start
-   ```
-
-3. **Check status**:
-
-   ```bash
-   solforge status
-   solforge list
-   ```
-
-4. **Stop when done**:
-   ```bash
-   solforge stop --all
-   ```
-
-### API Server
-
-SolForge automatically starts a REST API server alongside your validator, providing programmatic access to validator operations:
+### Option 3: CLI Development
 
 ```bash
-# API server starts automatically with the validator
-solforge start
-
-# API available at http://127.0.0.1:3000/api
-curl http://127.0.0.1:3000/api/health
-
-# Mint tokens via API (using mint address)
-curl -X POST http://127.0.0.1:3000/api/tokens/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/mint \
-  -H "Content-Type: application/json" \
-  -d '{"walletAddress": "YOUR_WALLET_ADDRESS", "amount": 1000}'
-
-# Get wallet balances
-curl http://127.0.0.1:3000/api/wallet/YOUR_WALLET_ADDRESS/balances
+# Use the CLI directly
+bun src/cli/main.ts start
+bun src/cli/main.ts config init  # Create sf.config.json
 ```
 
-For complete API documentation, see [API Documentation](docs/API.md).
+## 🎯 Usage Examples
 
-## 📖 Documentation
-
-### 📚 Additional Documentation
-
-- [API Documentation](docs/API.md) - REST API endpoints and usage examples
-- [Configuration Guide](docs/CONFIGURATION.md) - Detailed configuration options and examples
-- [Troubleshooting Guide](#-troubleshooting) - Common issues and solutions
-
-### Commands
-
-#### `solforge init`
-
-Initialize a new `sf.config.json` configuration file in the current directory.
+### With Solana CLI
 
 ```bash
-solforge init
+# Connect to SolForge
+solana config set -u http://localhost:8899
+
+# Get unlimited airdrops
+solana airdrop 1000
+
+# Deploy programs normally
+solana program deploy ./program.so
 ```
 
-This command will prompt you for:
+### With @solana/kit
 
-- Project name
-- Description
-- RPC port (default: 8899)
-- Whether to include USDC token
+```typescript
+import { createSolanaRpc, generateKeyPairSigner, lamports } from "@solana/kit";
 
-#### `solforge start [options]`
+const rpc = createSolanaRpc("http://localhost:8899");
 
-Start a localnet validator with the current configuration.
+// Get account balance
+const { value: balance } = await rpc.getBalance(address).send();
+
+// Request airdrops (no limits!)
+const signature = await rpc
+  .requestAirdrop(
+    address,
+    lamports(1_000_000_000n), // 1 SOL
+  )
+  .send();
+```
+
+### With web3.js
+
+```typescript
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+
+const connection = new Connection("http://localhost:8899");
+
+// Get account info
+const accountInfo = await connection.getAccountInfo(publicKey);
+
+// Send transaction
+const signature = await connection.sendTransaction(transaction, [keypair]);
+```
+
+### With Anchor
+
+```typescript
+// anchor.toml - use default settings
+[provider]
+cluster = \"http://127.0.0.1:8899\"
+wallet = \"~/.config/solana/id.json\"
+
+// Deploy and test normally
+anchor build
+anchor deploy
+anchor test --skip-local-validator  # SolForge is already running
+```
+
+## 🖥️ GUI Dashboard
+
+Solforge ships a dark-mode dashboard that starts alongside the RPC server. By default it listens on `http://127.0.0.1:42069` and provides:
+
+- Quick airdrops and SPL mints via a faucet-aware form.
+- Live RPC metrics (slot, block height, transaction count, blockhash, faucet balance).
+- Tables of cloned programs and token mints with one-click modals to import additional assets.
+
+### Launching the Dashboard
 
 ```bash
-solforge start                # Start with default settings
-solforge start --debug        # Start with debug logging
-solforge start --network      # Make API server accessible over network
-solforge start --debug --network  # Debug mode + network access
+# Run the interactive CLI (starts RPC + GUI)
+bun src/cli/main.ts
+
+# Or start directly
+bun src/cli/main.ts start
+
+# Open the dashboard
+open http://127.0.0.1:42069
 ```
 
-**Options:**
+### GUI API Endpoints
 
-- `--debug` - Enable debug logging to see detailed command output
-- `--network` - Make API server accessible over network (binds to 0.0.0.0 instead of 127.0.0.1)
+The GUI server exposes REST endpoints backed by the same JSON-RPC methods:
 
-#### `solforge list`
+| Method & Path             | Description                          |
+| ------------------------- | ------------------------------------ |
+| `GET /api/status`         | Aggregated RPC stats + faucet info   |
+| `GET /api/programs`       | List the registered programs         |
+| `GET /api/tokens`         | Detailed SPL mint metadata           |
+| `POST /api/airdrop`       | Proxy to `requestAirdrop`            |
+| `POST /api/mint`          | Proxy to `solforgeMintTo`            |
+| `POST /api/clone/program` | Proxy to program clone helpers       |
+| `POST /api/clone/token`   | Proxy to token clone helpers         |
 
-List all running validators with detailed information.
+Override the GUI port via `sf.config.json` (`gui.port`) or `SOLFORGE_GUI_PORT`.
+
+Run `bun run build:css` before `bun run build:bin` to embed the latest Tailwind styles in the standalone binary.
+
+
+## 🔧 Configuration
+
+SolForge works with zero configuration, but can be customized via environment variables or config file.
+
+### Environment Variables
 
 ```bash
-solforge list
+# Server settings
+export RPC_PORT=8899              # HTTP port (WS uses port+1)
+export DEBUG_RPC_LOG=1            # Log all RPC calls
+
+# Database
+export SOLFORGE_DB_MODE=ephemeral # or 'persistent'
+export SOLFORGE_DB_PATH=.solforge/db.db
+
+# Faucet
+export SOLFORGE_FAUCET_LAMPORTS=1000000000000000  # 1M SOL
 ```
 
-Shows:
-
-- Validator ID and name
-- Process ID (PID)
-- RPC and Faucet ports
-- Uptime
-- Status
-- Connection URLs
-
-#### `solforge stop [validator-id] [options]`
-
-Stop running validators.
+### Config File (sf.config.json)
 
 ```bash
-solforge stop                 # Interactive selection
-solforge stop <validator-id>  # Stop specific validator
-solforge stop --all           # Stop all validators
-solforge stop --kill          # Force kill (SIGKILL)
+# Generate default config
+bun src/cli/main.ts config init
+
+# Edit configuration
+bun src/cli/main.ts config set server.rpcPort 9000
+bun src/cli/main.ts config get server.db.mode
 ```
-
-**Options:**
-
-- `--all` - Stop all running validators
-- `--kill` - Force kill the validator (SIGKILL instead of SIGTERM)
-
-#### `solforge kill [validator-id] [options]`
-
-Force kill running validators with interactive selection.
-
-```bash
-solforge kill                 # Interactive selection with validator list
-solforge kill <validator-id>  # Kill specific validator
-solforge kill --all           # Kill all validators
-```
-
-**Interactive Mode:**
-When run without arguments, `solforge kill` will:
-
-- Display a table of all running validators
-- Allow you to select which validator to kill using arrow keys
-- Provide options to kill individual validators, all validators, or cancel
-- No need to copy/paste validator IDs from `solforge list`
-
-#### `solforge status`
-
-Show overall localnet status and configuration summary.
-
-```bash
-solforge status
-```
-
-#### `solforge add-program [options]`
-
-Add a program to your configuration.
-
-```bash
-solforge add-program                                    # Interactive mode
-solforge add-program --program-id <address>             # Non-interactive
-solforge add-program --program-id <address> --name <name>
-```
-
-**Options:**
-
-- `--program-id <address>` - Mainnet program ID to clone and deploy
-- `--name <name>` - Friendly name for the program
-- `--no-interactive` - Run in non-interactive mode
-
-#### `solforge mint [options]`
-
-Interactively mint tokens to any wallet address.
-
-```bash
-solforge mint                                        # Interactive mode
-solforge mint --symbol USDC --wallet <address> --amount 1000  # CLI mode
-solforge mint --rpc-url http://localhost:8899       # Custom RPC
-```
-
-**Options:**
-
-- `--rpc-url <url>` - RPC URL to use (default: "http://127.0.0.1:8899")
-- `--symbol <symbol>` - Token symbol to mint
-- `--wallet <address>` - Wallet address to mint to
-- `--amount <amount>` - Amount to mint
-
-**Interactive Mode:**
-When run without arguments, `solforge mint` will:
-
-- Display available cloned tokens
-- Allow you to select which token to mint
-- Prompt for recipient wallet address
-- Prompt for amount to mint
-- Handle SPL token account creation automatically
-
-#### `solforge api-server [options]`
-
-Start the API server as a standalone service (without validator).
-
-```bash
-solforge api-server                                    # Start on default port 3000
-solforge api-server --port 8080                       # Custom port
-solforge api-server --host 0.0.0.0                    # Network accessible
-solforge api-server --rpc-url http://localhost:8899   # Custom RPC
-```
-
-**Options:**
-
-- `-p, --port <port>` - Port for API server (default: 3000)
-- `--host <host>` - Host to bind to (default: 127.0.0.1, use 0.0.0.0 for network access)
-- `--rpc-url <url>` - Validator RPC URL (default: http://127.0.0.1:8899)
-- `--faucet-url <url>` - Validator faucet URL (default: http://127.0.0.1:9900)
-- `--work-dir <dir>` - Work directory (default: ./.solforge)
-
-#### `solforge reset`
-
-Reset localnet ledger (coming soon).
-
-```bash
-solforge reset
-```
-
-### Configuration File (`sf.config.json`)
-
-The configuration file defines your localnet setup. For detailed configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
-
-Here's the complete schema:
 
 ```json
 {
-  "name": "my-localnet",
-  "description": "Local Solana development environment",
-  "tokens": [
-    {
-      "symbol": "USDC",
-      "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "mintAuthority": "./keypairs/mint-authority.json",
-      "mintAmount": 1000000,
-      "cloneMetadata": true,
-      "recipients": [
-        {
-          "wallet": "YourWalletPublicKeyHere",
-          "amount": 1000000000
-        }
-      ]
+  \"server\": {
+    \"rpcPort\": 8899,
+    \"wsPort\": 8900,
+    \"db\": {
+      \"mode\": \"ephemeral\",
+      \"path\": \".solforge/db.db\"
     }
-  ],
-  "programs": [
-    {
-      "name": "Token Metadata",
-      "mainnetProgramId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-      "cluster": "mainnet-beta",
-      "upgradeable": false,
-      "dependencies": []
-    }
-  ],
-  "localnet": {
-    "airdropAmount": 100,
-    "faucetAccounts": ["YourWalletPublicKeyHere"],
-    "port": 8899,
-    "faucetPort": 9900,
-    "reset": false,
-    "logLevel": "info",
-    "bindAddress": "127.0.0.1",
-    "limitLedgerSize": 100000,
-    "rpc": "https://api.mainnet-beta.solana.com"
+  },
+  \"svm\": {
+    \"initialLamports\": \"1000000000000000\",
+    \"faucetSOL\": 1000
+  },
+  \"clone\": {
+    \"endpoint\": \"https://api.mainnet-beta.solana.com\",
+    \"programs\": [],
+    \"tokens\": [],
+    \"programAccounts\": []
+  },
+  \"gui\": {
+    \"enabled\": true,
+    \"port\": 42069
+  },
+  \"bootstrap\": {
+    \"airdrops\": []
   }
 }
 ```
 
-#### Configuration Schema
+## 🛠️ CLI Tools
 
-For detailed configuration options and examples, see the [Configuration Guide](docs/CONFIGURATION.md).
-
-**Quick Reference:**
-
-- `name` - Project name
-- `description` - Project description
-- `tokens[]` - Tokens to clone from mainnet
-- `programs[]` - Programs to clone from mainnet
-- `localnet` - Validator settings (ports, logging, etc.)
-
-## 🎯 Use Cases
-
-### DeFi Development
-
-Clone popular DeFi tokens and programs to test your application:
-
-```json
-{
-  "name": "defi-testing",
-  "tokens": [
-    {
-      "symbol": "USDC",
-      "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "mintAmount": 10000000
-    },
-    {
-      "symbol": "USDT",
-      "mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-      "mintAmount": 10000000
-    }
-  ],
-  "programs": [
-    {
-      "name": "Jupiter",
-      "mainnetProgramId": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
-    }
-  ]
-}
-```
-
-### NFT Development
-
-Set up an environment for NFT projects:
-
-```json
-{
-  "name": "nft-development",
-  "programs": [
-    {
-      "name": "Token Metadata",
-      "mainnetProgramId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-    },
-    {
-      "name": "Candy Machine",
-      "mainnetProgramId": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-    }
-  ]
-}
-```
-
-### Multi-Environment Testing
-
-Run multiple validators for different test scenarios:
+SolForge includes powerful CLI tools for development:
 
 ```bash
-# Terminal 1 - DeFi environment
-cd defi-project
-solforge start
+# Airdrop SOL to any address
+bun src/cli/main.ts airdrop --to <pubkey> --sol 100
 
-# Terminal 2 - NFT environment
-cd nft-project
-solforge start
+# Interactive token minting
+bun src/cli/main.ts mint
 
-# Check both
-solforge list
+# Clone mainnet programs and data
+bun src/cli/main.ts program clone <program-id>
+bun src/cli/main.ts token clone <mint-address>
+
+# Manage configuration
+bun src/cli/main.ts config init
+bun src/cli/main.ts config set server.rpcPort 9000
 ```
 
-## 🔧 Development
+## 📡 RPC Method Coverage
+
+### ✅ Fully Implemented (90+ methods)
+
+**Account Operations**
+
+- `getAccountInfo`, `getMultipleAccounts`, `getBalance`
+- `getParsedAccountInfo`, `getProgramAccounts`
+
+**Transaction Operations**
+
+- `sendTransaction`, `simulateTransaction`, `getTransaction`
+- `getSignatureStatuses`, `getSignaturesForAddress`
+
+**Block & Slot Operations**
+
+- `getLatestBlockhash`, `getBlock`, `getBlocks`, `getBlockHeight`
+- `getSlot`, `getSlotLeader`, `getSlotLeaders`
+
+**System & Network**
+
+- `getHealth`, `getVersion`, `getGenesisHash`, `getEpochInfo`
+- `getSupply`, `getInflationRate`, `getVoteAccounts`
+
+**Fee Operations**
+
+- `getFeeForMessage`, `getFees`, `getRecentPrioritizationFees`
+
+**WebSocket Subscriptions**
+
+- `signatureSubscribe/Unsubscribe` ✅ (real-time notifications)
+- Other subscriptions (stubbed but functional)
+
+### ⚠️ Minimal/Stubbed
+
+- Token-specific RPCs (returns defaults unless indexed)
+- Some advanced cluster RPCs (simplified for local dev)
+
+## 💾 Data & Persistence
+
+### Ephemeral Mode (Default)
+
+- SQLite database recreated on each restart
+- Perfect for testing and development
+- Stores full transaction history during session
+
+### Persistent Mode
+
+```bash
+# Enable persistent storage
+export SOLFORGE_DB_MODE=persistent
+bun start
+```
+
+### Database Schema
+
+```sql
+-- Transactions with full metadata
+CREATE TABLE transactions (
+  signature TEXT PRIMARY KEY,
+  slot INTEGER,
+  raw_transaction BLOB,  -- Full transaction data
+  logs TEXT,            -- JSON array of logs
+  status TEXT,          -- success/error
+  fee INTEGER,
+  timestamp INTEGER
+);
+
+-- Account snapshots
+CREATE TABLE accounts (
+  address TEXT PRIMARY KEY,
+  lamports INTEGER,
+  owner TEXT,
+  data_len INTEGER,
+  last_slot INTEGER
+);
+
+-- Address to signature mapping
+CREATE TABLE address_signatures (
+  address TEXT,
+  signature TEXT,
+  slot INTEGER
+);
+```
+
+## 🔌 WebSocket Support
+
+```javascript
+const ws = new WebSocket("ws://localhost:8900");
+
+// Subscribe to signature updates
+ws.send(
+  JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "signatureSubscribe",
+    params: ["<signature>", { commitment: "confirmed" }],
+  }),
+);
+
+// Receive real-time notifications
+ws.onmessage = (event) => {
+  const response = JSON.parse(event.data);
+  console.log("Signature update:", response);
+};
+```
+
+## 🧪 Testing & Validation
+
+```bash
+# Run comprehensive test suite
+bun run test-client.ts
+
+# Test specific functionality
+bun test
+
+# Validate against real programs
+anchor test --skip-local-validator
+```
+
+## 🏗️ Architecture Overview
+
+```
+SolForge
+├── 🧠 LiteSVM Core           # In-memory execution engine
+├── 🌐 HTTP Server            # JSON-RPC over HTTP
+├── 🔌 WebSocket Server       # Real-time subscriptions
+├── 🗃️ SQLite + Drizzle       # Ephemeral data indexing
+├── 💧 Smart Faucet          # Unlimited SOL distribution
+└── 🎯 CLI Tools             # Developer utilities
+```
+
+### Key Components
+
+- **`index.ts`**: Main server entry point
+- **`server/`**: HTTP and WebSocket servers
+- **`server/methods/`**: Modular RPC implementations
+- **`src/cli/`**: Command-line interface
+- **`src/config/`**: Configuration management
+- **`src/db/`**: Database schema and operations
+
+## 🤝 Development
+
+### Adding New RPC Methods
+
+1. Create method file: `server/methods/your-method.ts`
+2. Implement the `RpcMethodHandler` interface
+3. Export from `server/methods/index.ts`
+4. Add to `rpcMethods` object
+
+```typescript
+// server/methods/your-method.ts
+import type { RpcMethodHandler } from \"../types\";
+
+export const yourMethod: RpcMethodHandler = (id, params, context) => {
+  try {
+    const result = context.svm.someOperation();
+    return context.createSuccessResponse(id, result);
+  } catch (error: any) {
+    return context.createErrorResponse(id, -32603, \"Internal error\");
+  }
+};
+```
 
 ### Project Structure
 
 ```
-src/
-├── commands/          # CLI command implementations
-│   ├── init.ts        # Initialize configuration
-│   ├── start.ts       # Start validator
-│   ├── stop.ts        # Stop validator
-│   ├── list.ts        # List validators
-│   ├── status.ts      # Show status
-│   ├── add-program.ts # Add programs
-│   └── transfer.ts    # Transfer tokens
-├── config/            # Configuration management
-│   └── manager.ts     # Config file operations
-├── services/          # Core services
-│   ├── validator.ts   # Validator management
-│   ├── token-cloner.ts    # Token cloning logic
-│   ├── program-cloner.ts  # Program cloning logic
-│   ├── port-manager.ts    # Port allocation
-│   └── process-registry.ts # Process tracking
-├── types/             # TypeScript definitions
-│   └── config.ts      # Configuration schemas
-├── utils/             # Utility functions
-│   └── shell.ts       # Shell command helpers
-└── index.ts           # CLI entry point
+solforge/
+├── index.ts                     # Main entry point
+├── server/                      # Core server
+│   ├── rpc-server.ts           # HTTP server
+│   ├── ws-server.ts            # WebSocket server
+│   ├── methods/                # RPC method implementations
+│   │   ├── account/           # Account methods
+│   │   ├── transaction/       # Transaction methods
+│   │   └── index.ts          # Method registry
+│   └── lib/                   # Utilities
+├── src/                       # CLI and config
+│   ├── cli/                  # Command-line interface
+│   ├── config/               # Configuration management
+│   └── db/                   # Database operations
+├── test-client.ts            # Integration tests
+└── docs/                     # Documentation
 ```
 
-### Build Commands
+### Development Guidelines
 
-```bash
-# Development
-bun run dev            # Watch mode development
-
-# Building
-bun run build          # Build for Node.js
-bun run build:binary   # Build standalone binary
-
-# Testing & Quality
-bun test               # Run tests
-bun run lint           # Lint code
-bun run format         # Format code
-
-# Installation
-bun run install:binary # Install binary to ~/.local/bin
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Run tests and linting: `bun test && bun run lint`
-5. Commit your changes: `git commit -m 'Add amazing feature'`
-6. Push to the branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
+- Use **Bun exclusively** (no npm/yarn/node)
+- Keep files **under 200 lines** (split when larger)
+- Follow **kebab-case** for filenames
+- Write **comprehensive tests**
+- Use **TypeScript strictly**
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**Port already in use**
+**Server won't start**
 
 ```bash
-# Check what's using the port
+# Check if port is in use
 lsof -i :8899
 
-# Use a different port in sf.config.json
-{
-  "localnet": {
-    "port": 8900,
-    "faucetPort": 9901
-  }
-}
+# Use different port
+RPC_PORT=9000 bun start
 ```
 
-**Validator won't start**
+**Anchor deploy fails**
 
 ```bash
-# Check Solana CLI is installed
-solana --version
-
-# Check configuration
-solforge status
-
-# Start with debug logging
-solforge start --debug
+# Ensure relaxed validation (default)
+# Check logs with debug mode
+DEBUG_RPC_LOG=1 bun start
 ```
 
-**Token cloning fails**
-
-- Ensure RPC URL in config is accessible
-- Check mainnet mint address is correct
-- Verify network connectivity
-
-**Program deployment fails**
-
-- Ensure program ID exists on specified cluster
-- Check if program has dependencies that need to be deployed first
-- Verify sufficient SOL for deployment
-
-### Debug Mode
-
-Use `--debug` flag to see detailed command output:
+**WebSocket connection issues**
 
 ```bash
-solforge start --debug
+# WebSocket runs on RPC_PORT + 1
+# Default: ws://localhost:8900
 ```
 
-This shows:
+**Airdrop not working**
 
-- Exact solana-test-validator commands
-- Program deployment steps
-- Token cloning operations
-- Error details
+```bash
+# Check faucet was created
+ls .solforge/faucet.json
 
-### Logs and Data
+# Manual airdrop via CLI
+bun src/cli/main.ts airdrop --to <address> --sol 10
+```
 
-SolForge stores data in:
+## 🔮 Roadmap
 
-- `~/.solforge/` - Process registry and metadata
-- `.solforge/` - Local working directory for current project
+### v0.3.0 - Enhanced RPC Coverage
+
+- [ ] Complete token RPC implementations
+- [ ] Advanced subscription support
+- [ ] Improved error handling
+
+### v0.4.0 - Developer Experience
+
+- [ ] Web-based dashboard
+- [ ] Time-travel debugging
+- [ ] Snapshot/restore functionality
+
+### v0.5.0 - Production Features
+
+- [ ] Clustering support
+- [ ] Metrics and monitoring
+- [ ] Plugin architecture
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details.
 
-## 🤝 Support
+## 🤝 Contributing
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/nitishxyz/solforge/issues)
+We welcome contributions! Please see:
+
+- [AGENTS.md](./AGENTS.md) - Development guidelines
+- [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - Architecture details
+- [SOLFORGE.md](./SOLFORGE.md) - Vision and roadmap
 
 ## 🙏 Acknowledgments
 
-- [Solana Labs](https://solana.com) for the amazing blockchain platform
-- [Bun](https://bun.sh) for the fast JavaScript runtime
-- The Solana developer community for inspiration and feedback
+Built with ❤️ using:
+
+- [LiteSVM](https://github.com/litesvm/litesvm) - Fast Solana VM
+- [Bun](https://bun.sh) - Lightning-fast JavaScript runtime
+- [Drizzle](https://drizzle.team) - TypeScript SQL toolkit
 
 ---
 
-**Happy building on Solana! 🚀**
+**⚡ Ready to build on Solana at lightning speed?**
+
+```bash
+git clone https://github.com/nitishxyz/solforge
+cd solforge && bun install && bun start
+```
+
+_Happy coding! 🦀_
