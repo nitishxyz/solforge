@@ -10,13 +10,17 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
       const tx = rec.tx as any;
       if (encoding === "base64") {
         const raw = Buffer.from(tx.serialize()).toString("base64");
+        // Top-level version is required by some clients
+        const isV0 = typeof (tx.message as any)?.version === "number" ? (tx.message as any).version === 0 : true;
         return context.createSuccessResponse(id, {
           slot: rec.slot,
-          transaction: raw,
+          transaction: [raw, "base64"],
+          version: isV0 ? 0 : "legacy",
           meta: {
             status: rec.err ? { Err: rec.err } : { Ok: null },
             err: rec.err ?? null,
             fee: rec.fee,
+            loadedAddresses: { writable: [], readonly: [] },
             preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
             postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
             innerInstructions: [],
@@ -60,6 +64,7 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
         };
       const recentBlockhash = msg.recentBlockhash || "";
 
+      const isV0 = typeof msg.version === "number" ? msg.version === 0 : true;
       const result: any = {
         slot: rec.slot,
         transaction: {
@@ -72,10 +77,12 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
             addressTableLookups
           }
         },
+        version: isV0 ? 0 : "legacy",
         meta: {
           status: rec.err ? { Err: rec.err } : { Ok: null },
           err: rec.err ?? null,
           fee: rec.fee,
+          loadedAddresses: { writable: [], readonly: [] },
           preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
           postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
           innerInstructions: [],
@@ -139,15 +146,18 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
     const logs = isError ? txh.meta().logs() : txh.logs();
     const errVal = isError ? txh.err() : null;
     const status = isError ? { Err: errVal } : { Ok: null };
+    const isV0 = true;
     return context.createSuccessResponse(id, {
       slot: Number(context.slot),
       transaction: {
-        signatures: [signature]
+        signatures: [signature],
       },
+      version: isV0 ? 0 : "legacy",
       meta: {
         status,
         err: errVal,
         fee: 5000,
+        loadedAddresses: { writable: [], readonly: [] },
         preBalances: [],
         postBalances: [],
         innerInstructions: [],
@@ -155,7 +165,8 @@ export const getTransaction: RpcMethodHandler = (id, params, context) => {
         preTokenBalances: [],
         postTokenBalances: [],
         rewards: []
-      }
+      },
+      blockTime: Math.floor(Date.now() / 1000)
     });
   } catch (error: any) {
     return context.createErrorResponse(id, -32602, "Invalid params", error.message);
