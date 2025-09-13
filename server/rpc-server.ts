@@ -5,6 +5,7 @@ import type { JsonRpcRequest, JsonRpcResponse, RpcMethodContext } from "./types"
 import { TxStore } from "../src/db/tx-store";
 import { sqlite } from "../src/db/index";
 import { encodeBase58, decodeBase58 } from "./lib/base58";
+import { loadOrCreateFaucet, fundFaucetIfNeeded } from "./lib/faucet";
 
 export class LiteSVMRpcServer {
   private svm: LiteSVM;
@@ -21,7 +22,8 @@ export class LiteSVMRpcServer {
       .withSysvars()
       .withBuiltins()
       .withDefaultPrograms()
-      .withLamports(1000000000000n)
+      // Mint 1,000,000 SOL (1e15 lamports) for local dev
+      .withLamports(1_000_000_000_000_000n)
       .withBlockhashCheck(false)
       // keep some tx history so getTransaction/getSignatureStatuses can work
       .withTransactionHistory(1000n)
@@ -42,12 +44,18 @@ export class LiteSVMRpcServer {
       }
     } catch {}
 
-    // Create and pre-fund a faucet for real airdrop transfers
-    this.faucet = Keypair.generate();
+    // Load or create faucet; fund once at startup
+    this.faucet = loadOrCreateFaucet();
     try {
-      // Fund faucet using svm's internal airdrop once at startup
-      this.svm.airdrop(this.faucet.publicKey, 10_000_000_000_000n); // 10k SOL
-    } catch {}
+      const bal = fundFaucetIfNeeded(this.svm, this.faucet);
+      console.log(`💧 Faucet loaded: ${this.faucet.publicKey.toBase58()} with ${(Number(bal)/1_000_000_000).toFixed(0)} SOL`);
+    } catch (e) {
+      console.warn("⚠️ Faucet funding failed:", e);
+      try {
+        const bal = this.svm.getBalance(this.faucet.publicKey as PublicKey) || 0n;
+        console.log(`💧 Faucet balance: ${(Number(bal)/1_000_000_000).toFixed(9)} SOL`);
+      } catch {}
+    }
   }
 
   // base58 helpers moved to server/lib/base58
