@@ -21,8 +21,17 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
       );
     }
 
-    // Generate a mock signature for the airdrop transaction
-    const signature = context.encodeBase58(new Uint8Array(64).fill(1));
+    // Generate a unique mock signature for the airdrop "transaction"
+    const sigBytes = new Uint8Array(64);
+    crypto.getRandomValues(sigBytes);
+    const signature = context.encodeBase58(sigBytes);
+
+    // Record as finalized locally so CLI confirmation completes
+    context.recordLocalSignature(signature, {
+      slot: context.slot,
+      err: null,
+      confirmationStatus: "finalized"
+    });
     
     return context.createSuccessResponse(id, signature);
   } catch (error: any) {
