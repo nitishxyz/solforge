@@ -15,9 +15,9 @@ export const getSignatureStatuses: RpcMethodHandler = async (id, params, context
         const status = errVal ? { Err: errVal } : { Ok: null };
         return {
           slot: rec.slot,
-          confirmations: errVal ? 0 : 1,
+          confirmations: errVal ? 0 : null,
           err: errVal,
-          confirmationStatus: errVal ? "processed" : "confirmed",
+          confirmationStatus: errVal ? "processed" : "finalized",
           status
         };
       }
@@ -27,9 +27,9 @@ export const getSignatureStatuses: RpcMethodHandler = async (id, params, context
         const status = errVal ? { Err: errVal } : { Ok: null };
         return {
           slot: db.slot,
-          confirmations: errVal ? 0 : 1,
+          confirmations: errVal ? 0 : null,
           err: errVal,
-          confirmationStatus: errVal ? "processed" : "confirmed",
+          confirmationStatus: errVal ? "processed" : "finalized",
           status
         };
       }
@@ -47,9 +47,9 @@ export const getSignatureStatuses: RpcMethodHandler = async (id, params, context
 
       return {
         slot: Number(context.slot),
-        confirmations: errVal ? 0 : 1,
+        confirmations: errVal ? 0 : null,
         err: errVal,
-        confirmationStatus: errVal ? "processed" : "confirmed",
+        confirmationStatus: errVal ? "processed" : "finalized",
         status
       };
     } catch {
