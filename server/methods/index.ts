@@ -15,7 +15,8 @@ import {
   getTransaction,
   getSignatureStatuses,
   getParsedTransaction,
-  getSignaturesForAddress
+  getSignaturesForAddress,
+  getConfirmedTransaction
 } from "./transaction";
 
 import {
@@ -101,6 +102,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getParsedTransaction,
   getSignatureStatuses,
   getSignaturesForAddress,
+  getConfirmedTransaction,
   
   // Block methods
   getLatestBlockhash,
@@ -172,6 +174,7 @@ export {
   getTransaction,
   getSignatureStatuses,
   getSignaturesForAddress,
+  getConfirmedTransaction,
   getLatestBlockhash,
   getSlot,
   getBlockHeight,

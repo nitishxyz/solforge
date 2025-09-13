@@ -133,6 +133,11 @@ export class LiteSVMRpcServer {
   }
 
   getSignatureStatus(signature: string): { slot: number; err: any | null } | null {
+    // Prefer local record for reliability
+    const rec = this.txRecords.get(signature);
+    if (rec) {
+      return { slot: rec.slot, err: rec.err ?? null };
+    }
     try {
       const sigBytes = this.decodeBase58(signature);
       const tx = this.svm.getTransaction(sigBytes);
@@ -188,6 +193,7 @@ export function createLiteSVMRpcServer(port: number = 8899) {
   const bunServer = Bun.serve({
     port,
     async fetch(req) {
+      const DEBUG = process.env.DEBUG_RPC_LOG === "1";
       const acrh = req.headers.get("Access-Control-Request-Headers");
       const allowHeaders = acrh && acrh.length > 0 
         ? acrh 
@@ -216,12 +222,19 @@ export function createLiteSVMRpcServer(port: number = 8899) {
           const body = await req.json();
           
           if (Array.isArray(body)) {
+            if (DEBUG) {
+              try { console.log("RPC batch:", body.map((b: any) => b.method)); } catch {}
+            }
             const responses = await Promise.all(
               body.map(request => server.handleRequest(request))
             );
             return new Response(JSON.stringify(responses), { headers: { "Content-Type": "application/json", ...corsHeaders } });
           } else {
-            const response = await server.handleRequest(body as JsonRpcRequest);
+            const reqObj = body as JsonRpcRequest;
+            if (DEBUG) {
+              try { console.log("RPC:", reqObj.method, JSON.stringify(reqObj.params)); } catch {}
+            }
+            const response = await server.handleRequest(reqObj);
             return new Response(JSON.stringify(response), { headers: { "Content-Type": "application/json", ...corsHeaders } });
           }
         } catch (error) {

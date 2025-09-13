@@ -5,6 +5,20 @@ export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
 
   const statuses = signatures.map((sig: string) => {
     try {
+      // Prefer locally recorded transactions for reliability with CLI tooling
+      const rec = context.getRecordedTransaction(sig);
+      if (rec) {
+        const errVal: any = rec.err ?? null;
+        const status = errVal ? { Err: errVal } : { Ok: null };
+        return {
+          slot: rec.slot,
+          confirmations: errVal ? 0 : 1,
+          err: errVal,
+          confirmationStatus: errVal ? "processed" : "confirmed",
+          status
+        };
+      }
+
       const sigBytes = context.decodeBase58(sig);
       const tx = (context.svm as any).getTransaction(sigBytes);
       if (!tx) return null;
@@ -18,9 +32,9 @@ export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
 
       return {
         slot: Number(context.slot),
-        confirmations: errVal ? 0 : null,
+        confirmations: errVal ? 0 : 1,
         err: errVal,
-        confirmationStatus: errVal ? "processed" : "finalized",
+        confirmationStatus: errVal ? "processed" : "confirmed",
         status
       };
     } catch {
@@ -33,4 +47,3 @@ export const getSignatureStatuses: RpcMethodHandler = (id, params, context) => {
     value: statuses
   });
 };
-
