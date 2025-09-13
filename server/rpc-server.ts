@@ -1,5 +1,5 @@
 import { LiteSVM } from "litesvm";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, VersionedTransaction } from "@solana/web3.js";
 import { rpcMethods } from "./methods";
 import type { JsonRpcRequest, JsonRpcResponse, RpcMethodContext } from "./types";
 
@@ -7,8 +7,10 @@ export class LiteSVMRpcServer {
   private svm: LiteSVM;
   private slot: bigint = 1n;
   private blockHeight: bigint = 1n;
+  private txCount: bigint = 0n;
   private signatureListeners: Set<(sig: string) => void> = new Set();
   private faucet: Keypair;
+  private txRecords: Map<string, { tx: VersionedTransaction; logs: string[]; err: unknown; fee: number; slot: number; blockTime?: number; preBalances?: number[]; postBalances?: number[] } > = new Map();
 
   constructor() {
     this.svm = new LiteSVM()
@@ -107,7 +109,21 @@ export class LiteSVMRpcServer {
       createSuccessResponse: this.createSuccessResponse.bind(this),
       createErrorResponse: this.createErrorResponse.bind(this),
       notifySignature: (signature: string) => { for (const cb of this.signatureListeners) cb(signature); },
-      getFaucet: () => this.faucet
+      getFaucet: () => this.faucet,
+      getTxCount: () => this.txCount,
+      recordTransaction: (signature, tx, meta) => {
+        this.txRecords.set(signature, {
+          tx,
+          logs: meta?.logs || [],
+          err: meta?.err ?? null,
+          fee: meta?.fee ?? 5000,
+          slot: Number(this.slot),
+          blockTime: meta?.blockTime,
+          preBalances: meta?.preBalances,
+          postBalances: meta?.postBalances
+        });
+      },
+      getRecordedTransaction: (signature) => this.txRecords.get(signature)
     };
   }
 
@@ -151,6 +167,7 @@ export class LiteSVMRpcServer {
       if (["sendTransaction", "requestAirdrop"].includes(method)) {
         this.slot += 1n;
         this.blockHeight += 1n;
+        this.txCount += 1n;
       }
       
       return result;
@@ -171,6 +188,29 @@ export function createLiteSVMRpcServer(port: number = 8899) {
   const bunServer = Bun.serve({
     port,
     async fetch(req) {
+      const acrh = req.headers.get("Access-Control-Request-Headers");
+      const allowHeaders = acrh && acrh.length > 0 
+        ? acrh 
+        : "Content-Type, Accept, Origin, solana-client";
+      const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, HEAD",
+        "Access-Control-Allow-Headers": allowHeaders,
+        "Access-Control-Max-Age": "600",
+        // Help Chrome when accessing local network/localhost from secure context
+        "Access-Control-Allow-Private-Network": "true"
+      } as const;
+      
+      if (req.method === "GET") {
+        const url = new URL(req.url);
+        if (url.pathname === "/" || url.pathname === "") {
+          return new Response("ok", { headers: { "Content-Type": "text/plain", ...corsHeaders } });
+        }
+        if (url.pathname === "/health") {
+          return new Response("ok", { headers: { "Content-Type": "text/plain", ...corsHeaders } });
+        }
+        return new Response("Not found", { status: 404, headers: corsHeaders });
+      }
       if (req.method === "POST") {
         try {
           const body = await req.json();
@@ -179,34 +219,31 @@ export function createLiteSVMRpcServer(port: number = 8899) {
             const responses = await Promise.all(
               body.map(request => server.handleRequest(request))
             );
-            return Response.json(responses);
+            return new Response(JSON.stringify(responses), { headers: { "Content-Type": "application/json", ...corsHeaders } });
           } else {
             const response = await server.handleRequest(body as JsonRpcRequest);
-            return Response.json(response);
+            return new Response(JSON.stringify(response), { headers: { "Content-Type": "application/json", ...corsHeaders } });
           }
         } catch (error) {
-          return Response.json({
+          return new Response(JSON.stringify({
             jsonrpc: "2.0",
             id: null,
             error: {
               code: -32700,
               message: "Parse error"
             }
-          });
+          }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
         }
       }
 
       if (req.method === "OPTIONS") {
-        return new Response(null, {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-          }
-        });
+        return new Response(null, { headers: corsHeaders });
+      }
+      if (req.method === "HEAD") {
+        return new Response(null, { headers: corsHeaders });
       }
 
-      return new Response("Method not allowed", { status: 405 });
+      return new Response("Method not allowed", { status: 405, headers: corsHeaders });
     },
     error(error) {
       console.error("Server error:", error);
