@@ -31,6 +31,19 @@ export interface RpcMethodContext {
     message: string, 
     data?: any
   ) => JsonRpcResponse;
+  getLocalSignatureStatus: (signature: string) => {
+    slot: bigint;
+    err: any | null;
+    confirmationStatus: "processed" | "confirmed" | "finalized";
+  } | undefined;
+  recordLocalSignature: (
+    signature: string,
+    status: {
+      slot: bigint;
+      err: any | null;
+      confirmationStatus: "processed" | "confirmed" | "finalized";
+    }
+  ) => void;
 }
 
 export type RpcMethodHandler = (
