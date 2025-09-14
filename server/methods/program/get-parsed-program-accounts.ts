@@ -1,7 +1,8 @@
 import type { RpcMethodHandler } from "../../types";
+import { getProgramAccounts } from "./get-program-accounts";
 
-export const getParsedProgramAccounts: RpcMethodHandler = (id, _params, context) => {
-  // Minimal implementation for compatibility
-  return context.createSuccessResponse(id, []);
+export const getParsedProgramAccounts: RpcMethodHandler = (id, params, context) => {
+  const [programId, config] = params || [];
+  const cfg = { ...(config || {}), encoding: "jsonParsed" };
+  return getProgramAccounts(id, [programId, cfg], context);
 };
-
