@@ -1,9 +1,5 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
-import { rpcStartCommand } from "./commands/rpc-start";
-import { configCommand } from "./commands/config";
-import { airdropCommand } from "./commands/airdrop";
-import { mintCommand } from "./commands/mint";
 
 const argv = Bun.argv.slice(2);
 
@@ -17,23 +13,63 @@ async function main() {
 
   // Alias: solforge start -> solforge rpc start
   if (cmd === "start") {
+    const { rpcStartCommand } = await import("./commands/rpc-start");
     await rpcStartCommand(rest);
     return;
   }
 
   switch (cmd) {
     case "rpc": {
-      if (sub === "start") return rpcStartCommand(rest);
+      if (sub === "start") {
+        const { rpcStartCommand } = await import("./commands/rpc-start");
+        return rpcStartCommand(rest);
+      }
       return unknownCommand([cmd, sub]);
     }
     case "config": {
+      const { configCommand } = await import("./commands/config");
       return configCommand(sub, rest);
     }
     case "airdrop": {
+      const { airdropCommand } = await import("./commands/airdrop");
       return airdropCommand(rest);
     }
     case "mint": {
+      const { mintCommand } = await import("./commands/mint");
       return mintCommand(rest);
+    }
+    case "token": {
+      if (sub === "clone") {
+        const { tokenCloneCommand } = await import("./commands/token-clone");
+        return tokenCloneCommand(rest);
+      }
+      if (sub === "create") {
+        const { tokenCreateCommand } = await import("./commands/token-create");
+        return tokenCreateCommand(rest);
+      }
+      if (sub === "adopt-authority") {
+        const { tokenAdoptAuthorityCommand } = await import("./commands/token-adopt-authority");
+        return tokenAdoptAuthorityCommand(rest);
+      }
+      return unknownCommand([cmd, sub]);
+    }
+    case "program": {
+      if (sub === "clone") {
+        const { programCloneCommand } = await import("./commands/program-clone");
+        return programCloneCommand(rest);
+      }
+      if (sub === "load") {
+        const { programLoadCommand } = await import("./commands/program-load");
+        return programLoadCommand(rest);
+      }
+      if (sub === "accounts") {
+        const [_, __, ...tail] = argv.slice(2); // re-read to check deep subcommand
+        if (tail[0] === "clone") {
+          const { programAccountsCloneCommand } = await import("./commands/program-clone");
+          return programAccountsCloneCommand(tail.slice(1));
+        }
+      }
+      return unknownCommand([cmd, sub]);
     }
     default:
       return unknownCommand([cmd, sub]);
@@ -51,7 +87,10 @@ Commands:
   config get <key>    Read a config value (dot path)
   config set <k> <v>  Set a config value
   airdrop --to <pubkey> --sol <amount>  Airdrop SOL via RPC faucet
-  mint ...            Mint cloned token accounts (scaffold)
+  mint                 Interactive: pick mint, receiver, amount
+  token clone <mint>  Clone SPL token mint + accounts
+  program clone <programId>              Clone program code (and optionally accounts)
+  program accounts clone <programId>     Clone accounts owned by program
 `);
 }
 
@@ -61,4 +100,3 @@ async function unknownCommand(parts: (string | undefined)[]) {
 }
 
 main();
-

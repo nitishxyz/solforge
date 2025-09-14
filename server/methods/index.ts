@@ -88,6 +88,18 @@ import {
 } from "./performance";
 
 import { getAddressLookupTable } from "./get-address-lookup-table";
+import {
+  solforgeAdminCloneProgram,
+  solforgeAdminCloneProgramAccounts,
+  solforgeAdminCloneTokenMint,
+  solforgeAdminCloneTokenAccounts,
+  solforgeCreateTokenAccount,
+  solforgeLoadProgram,
+  solforgeCreateMint,
+  solforgeListMints,
+  solforgeMintTo,
+  solforgeAdoptMintAuthority,
+} from "./admin";
 
 export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Account methods
@@ -167,6 +179,22 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getFeeCalculatorForBlockhash,
   getFeeRateGovernor
 };
+
+// Admin methods (gated by SOLFORGE_ADMIN=1)
+export const adminMethods: Record<string, RpcMethodHandler> = {
+  solforgeAdminCloneProgram,
+  solforgeAdminCloneProgramAccounts,
+  solforgeAdminCloneTokenMint,
+  solforgeAdminCloneTokenAccounts,
+  solforgeCreateTokenAccount,
+  solforgeLoadProgram,
+  solforgeCreateMint,
+  solforgeListMints,
+  solforgeMintTo,
+  solforgeAdoptMintAuthority,
+};
+
+Object.assign(rpcMethods, adminMethods);
 
 export {
   getAccountInfo,
