@@ -12,7 +12,9 @@ export const transactions = sqliteTable(
     rawBase64: text("raw_base64").notNull(),
     preBalancesJson: text("pre_balances_json").notNull(),
     postBalancesJson: text("post_balances_json").notNull(),
-    logsJson: text("logs_json").notNull()
+    logsJson: text("logs_json").notNull(),
+    preTokenBalancesJson: text("pre_token_balances_json").default("[]").notNull(),
+    postTokenBalancesJson: text("post_token_balances_json").default("[]").notNull()
   },
   (t) => ({
     slotIdx: index("idx_transactions_slot").on(t.slot)
@@ -21,4 +23,3 @@ export const transactions = sqliteTable(
 
 export type TransactionRow = typeof transactions.$inferSelect;
 export type NewTransactionRow = typeof transactions.$inferInsert;
-

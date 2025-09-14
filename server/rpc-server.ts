@@ -30,6 +30,8 @@ export class LiteSVMRpcServer {
       blockTime?: number;
       preBalances?: number[];
       postBalances?: number[];
+      preTokenBalances?: any[];
+      postTokenBalances?: any[];
     }
   > = new Map();
   private store: TxStore;
@@ -142,6 +144,8 @@ export class LiteSVMRpcServer {
           blockTime: meta?.blockTime,
           preBalances: meta?.preBalances,
           postBalances: meta?.postBalances,
+          preTokenBalances: (meta as any)?.preTokenBalances,
+          postTokenBalances: (meta as any)?.postTokenBalances,
         });
 
         // Persist to SQLite for durability and history queries
@@ -210,6 +214,8 @@ export class LiteSVMRpcServer {
                 ? meta!.postBalances!
                 : [],
               logs: Array.isArray(meta?.logs) ? meta!.logs! : [],
+              preTokenBalances: Array.isArray((meta as any)?.preTokenBalances) ? (meta as any).preTokenBalances : [],
+              postTokenBalances: Array.isArray((meta as any)?.postTokenBalances) ? (meta as any).postTokenBalances : [],
               accounts,
             })
             .catch(() => {});

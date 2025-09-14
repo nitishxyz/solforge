@@ -8,6 +8,13 @@
       "when": 1757791582272,
       "tag": "0000_friendly_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1757872206845,
+      "tag": "0001_stale_sentinels",
+      "breakpoints": true
     }
   ]
 }

@@ -17,6 +17,8 @@ export type InsertTxBundle = {
   postBalances: number[];
   logs: string[];
   accounts: Array<{ address: string; index: number; signer: boolean; writable: boolean; programIdIndex?: number }>;
+  preTokenBalances?: any[];
+  postTokenBalances?: any[];
 };
 
 export type AccountSnapshot = {
@@ -46,7 +48,9 @@ export class TxStore {
           rawBase64: bundle.rawBase64,
           preBalancesJson: JSON.stringify(bundle.preBalances ?? []),
           postBalancesJson: JSON.stringify(bundle.postBalances ?? []),
-          logsJson: JSON.stringify(bundle.logs ?? [])
+          logsJson: JSON.stringify(bundle.logs ?? []),
+          preTokenBalancesJson: JSON.stringify(bundle.preTokenBalances ?? []),
+          postTokenBalancesJson: JSON.stringify(bundle.postTokenBalances ?? [])
         })
         .onConflictDoNothing();
 
