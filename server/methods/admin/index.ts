@@ -13,10 +13,13 @@ export const solforgeAdminCloneProgram: RpcMethodHandler = async (id, params, co
     const conn = new Connection(endpoint, "confirmed");
     const pid = new PublicKey(programId);
     const info = await conn.getAccountInfo(pid, "confirmed");
-    if (!info) return context.createErrorResponse(id, -32004, "Program account not found on endpoint");
+    if (!info) return context.createErrorResponse(id, -32004, "Program account not found on endpoint", { programId, endpoint });
+    console.log("[admin] clone program start", { programId: pid.toBase58(), owner: info.owner.toBase58(), exec: info.executable, dataLen: info.data?.length ?? 0 });
+    const ownerStr = info.owner.toBase58();
+    let added = false;
+    let addSource: "programData" | "program" | null = null;
 
     // If upgradeable loader: fetch program data, extract ELF and addProgram
-    const ownerStr = info.owner.toBase58();
     const parsed = parseUpgradeableLoader(ownerStr, new Uint8Array(info.data), context);
     if (parsed?.parsed?.type === "program") {
       const programDataAddr = parsed.parsed.info?.programData as string | undefined;
@@ -28,23 +31,29 @@ export const solforgeAdminCloneProgram: RpcMethodHandler = async (id, params, co
           const base64 = pdataParsed?.parsed?.info?.data?.[0] as string | undefined;
           if (base64) {
             const bytes = Uint8Array.from(Buffer.from(base64, "base64"));
-            try { context.svm.addProgram(pid, bytes); } catch {}
+            try { context.svm.addProgram(pid, bytes); added = true; addSource = "programData"; }
+            catch (e) {
+              console.warn("[admin] addProgram failed (programData bytes)", e);
+              return context.createErrorResponse(id, -32603, "Clone program failed", { message: String(e), programId, endpoint, source: "programData" });
+            }
+          } else {
+            console.warn("[admin] programData bytes missing");
+            return context.createErrorResponse(id, -32603, "Clone program failed", { message: "ProgramData bytes missing", programId, endpoint });
           }
         }
       }
     } else {
-      // Legacy loader or raw program: try using the account data directly as ELF
-      try { context.svm.addProgram(pid, new Uint8Array(info.data)); } catch {}
+      // Legacy loaders (bpf-loader / deprecated) keep ELF in the program account directly
+      try {
+        context.svm.addProgram(pid, new Uint8Array(info.data));
+        added = true; addSource = "program";
+      } catch (e) {
+        console.warn("[admin] addProgram failed (program account data)", e);
+        return context.createErrorResponse(id, -32603, "Clone program failed", { message: String(e), programId, endpoint, source: "program" });
+      }
     }
 
-    // Also mirror the program account metadata into LiteSVM (owner/executable/lamports)
-    context.svm.setAccount(pid, {
-      data: new Uint8Array(info.data),
-      executable: true,
-      lamports: Number(info.lamports),
-      owner: info.owner,
-      rentEpoch: 0,
-    } as any);
+    // No metadata fallback: either ELF added or fail (strict mode)
 
     // Optionally clone owned accounts
     if (options?.withAccounts) {
@@ -53,9 +62,11 @@ export const solforgeAdminCloneProgram: RpcMethodHandler = async (id, params, co
       void res;
     }
 
-    return context.createSuccessResponse(id, { ok: true, programId });
+    console.log("[admin] clone program done", { programId: pid.toBase58(), added: true, source: addSource });
+    return context.createSuccessResponse(id, { ok: true, programId, added: true, source: addSource });
   } catch (e: any) {
-    return context.createErrorResponse(id, -32603, "Clone program failed", e?.message || String(e));
+    console.error("[admin] clone program error", e);
+    return context.createErrorResponse(id, -32603, "Clone program failed", { message: e?.message || String(e), stack: e?.stack, programId, endpoint });
   }
 };
 
