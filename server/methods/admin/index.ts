@@ -434,9 +434,22 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
     const vtx = new VersionedTransaction(legacy);
     vtx.sign([faucet]);
 
-    // Capture preBalances for primary accounts referenced
+    // Capture preBalances for primary accounts referenced and token pre amount
     const trackedKeys = [faucet.publicKey, ata, mint, owner];
     const preBalances = trackedKeys.map((pk) => { try { return Number(context.svm.getBalance(pk) || 0n); } catch { return 0; } });
+    // Token mint decimals and pre amount
+    let decsForMint = 0;
+    let preTokenAmt: bigint = 0n;
+    try {
+      const mintAcc0 = context.svm.getAccount(mint);
+      const mintInfo0 = mintAcc0 ? MintLayout.decode(Buffer.from(mintAcc0.data).slice(0, MINT_SIZE)) : undefined;
+      decsForMint = Number(mintInfo0?.decimals ?? decimals ?? 0);
+      const ataAcc0 = context.svm.getAccount(ata);
+      if (ataAcc0 && (ataAcc0.data?.length ?? 0) >= ACCOUNT_SIZE) {
+        const dec0 = AccountLayout.decode(Buffer.from(ataAcc0.data));
+        preTokenAmt = BigInt(dec0.amount.toString());
+      }
+    } catch {}
 
     // Send transaction via svm
     const res = context.svm.sendTransaction(vtx);
@@ -447,6 +460,24 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
       if (sigBytes) signatureStr = context.encodeBase58(new Uint8Array(sigBytes));
     } catch {}
     if (!signatureStr) signatureStr = `mint:${ata.toBase58()}:${Date.now()}`;
+
+    // Token balance deltas (pre/post) for ATA
+    let preTokenBalances: any[] = [];
+    let postTokenBalances: any[] = [];
+    try {
+      const decs = decsForMint;
+      const ui = (n: bigint) => ({ amount: n.toString(), decimals: decs, uiAmount: Number(n) / Math.pow(10, decs), uiAmountString: (Number(n) / Math.pow(10, decs)).toString() });
+      const preAmt = preTokenAmt;
+      const ataPostAcc = context.svm.getAccount(ata); // after send
+      const postAmt = ataPostAcc && (ataPostAcc.data?.length ?? 0) >= ACCOUNT_SIZE ? BigInt(AccountLayout.decode(Buffer.from(ataPostAcc.data)).amount.toString()) : preAmt;
+      const msgAny: any = vtx.message as any;
+      const rawKeys: any[] = Array.isArray(msgAny.staticAccountKeys) ? msgAny.staticAccountKeys : (Array.isArray(msgAny.accountKeys) ? msgAny.accountKeys : []);
+      const keys = rawKeys.map((k: any) => { try { return typeof k === "string" ? k : new PublicKey(k).toBase58(); } catch { return String(k); } });
+      const ataIndex = keys.indexOf(ata.toBase58());
+      const ownerIndex = keys.indexOf(owner.toBase58());
+      preTokenBalances = [{ accountIndex: ataIndex >= 0 ? ataIndex : 0, mint: mint.toBase58(), owner: owner.toBase58(), uiTokenAmount: ui(preAmt) }];
+      postTokenBalances = [{ accountIndex: ataIndex >= 0 ? ataIndex : 0, mint: mint.toBase58(), owner: owner.toBase58(), uiTokenAmount: ui(postAmt) }];
+    } catch {}
 
     // Insert into DB for explorer via context.recordTransaction for richer details
     try {
@@ -462,6 +493,8 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
         blockTime: Math.floor(Date.now() / 1000),
         preBalances,
         postBalances,
+        preTokenBalances,
+        postTokenBalances,
       });
     } catch {}
     try { context.notifySignature(signatureStr); } catch {}

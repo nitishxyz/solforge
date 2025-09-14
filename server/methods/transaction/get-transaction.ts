@@ -26,8 +26,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
             postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
             innerInstructions: [],
             logMessages: rec.logs || [],
-            preTokenBalances: [],
-            postTokenBalances: [],
+            preTokenBalances: Array.isArray((rec as any).preTokenBalances) ? (rec as any).preTokenBalances : [],
+            postTokenBalances: Array.isArray((rec as any).postTokenBalances) ? (rec as any).postTokenBalances : [],
             rewards: []
           },
           blockTime: rec.blockTime
@@ -41,7 +41,9 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
       const accountKeys = rawKeys1.map((k: any) => {
         try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
       });
-      const compiled = msg.compiledInstructions || [];
+      const compiled = Array.isArray(msg.compiledInstructions)
+        ? msg.compiledInstructions
+        : (Array.isArray(msg.instructions) ? msg.instructions : []);
       const instructions = compiled.map((ci: any) => {
         const dataBytes: Uint8Array = ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data);
         return {
@@ -87,8 +89,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
           postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
           innerInstructions: [],
           logMessages: rec.logs || [],
-          preTokenBalances: [],
-          postTokenBalances: [],
+          preTokenBalances: Array.isArray((rec as any).preTokenBalances) ? (rec as any).preTokenBalances : [],
+          postTokenBalances: Array.isArray((rec as any).postTokenBalances) ? (rec as any).postTokenBalances : [],
           rewards: []
         },
         blockTime: rec.blockTime
@@ -160,8 +162,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
               postBalances,
               innerInstructions: [],
               logMessages: logs,
-              preTokenBalances: [],
-              postTokenBalances: [],
+              preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+              postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
               rewards: []
             },
             blockTime: row.blockTime ? Number(row.blockTime) : null
@@ -178,7 +180,9 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
             try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
           });
           const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
-          const compiled = msg.compiledInstructions || [];
+          const compiled = Array.isArray(msg.compiledInstructions)
+            ? msg.compiledInstructions
+            : (Array.isArray(msg.instructions) ? msg.instructions : []);
           const parsedInstructions = compiled.map((ci: any) => {
             const programId = accountKeys[ci.programIdIndex];
             let parsed: any = undefined;
@@ -236,8 +240,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
               postBalances,
               innerInstructions: [],
               logMessages: logs,
-              preTokenBalances: [],
-              postTokenBalances: [],
+              preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+              postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
               rewards: []
             },
             blockTime: row.blockTime ? Number(row.blockTime) : null
@@ -254,7 +258,9 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
             try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
           });
           const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
-          const compiled = msg.compiledInstructions || [];
+          const compiled = Array.isArray(msg.compiledInstructions)
+            ? msg.compiledInstructions
+            : (Array.isArray(msg.instructions) ? msg.instructions : []);
           const instructions = compiled.map((ci: any) => ({
             programIdIndex: ci.programIdIndex,
             accounts: Array.from(ci.accountKeyIndexes || ci.accounts || []),
@@ -276,8 +282,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
               postBalances,
               innerInstructions: [],
               logMessages: logs,
-              preTokenBalances: [],
-              postTokenBalances: [],
+              preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+              postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
               rewards: []
             },
             blockTime: row.blockTime ? Number(row.blockTime) : null

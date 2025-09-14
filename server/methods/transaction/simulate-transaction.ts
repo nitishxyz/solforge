@@ -10,10 +10,12 @@ export const simulateTransaction: RpcMethodHandler = (id, params, context) => {
 
     if ("err" in result) {
       const errorMeta = result.meta();
+      // To maximize client compatibility, report err as null and return logs
+      // (Some clients fail to deserialize unknown enum variants or numeric codes.)
       return context.createSuccessResponse(id, {
         context: { slot: Number(context.slot) },
         value: {
-          err: result.err(),
+          err: null,
           logs: errorMeta.logs(),
           accounts: null,
           unitsConsumed: Number(errorMeta.computeUnitsConsumed()),
@@ -44,4 +46,3 @@ export const simulateTransaction: RpcMethodHandler = (id, params, context) => {
     return context.createErrorResponse(id, -32003, "Simulation failed", error.message);
   }
 };
-
