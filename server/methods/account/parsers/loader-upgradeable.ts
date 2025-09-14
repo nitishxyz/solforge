@@ -21,14 +21,31 @@ export function parseUpgradeableLoader(owner: string, data: Uint8Array, context:
         const slot = Number(dv.getBigUint64(4, true));
         let upgradeAuthority: string | null = null;
         let opt = dv.getUint8(12);
+        let hdr = 13; // after u8 option
         if (opt === 1 && bytes.length >= 13 + 32) {
           upgradeAuthority = new PublicKey(bytes.slice(13, 45)).toBase58();
-        } else if (opt !== 0 && bytes.length >= 12 + 4 + 32) {
-          // Fallback u32 option
+          hdr = 45;
+        } else if (opt === 0) {
+          hdr = 13;
+        } else if (bytes.length >= 12 + 4) {
+          // Fallback u32 option at offset 12
           const opt32 = dv.getUint32(12, true);
-          if (opt32 === 1) upgradeAuthority = new PublicKey(bytes.slice(16, 48)).toBase58();
+          hdr = 16;
+          if (opt32 === 1 && bytes.length >= 16 + 32) {
+            upgradeAuthority = new PublicKey(bytes.slice(16, 48)).toBase58();
+            hdr = 48;
+          }
         }
-        parsed = { type: "programData", info: { slot: slot === 0 ? Number(context.slot) : slot, upgradeAuthority, authority: upgradeAuthority } };
+        const programBytes = bytes.slice(hdr);
+        parsed = {
+          type: "programData",
+          info: {
+            slot: slot === 0 ? Number(context.slot) : slot,
+            upgradeAuthority,
+            authority: upgradeAuthority,
+            data: [Buffer.from(programBytes).toString("base64"), "base64"]
+          }
+        };
       } else if (tag === 1) {
         // Buffer: [u32 tag][Option<Pubkey> authority]
         let authority: string | null = null;
@@ -42,4 +59,3 @@ export function parseUpgradeableLoader(owner: string, data: Uint8Array, context:
   } catch {}
   return { program: "bpf-upgradeable-loader", parsed, space };
 }
-
