@@ -4,6 +4,7 @@ import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import * as schema from "./schema";
 import { mkdirSync, unlinkSync, existsSync } from "node:fs";
 import { dirname } from "node:path";
+import { bundledMigrations } from "../migrations-bundled";
 
 // DB path is configurable; default to project-local hidden folder
 let DB_PATH = process.env.SOLFORGE_DB_PATH || ".solforge/db.db";
@@ -40,9 +41,29 @@ export * as dbSchema from "./schema";
 // Run Drizzle migrations on app start (Bun + SQLite)
 const migrationsFolder = process.env.DRIZZLE_MIGRATIONS || "drizzle";
 try {
-  // Top-level await is supported in Bun
-  await migrate(db, { migrationsFolder });
-  console.log("✅ Local database migrations completed");
+  // Prefer folder-based migrations when available (dev/uncompiled)
+  if (existsSync(migrationsFolder)) {
+    await migrate(db, { migrationsFolder });
+    console.log("✅ Database migrations completed (folder)");
+  } else {
+    // Bundled mode: apply embedded SQL files if schema isn't present
+    const haveTx = sqlite
+      .query("SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'")
+      .get() as { name?: string } | undefined;
+    if (!haveTx?.name) {
+      for (const m of bundledMigrations) {
+        try {
+          const sql = await Bun.file(m.path).text();
+          sqlite.exec(sql);
+          console.log(`✅ Applied bundled migration: ${m.name}`);
+        } catch (e) {
+          console.error(`❌ Failed bundled migration: ${m.name}`, e);
+          throw e;
+        }
+      }
+    }
+    console.log("✅ Database migrations completed (bundled)");
+  }
 } catch (error) {
-  console.error("❌ Local database migration failed:", error);
+  console.error("❌ Database migration failed:", error);
 }
