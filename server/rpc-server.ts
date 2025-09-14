@@ -17,6 +17,7 @@ export class LiteSVMRpcServer {
   private blockHeight: bigint = 1n;
   private txCount: bigint = 0n;
   private signatureListeners: Set<(sig: string) => void> = new Set();
+  private knownMints: Set<string> = new Set();
   private faucet: Keypair;
   private txRecords: Map<
     string,
@@ -124,6 +125,13 @@ export class LiteSVMRpcServer {
       },
       getFaucet: () => this.faucet,
       getTxCount: () => this.txCount,
+      registerMint: (mint: any) => {
+        try {
+          const pk = typeof mint === "string" ? mint : new PublicKey(mint).toBase58();
+          this.knownMints.add(pk);
+        } catch {}
+      },
+      listMints: () => Array.from(this.knownMints),
       recordTransaction: (signature, tx, meta) => {
         this.txRecords.set(signature, {
           tx,
@@ -298,11 +306,12 @@ export class LiteSVMRpcServer {
   }
 }
 
-export function createLiteSVMRpcServer(port: number = 8899) {
+export function createLiteSVMRpcServer(port: number = 8899, host?: string) {
   const server = new LiteSVMRpcServer();
 
   const bunServer = Bun.serve({
     port,
+    hostname: host || process.env.RPC_HOST || "127.0.0.1",
     async fetch(req) {
       const DEBUG = process.env.DEBUG_RPC_LOG === "1";
       const acrh = req.headers.get("Access-Control-Request-Headers");
@@ -401,9 +410,10 @@ export function createLiteSVMRpcServer(port: number = 8899) {
     },
   });
 
-  console.log(`🚀 LiteSVM RPC Server running on http://localhost:${port}`);
+  const hostname = (host || process.env.RPC_HOST || "127.0.0.1").toString();
+  console.log(`🚀 LiteSVM RPC Server running on http://${hostname}:${port}`);
   console.log(`   Compatible with Solana RPC API`);
-  console.log(`   Use with: solana config set -u http://localhost:${port}`);
+  console.log(`   Use with: solana config set -u http://${hostname}:${port}`);
 
   return { httpServer: bunServer, rpcServer: server };
 }

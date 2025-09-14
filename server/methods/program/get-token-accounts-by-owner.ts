@@ -1,10 +1,11 @@
 import type { RpcMethodHandler } from "../../types";
 import { PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount, unpackMint } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount, unpackMint, getAssociatedTokenAddressSync, ACCOUNT_SIZE } from "@solana/spl-token";
 
 export const getTokenAccountsByOwner: RpcMethodHandler = async (id, params, context) => {
   try {
     const [ownerStr, filter, config] = params || [];
+    if (!ownerStr) throw new Error("owner public key required");
     const owner = new PublicKey(ownerStr);
     const wantMint: string | null = filter?.mint ? String(filter.mint) : null;
     const requestedProgramId: string | null = filter?.programId ? String(filter.programId) : null;
@@ -16,7 +17,13 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (id, params, cont
       : classicId;
 
     // Query DB for accounts owned by SPL Token program
-    const rows = (await context.store?.getAccountsByOwner(programFilter, 50_000)) || [];
+    let rows: Array<{ address: string; lastSlot: number } & any> = [];
+    try {
+      rows = (await context.store?.getAccountsByOwner(programFilter, 50_000)) || [];
+    } catch (dbErr) {
+      try { console.warn("[rpc] getTokenAccountsByOwner: db read failed", dbErr); } catch {}
+      rows = [];
+    }
     const out: any[] = [];
     const seen = new Set<string>();
     for (const r of rows) {
@@ -26,7 +33,14 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (id, params, cont
         const acc = context.svm.getAccount(pk);
         if (!acc) continue;
         if ((acc.data?.length ?? 0) < 165) continue;
-        const ownerPk = new PublicKey(acc.owner);
+        let ownerPk: PublicKey;
+        try {
+          // acc.owner may already be a PublicKey in LiteSVM
+          const anyOwner: any = (acc as any).owner;
+          ownerPk = typeof anyOwner?.toBase58 === "function" ? anyOwner as PublicKey : new PublicKey(anyOwner);
+        } catch {
+          ownerPk = TOKEN_PROGRAM_ID; // fallback avoids throw; unpackAccount will fail if wrong and be skipped
+        }
         const programPk = requestedProgramId === token2022Id ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
         const dec = unpackAccount(pk, { data: Buffer.from(acc.data), owner: ownerPk }, programPk);
         const decMint = dec.mint.toBase58();
@@ -108,8 +122,54 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (id, params, cont
         }
       } catch {}
     }
+    // Fallback: probe known mints' ATAs for this owner
+    try {
+      const mints = context.listMints ? context.listMints() : [];
+      for (const m of mints) {
+        try {
+          const ata = getAssociatedTokenAddressSync(new PublicKey(m), owner, true);
+          const acc = context.svm.getAccount(ata);
+          if (!acc || (acc.data?.length ?? 0) < ACCOUNT_SIZE) continue;
+          if (seen.has(ata.toBase58())) continue;
+          let ownerPk: PublicKey;
+          const anyOwner: any = (acc as any).owner;
+          ownerPk = typeof anyOwner?.toBase58 === "function" ? anyOwner as PublicKey : new PublicKey(anyOwner);
+          const programPk = requestedProgramId === token2022Id ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
+          const dec = unpackAccount(ata, { data: Buffer.from(acc.data), owner: ownerPk }, programPk);
+          const decMint = dec.mint.toBase58();
+          const decOwner = dec.owner.toBase58();
+          if (decOwner !== owner.toBase58()) continue;
+          let decimals = 0;
+          try {
+            const mintAcc = context.svm.getAccount(dec.mint);
+            const info = mintAcc ? unpackMint(dec.mint, { data: Buffer.from(mintAcc.data), owner: new PublicKey(mintAcc.owner) }, programPk) : null;
+            decimals = info?.decimals ?? 0;
+          } catch {}
+          const amount = BigInt(dec.amount?.toString?.() ?? dec.amount ?? 0);
+          const ui = decimals >= 0 ? Number(amount) / Math.pow(10, decimals) : null;
+          const state = dec.isFrozen ? "frozen" : dec.isInitialized ? "initialized" : "uninitialized";
+          const amountUi = { amount: amount.toString(), decimals, uiAmount: ui, uiAmountString: (ui ?? 0).toString() };
+          out.push({
+            pubkey: ata.toBase58(),
+            account: {
+              lamports: Number(acc.lamports || 0n),
+              owner: TOKEN_PROGRAM_ID.toBase58(),
+              executable: !!acc.executable,
+              rentEpoch: Number(acc.rentEpoch || 0),
+              data: {
+                program: programFilter === token2022Id ? "spl-token-2022" : "spl-token",
+                parsed: { type: "account", info: { mint: decMint, owner: decOwner, tokenAmount: amountUi, state, isNative: !!dec.isNative } },
+                space: acc.data?.length ?? 0,
+              },
+            },
+          });
+          seen.add(ata.toBase58());
+        } catch {}
+      }
+    } catch {}
     return context.createSuccessResponse(id, { context: { slot: Number(context.slot) }, value: out });
   } catch (e: any) {
-    return context.createErrorResponse(id, -32602, "Invalid params", e.message);
+    try { console.error("[rpc] getTokenAccountsByOwner error", e); } catch {}
+    return context.createErrorResponse(id, -32603, "Internal error", e?.message || String(e));
   }
 };

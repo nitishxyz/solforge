@@ -1,6 +1,6 @@
 import { LiteSVM } from "litesvm";
 import type { TxStore } from "../src/db/tx-store";
-import type { Keypair, VersionedTransaction } from "@solana/web3.js";
+import type { Keypair, VersionedTransaction, PublicKey } from "@solana/web3.js";
 
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -37,6 +37,8 @@ export interface RpcMethodContext {
   notifySignature: (signature: string) => void;
   getFaucet: () => Keypair;
   getTxCount: () => bigint;
+  registerMint?: (mint: PublicKey | string) => void;
+  listMints?: () => string[];
   recordTransaction: (
     signature: string,
     tx: VersionedTransaction,
