@@ -12,9 +12,16 @@ export const getSignaturesForAddress: RpcMethodHandler = async (id, params, cont
     const until = typeof config?.until === "string" ? config.until : undefined;
 
     if (!context.store) return context.createSuccessResponse(id, []);
-    const entries = await context.store.getSignaturesForAddress(address, { before, until, limit });
-    return context.createSuccessResponse(id, entries);
+    try {
+      const entries = await context.store.getSignaturesForAddress(address, { before, until, limit });
+      return context.createSuccessResponse(id, entries);
+    } catch (e) {
+      try { console.warn("[rpc] getSignaturesForAddress: db read failed", e); } catch {}
+      // Graceful fallback: return empty list instead of error
+      return context.createSuccessResponse(id, []);
+    }
   } catch (error: any) {
-    return context.createErrorResponse(id, -32602, "Invalid params", error.message);
+    try { console.error("[rpc] getSignaturesForAddress error", error); } catch {}
+    return context.createErrorResponse(id, -32603, "Internal error", error.message);
   }
 };
