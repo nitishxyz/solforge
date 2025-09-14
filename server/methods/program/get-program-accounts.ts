@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, unpackAccount, unpackMint } from "@solana/spl-token";
+import { parseUpgradeableLoader } from "../account/parsers/loader-upgradeable";
 
 export const getProgramAccounts: RpcMethodHandler = async (id, params, context) => {
   const [programId, cfg] = params || [];
@@ -81,6 +82,18 @@ export const getProgramAccounts: RpcMethodHandler = async (id, params, context) 
                 },
                 space: acc.data?.length ?? 0
               }
+            }
+          });
+        } else if (encoding === "jsonParsed" && programStr === "BPFLoaderUpgradeab1e11111111111111111111111") {
+          const parsed = parseUpgradeableLoader(programStr, raw, context);
+          out.push({
+            pubkey: r.address,
+            account: {
+              lamports: Number(acc.lamports || 0n),
+              owner: programStr,
+              executable: !!acc.executable,
+              rentEpoch: Number(acc.rentEpoch || 0),
+              data: parsed
             }
           });
         } else {
