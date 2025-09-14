@@ -45,7 +45,10 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 
     // Compute pre balances for all static account keys
     const txMsg: any = tx.message as any;
-    const staticKeys = (txMsg.staticAccountKeys || []).map((k: any) => {
+    const rawKeys: any[] = Array.isArray(txMsg.staticAccountKeys)
+      ? txMsg.staticAccountKeys
+      : (Array.isArray(txMsg.accountKeys) ? txMsg.accountKeys : []);
+    const staticKeys = rawKeys.map((k: any) => {
       try { return typeof k === "string" ? new PublicKey(k) : (k as PublicKey); } catch { return faucet.publicKey; }
     });
     const preBalances = staticKeys.map((pk) => {

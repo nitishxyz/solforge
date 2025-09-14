@@ -2,7 +2,7 @@ import type { RpcMethodHandler } from "../types";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, AccountLayout, ACCOUNT_SIZE, MintLayout, MINT_SIZE } from "@solana/spl-token";
 import { createAssociatedTokenAccountInstruction, createMintToCheckedInstruction } from "@solana/spl-token";
-import { Transaction, SystemProgram, VersionedTransaction } from "@solana/web3.js";
+import { Transaction, SystemProgram, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { parseUpgradeableLoader } from "../account/parsers/loader-upgradeable";
 
 export const solforgeAdminCloneProgram: RpcMethodHandler = async (id, params, context) => {
@@ -423,41 +423,45 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
     const amount = typeof rawAmount === "bigint" ? rawAmount : BigInt(rawAmount);
     ixs.push(createMintToCheckedInstruction(mint, ata, faucet.publicKey, amount, decimals));
 
-    const tx = new Transaction().add(...ixs);
-    tx.feePayer = faucet.publicKey;
-    try { tx.recentBlockhash = context.svm.latestBlockhash(); } catch {}
-    tx.sign(faucet);
+    // Build a VersionedTransaction (legacy message) to ensure consistent encoding/decoding downstream
+    let rb = context.svm.latestBlockhash();
+    if (!rb || rb.length === 0) {
+      const bh = new Uint8Array(32); crypto.getRandomValues(bh);
+      rb = context.encodeBase58(bh);
+    }
+    const msg = new TransactionMessage({ payerKey: faucet.publicKey, recentBlockhash: rb, instructions: ixs });
+    const legacy = msg.compileToLegacyMessage();
+    const vtx = new VersionedTransaction(legacy);
+    vtx.sign([faucet]);
+
+    // Capture preBalances for primary accounts referenced
+    const trackedKeys = [faucet.publicKey, ata, mint, owner];
+    const preBalances = trackedKeys.map((pk) => { try { return Number(context.svm.getBalance(pk) || 0n); } catch { return 0; } });
 
     // Send transaction via svm
-    const res = context.svm.sendTransaction(tx);
+    const res = context.svm.sendTransaction(vtx);
     // Compute signature (base58) from the signed transaction
     let signatureStr = "";
     try {
-      const sigBytes = tx.signatures?.[0]?.signature;
+      const sigBytes = vtx.signatures?.[0];
       if (sigBytes) signatureStr = context.encodeBase58(new Uint8Array(sigBytes));
     } catch {}
     if (!signatureStr) signatureStr = `mint:${ata.toBase58()}:${Date.now()}`;
 
-    // Insert into DB for explorer
+    // Insert into DB for explorer via context.recordTransaction for richer details
     try {
-      const rawBase64 = Buffer.from(tx.serialize()).toString("base64");
-      await context.store?.insertTransactionBundle({
-        signature: signatureStr,
-        slot: Number(context.slot),
-        blockTime: Math.floor(Date.now() / 1000),
-        version: "legacy",
+      const rawBase64 = Buffer.from(vtx.serialize()).toString("base64");
+      const postBalances = trackedKeys.map((pk) => { try { return Number(context.svm.getBalance(pk) || 0n); } catch { return 0; } });
+      // Best-effort logs
+      const logs: string[] = ["spl-token mintToChecked"];
+      // Feed through recordTransaction helper so downstream queries have consistent shape
+      try { (vtx as any).serialize = () => Buffer.from(rawBase64, "base64"); } catch {}
+      context.recordTransaction(signatureStr, vtx as any, {
+        logs,
         fee: 0,
-        err: null,
-        rawBase64,
-        preBalances: [],
-        postBalances: [],
-        logs: ["spl-token mintToChecked"],
-        accounts: [
-          { address: ata.toBase58(), index: 0, signer: false, writable: true },
-          { address: mint.toBase58(), index: 1, signer: false, writable: false },
-          { address: owner.toBase58(), index: 2, signer: false, writable: false },
-          { address: faucet.publicKey.toBase58(), index: 3, signer: true, writable: true },
-        ],
+        blockTime: Math.floor(Date.now() / 1000),
+        preBalances,
+        postBalances,
       });
     } catch {}
     try { context.notifySignature(signatureStr); } catch {}
