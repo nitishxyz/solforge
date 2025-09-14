@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "cli": "bun src/cli/main.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "drizzle-kit": "^0.31.4"
@@ -11,6 +14,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@clack/prompts": "^0.11.0",
     "@solana-program/compute-budget": "^0.9.0",
     "@solana-program/memo": "^0.8.0",
     "@solana-program/system": "^0.8.0",
