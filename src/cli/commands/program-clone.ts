@@ -20,7 +20,10 @@ export async function programCloneCommand(args: string[]) {
       jsonrpc: "2.0", id: 1, method: "solforgeAdminCloneProgram", params: [programId, { endpoint, withAccounts, accountsLimit }]
     }) });
     const json = await res.json();
-    if (json.error) throw new Error(json.error.message || "program clone failed");
+    if (json.error) {
+      const details = json.error.data ? `\nDetails: ${JSON.stringify(json.error.data)}` : "";
+      throw new Error((json.error.message || "program clone failed") + details);
+    }
     s.stop("Program cloned");
     console.log(JSON.stringify(json.result, null, 2));
   } catch (e) {
@@ -59,4 +62,3 @@ export async function programAccountsCloneCommand(args: string[]) {
 function safeJson(s: string): any {
   try { return JSON.parse(s); } catch { return undefined; }
 }
-
