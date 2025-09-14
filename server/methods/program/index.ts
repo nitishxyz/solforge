@@ -13,8 +13,9 @@ export { getSupply } from "./get-supply";
 export { getTokenAccountBalance } from "./get-token-account-balance";
 export { getTokenAccountsByOwner } from "./get-token-accounts-by-owner";
 export { getTokenAccountsByDelegate } from "./get-token-accounts-by-delegate";
+export { getParsedTokenAccountsByOwner } from "./get-parsed-token-accounts-by-owner";
+export { getParsedTokenAccountsByDelegate } from "./get-parsed-token-accounts-by-delegate";
 export { getTokenSupply } from "./get-token-supply";
 export { getTokenLargestAccounts } from "./get-token-largest-accounts";
 export { getParsedProgramAccounts } from "./get-parsed-program-accounts";
 export { getLargestAccounts } from "./get-largest-accounts";
-
