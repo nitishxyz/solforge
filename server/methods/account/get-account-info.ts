@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { parseAccountJson } from "./parsers";
 import type { RpcMethodHandler } from "../../types";
 
 /**
@@ -36,8 +37,14 @@ export const getAccountInfo: RpcMethodHandler = async (id, params, context) => {
     } catch {}
 
     if (encoding === "jsonParsed") {
-      const space = account.data?.length ?? 0;
-      const program = owner === "11111111111111111111111111111111" ? "system" : "unknown";
+      const parsed = parseAccountJson(pubkey, {
+        owner: new PublicKey(account.owner),
+        data: account.data ? new Uint8Array(account.data) : new Uint8Array(),
+        lamports: account.lamports,
+        executable: account.executable,
+        rentEpoch: account.rentEpoch
+      }, context);
+
       return context.createSuccessResponse(id, {
         context: { slot: Number(context.slot) },
         value: {
@@ -45,11 +52,7 @@ export const getAccountInfo: RpcMethodHandler = async (id, params, context) => {
           owner,
           executable: account.executable,
           rentEpoch: Number(account.rentEpoch || 0),
-          data: {
-            program,
-            parsed: program === "system" ? { type: "account", info: {} } : null,
-            space
-          }
+          data: parsed || { program: "unknown", parsed: null, space: account.data?.length ?? 0 }
         }
       });
     }
