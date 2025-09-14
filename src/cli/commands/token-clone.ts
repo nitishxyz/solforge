@@ -34,23 +34,17 @@ export async function tokenCloneCommand(args: string[]) {
       const data = jsonMint.error.data ? `\nDetails: ${JSON.stringify(jsonMint.error.data)}` : "";
       throw new Error((jsonMint.error.message || "clone mint failed") + data);
     }
-    // Optionally adopt faucet as authority for local testing
-    const adopt = flags["adopt-authority"] ? true : await p.confirm({ message: "Set faucet as mint authority locally?", initialValue: true });
-    if (adopt) {
-      s.message("Adopting faucet as authority...");
-      const resAdopt = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 3, method: "solforgeAdoptMintAuthority", params: [mint] }),
-      });
-      const jsonAdopt = await resAdopt.json();
-      if (jsonAdopt.error) throw new Error(jsonAdopt.error.message || "adopt authority failed");
-      s.stop("Mint cloned and authority adopted");
-      console.log(JSON.stringify({ mint: jsonMint.result, adopt: jsonAdopt.result }, null, 2));
-      return;
-    }
-    s.stop("Mint cloned");
-    console.log(JSON.stringify({ mint: jsonMint.result }, null, 2));
+    // Always adopt faucet as mint authority for local usage
+    s.message("Adopting faucet as authority...");
+    const resAdopt = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 3, method: "solforgeAdoptMintAuthority", params: [mint] }),
+    });
+    const jsonAdopt = await resAdopt.json();
+    if (jsonAdopt.error) throw new Error(jsonAdopt.error.message || "adopt authority failed");
+    s.stop("Mint cloned and authority adopted");
+    console.log(JSON.stringify({ mint: jsonMint.result, adopt: jsonAdopt.result }, null, 2));
     return;
   } catch (e) {
     s.stop("Clone failed");
