@@ -9,7 +9,10 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 
     // Snapshot pre balances
     const msg: any = tx.message as any;
-    const staticKeys = (msg.staticAccountKeys || []).map((k: any) => {
+    const rawKeys: any[] = Array.isArray(msg.staticAccountKeys)
+      ? msg.staticAccountKeys
+      : (Array.isArray(msg.accountKeys) ? msg.accountKeys : []);
+    const staticKeys = rawKeys.map((k: any) => {
       try { return typeof k === "string" ? new PublicKey(k) : (k as PublicKey); } catch { return undefined; }
     }).filter(Boolean) as PublicKey[];
     const preBalances = staticKeys.map((pk) => {

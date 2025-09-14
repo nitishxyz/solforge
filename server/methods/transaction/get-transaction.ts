@@ -35,12 +35,11 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
       }
 
       const msg: any = tx.message as any;
-      const accountKeys = (msg.staticAccountKeys || []).map((k: any) => {
-        try {
-          return typeof k === "string" ? k : k.toBase58();
-        } catch {
-          return String(k);
-        }
+      const rawKeys1: any[] = Array.isArray(msg.staticAccountKeys)
+        ? msg.staticAccountKeys
+        : (Array.isArray(msg.accountKeys) ? msg.accountKeys : []);
+      const accountKeys = rawKeys1.map((k: any) => {
+        try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
       });
       const compiled = msg.compiledInstructions || [];
       const instructions = compiled.map((ci: any) => {
@@ -172,7 +171,10 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
           const raw = Buffer.from(row.rawBase64, "base64");
           const tx = VersionedTransaction.deserialize(raw);
           const msg: any = tx.message as any;
-          const accountKeys = (msg.staticAccountKeys || []).map((k: any) => {
+          const rawKeys2: any[] = Array.isArray(msg.staticAccountKeys)
+            ? msg.staticAccountKeys
+            : (Array.isArray(msg.accountKeys) ? msg.accountKeys : []);
+          const accountKeys = rawKeys2.map((k: any) => {
             try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
           });
           const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
@@ -245,7 +247,10 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
           const raw = Buffer.from(row.rawBase64, "base64");
           const tx = VersionedTransaction.deserialize(raw);
           const msg: any = tx.message as any;
-          const accountKeys = (msg.staticAccountKeys || []).map((k: any) => {
+          const rawKeys3: any[] = Array.isArray(msg.staticAccountKeys)
+            ? msg.staticAccountKeys
+            : (Array.isArray(msg.accountKeys) ? msg.accountKeys : []);
+          const accountKeys = rawKeys3.map((k: any) => {
             try { return typeof k === "string" ? k : k.toBase58(); } catch { return String(k); }
           });
           const header = msg.header || { numRequiredSignatures: tx.signatures.length, numReadonlySignedAccounts: 0, numReadonlyUnsignedAccounts: 0 };
