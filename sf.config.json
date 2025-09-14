@@ -1,0 +1,24 @@
+{
+  "server": {
+    "rpcPort": 8899,
+    "wsPort": 8900,
+    "db": {
+      "mode": "ephemeral",
+      "path": ".solforge/db.db"
+    }
+  },
+  "svm": {
+    "initialLamports": "1000000000000000",
+    "faucetSOL": 1000
+  },
+  "clone": {
+    "endpoint": "https://api.mainnet-beta.solana.com",
+    "programs": [],
+    "tokens": [],
+    "programAccounts": []
+  },
+  "gui": {
+    "enabled": false,
+    "port": null
+  }
+}
