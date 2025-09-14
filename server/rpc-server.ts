@@ -147,7 +147,10 @@ export class LiteSVMRpcServer {
         // Persist to SQLite for durability and history queries
         try {
           const msg: any = tx.message as any;
-          const keys: string[] = (msg.staticAccountKeys || []).map((k: any) => {
+          const rawKeys: any[] = Array.isArray(msg.staticAccountKeys)
+            ? msg.staticAccountKeys
+            : (Array.isArray(msg.accountKeys) ? msg.accountKeys : []);
+          const keys: string[] = rawKeys.map((k: any) => {
             try {
               return typeof k === "string" ? k : (k as PublicKey).toBase58();
             } catch {
