@@ -37,3 +37,4 @@ target
 test-program
 .solforge/
 *-bak
+.keep
