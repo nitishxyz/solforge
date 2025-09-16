@@ -38,3 +38,4 @@ debug
 target
 test-program
 .solforge/
+*-bak

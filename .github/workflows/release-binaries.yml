@@ -1,4 +1,4 @@
-name: Build and Release
+name: Build and Release Binaries
 
 on:
   push:
@@ -16,7 +16,6 @@ jobs:
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       tag_exists: ${{ steps.check_tag.outputs.exists }}
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Get version from package.json
         id: get_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
       - name: Check if version tag exists
         id: check_tag
@@ -56,10 +55,9 @@ jobs:
           - os: linux
             arch: arm64
             runner: ubuntu-latest
-          - os: win32
+          - os: windows
             arch: x64
             runner: windows-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -71,39 +69,27 @@ jobs:
         run: bun install
 
       - name: Build binary
+        shell: bash
         run: |
           mkdir -p dist
-          bun build src/index.ts --compile --outfile ./dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'win32' && '.exe' || '' }}
+          TARGET="bun-${{ matrix.os }}-${{ matrix.arch }}"
+          OUTFILE="dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}"
+          bun build --compile --target="$TARGET" src/cli/main.ts --outfile "$OUTFILE"
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: solforge-${{ matrix.os }}-${{ matrix.arch }}
-          path: ./dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'win32' && '.exe' || '' }}
+          path: dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
 
   publish:
     needs: [check-version, build-binaries]
     if: needs.check-version.outputs.tag_exists == 'false'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-
-      - uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install dependencies
-        run: bun install
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -118,48 +104,29 @@ jobs:
 
       - name: Create and push git tag
         run: |
+          VERSION=$(node -p "require('./package.json').version")
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag v${{ needs.check-version.outputs.version }}
-          git push origin v${{ needs.check-version.outputs.version }}
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
           name: "SolForge v${{ needs.check-version.outputs.version }}"
           body: |
             ## SolForge v${{ needs.check-version.outputs.version }}
 
-            🚀 **Automatically built and released from main branch**
+            Platform binaries are attached below.
 
-            ### Quick Install
-            ```bash
-            npm install -g solforge
-            # or
-            yarn global add solforge
-            # or  
-            bun install -g solforge
-            ```
-
-            ### Platform Binaries
-            If you prefer manual installation, download the binary for your platform:
-
-            - **macOS (Intel)**: `solforge-darwin-x64`
-            - **macOS (Apple Silicon)**: `solforge-darwin-arm64`  
-            - **Linux (x64)**: `solforge-linux-x64`
-            - **Linux (ARM64)**: `solforge-linux-arm64`
-            - **Windows (x64)**: `solforge-win32-x64.exe`
-
-            ### What's New
-            See [commit history](https://github.com/nitishxyz/solforge/commits/v${{ needs.check-version.outputs.version }}) for changes in this release.
+            - macOS (Intel): solforge-darwin-x64
+            - macOS (Apple Silicon): solforge-darwin-arm64
+            - Linux (x64): solforge-linux-x64
+            - Linux (ARM64): solforge-linux-arm64
+            - Windows (x64): solforge-windows-x64.exe
           files: ./release/*
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
