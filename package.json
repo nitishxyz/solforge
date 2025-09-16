@@ -1,8 +1,9 @@
 {
   "name": "solforge",
+  "version": "0.2.0",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "scripts": {
     "cli": "bun src/cli/main.ts",
     "build:bin": "bun build --compile src/cli/main.ts --outfile dist/solforge",
@@ -10,7 +11,8 @@
     "build:bin:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/cli/main.ts --outfile dist/solforge-darwin-x64",
     "build:bin:linux-x64": "bun build --compile --target=bun-linux-x64 src/cli/main.ts --outfile dist/solforge-linux-x64",
     "build:bin:linux-arm64": "bun build --compile --target=bun-linux-arm64 src/cli/main.ts --outfile dist/solforge-linux-arm64",
-    "build:bin:windows-x64": "bun build --compile --target=bun-windows-x64 src/cli/main.ts --outfile dist/solforge-windows-x64.exe"
+    "build:bin:windows-x64": "bun build --compile --target=bun-windows-x64 src/cli/main.ts --outfile dist/solforge-windows-x64.exe",
+    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64"
   },
   "devDependencies": {
     "@types/bun": "latest",
