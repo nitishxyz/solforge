@@ -32,18 +32,32 @@ export async function tokenCloneCommand(args: string[]) {
       const data = jsonMint.error.data ? `\nDetails: ${JSON.stringify(jsonMint.error.data)}` : "";
       throw new Error((jsonMint.error.message || "clone mint failed") + data);
     }
-    // Always adopt faucet as mint authority for local usage
-    s.message("Adopting faucet as authority...");
-    const resAdopt = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 3, method: "solforgeAdoptMintAuthority", params: [mint] }),
-    });
-    const jsonAdopt = await resAdopt.json();
-    if (jsonAdopt.error) throw new Error(jsonAdopt.error.message || "adopt authority failed");
-    s.stop("Mint cloned and authority adopted");
-    console.log(JSON.stringify({ mint: jsonMint.result, adopt: jsonAdopt.result }, null, 2));
+    // Record mint in config immediately after a successful clone
     await recordTokenClone(configPath, mint);
+    // Try to adopt faucet as mint authority for local usage (do not fail the command if this step fails)
+    try {
+      s.message("Adopting faucet as authority...");
+      const resAdopt = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 3, method: "solforgeAdoptMintAuthority", params: [mint] }),
+      });
+      const jsonAdopt = await resAdopt.json();
+      if (jsonAdopt.error) {
+        p.log.warn(jsonAdopt.error.message || "adopt authority failed");
+        s.stop("Mint cloned (authority unchanged)");
+        console.log(JSON.stringify({ mint: jsonMint.result, adopt: null }, null, 2));
+        return;
+      }
+      s.stop("Mint cloned and authority adopted");
+      console.log(JSON.stringify({ mint: jsonMint.result, adopt: jsonAdopt.result }, null, 2));
+      return;
+    } catch (adoptErr: any) {
+      p.log.warn(`Adopt authority failed: ${adoptErr?.message || String(adoptErr)}`);
+      s.stop("Mint cloned (authority unchanged)");
+      console.log(JSON.stringify({ mint: jsonMint.result, adopt: null }, null, 2));
+      return;
+    }
     return;
   } catch (e) {
     s.stop("Clone failed");

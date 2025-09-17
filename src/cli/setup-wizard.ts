@@ -42,6 +42,26 @@ export async function runSetupWizard(existing: SolforgeConfig = defaultConfig) {
     ),
   );
 
+  const guiEnabledResp = await p.confirm({
+    message: "Enable GUI server?",
+    initialValue: base.gui?.enabled ?? defaultConfig.gui.enabled,
+  });
+  if (p.isCancel(guiEnabledResp)) cancelSetup();
+  const guiEnabled = guiEnabledResp !== false;
+
+  let guiPort = base.gui?.port ?? defaultConfig.gui.port;
+  if (guiEnabled) {
+    guiPort = Number(
+      ensure(
+        await p.text({
+          message: "GUI port",
+          initialValue: String(guiPort ?? defaultConfig.gui.port),
+          validate: validatePort,
+        }),
+      ),
+    );
+  }
+
   const endpoint = ensure(
     await p.text({
       message: "Source RPC endpoint for cloning",
@@ -111,6 +131,7 @@ export async function runSetupWizard(existing: SolforgeConfig = defaultConfig) {
 
   base.server.rpcPort = rpcPort;
   base.server.wsPort = wsPort;
+  base.gui = { enabled: guiEnabled, port: guiPort ?? defaultConfig.gui.port };
   base.clone.endpoint = endpoint;
   base.clone.tokens = tokens;
   base.clone.programs = programs;

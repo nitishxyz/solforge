@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import "../public/app.css";
 import { App } from "./app";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,4 +9,3 @@ document.addEventListener("DOMContentLoaded", () => {
     root.render(<App />);
   }
 });
-

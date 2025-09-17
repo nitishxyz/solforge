@@ -21,6 +21,7 @@ A blazing-fast, drop-in replacement for `solana-test-validator` built on LiteSVM
 - 🔌 **WebSocket support** for signature subscriptions
 - 🧰 **Universal compatibility** with Solana CLI, Anchor, @solana/kit, web3.js
 - 📊 **Rich RPC coverage** (90+ methods implemented)
+- 🖥️ **Built-in GUI dashboard** for airdrops, mints, and asset management
 - 🎯 **CLI tools** for tokens, programs, and accounts
 
 ## 📦 Installation & Quick Start
@@ -118,6 +119,46 @@ anchor deploy
 anchor test --skip-local-validator  # SolForge is already running
 ```
 
+## 🖥️ GUI Dashboard
+
+Solforge ships a dark-mode dashboard that starts alongside the RPC server. By default it listens on `http://127.0.0.1:42069` and provides:
+
+- Quick airdrops and SPL mints via a faucet-aware form.
+- Live RPC metrics (slot, block height, transaction count, blockhash, faucet balance).
+- Tables of cloned programs and token mints with one-click modals to import additional assets.
+
+### Launching the Dashboard
+
+```bash
+# Run the interactive CLI (starts RPC + GUI)
+bun src/cli/main.ts
+
+# Or start directly
+bun src/cli/main.ts start
+
+# Open the dashboard
+open http://127.0.0.1:42069
+```
+
+### GUI API Endpoints
+
+The GUI server exposes REST endpoints backed by the same JSON-RPC methods:
+
+| Method & Path             | Description                          |
+| ------------------------- | ------------------------------------ |
+| `GET /api/status`         | Aggregated RPC stats + faucet info   |
+| `GET /api/programs`       | List the registered programs         |
+| `GET /api/tokens`         | Detailed SPL mint metadata           |
+| `POST /api/airdrop`       | Proxy to `requestAirdrop`            |
+| `POST /api/mint`          | Proxy to `solforgeMintTo`            |
+| `POST /api/clone/program` | Proxy to program clone helpers       |
+| `POST /api/clone/token`   | Proxy to token clone helpers         |
+
+Override the GUI port via `sf.config.json` (`gui.port`) or `SOLFORGE_GUI_PORT`.
+
+Run `bun run build:css` before `bun run build:bin` to embed the latest Tailwind styles in the standalone binary.
+
+
 ## 🔧 Configuration
 
 SolForge works with zero configuration, but can be customized via environment variables or config file.
@@ -169,8 +210,8 @@ bun src/cli/main.ts config get server.db.mode
     \"programAccounts\": []
   },
   \"gui\": {
-    \"enabled\": false,
-    \"port\": null
+    \"enabled\": true,
+    \"port\": 42069
   },
   \"bootstrap\": {
     \"airdrops\": []

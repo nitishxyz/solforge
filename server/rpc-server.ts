@@ -18,6 +18,7 @@ export class LiteSVMRpcServer {
   private txCount: bigint = 0n;
   private signatureListeners: Set<(sig: string) => void> = new Set();
   private knownMints: Set<string> = new Set();
+  private knownPrograms: Set<string> = new Set();
   private faucet: Keypair;
   private txRecords: Map<
     string,
@@ -134,6 +135,13 @@ export class LiteSVMRpcServer {
         } catch {}
       },
       listMints: () => Array.from(this.knownMints),
+      registerProgram: (program: any) => {
+        try {
+          const pk = typeof program === "string" ? program : new PublicKey(program).toBase58();
+          this.knownPrograms.add(pk);
+        } catch {}
+      },
+      listPrograms: () => Array.from(this.knownPrograms),
       recordTransaction: (signature, tx, meta) => {
         this.txRecords.set(signature, {
           tx,
@@ -252,6 +260,30 @@ export class LiteSVMRpcServer {
   onSignatureRecorded(cb: (sig: string) => void) {
     this.signatureListeners.add(cb);
     return () => this.signatureListeners.delete(cb);
+  }
+
+  getFaucetAddress(): string {
+    try {
+      return this.faucet.publicKey.toBase58();
+    } catch {
+      return "";
+    }
+  }
+
+  getFaucetBalance(): bigint {
+    try {
+      return this.svm.getBalance(this.faucet.publicKey as PublicKey) ?? 0n;
+    } catch {
+      return 0n;
+    }
+  }
+
+  listKnownMints(): string[] {
+    return Array.from(this.knownMints);
+  }
+
+  listKnownPrograms(): string[] {
+    return Array.from(this.knownPrograms);
   }
 
   getSignatureStatus(

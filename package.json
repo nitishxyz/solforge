@@ -6,6 +6,7 @@
   "private": false,
   "scripts": {
     "cli": "bun src/cli/main.ts",
+    "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
     "build:bin": "bun build --compile src/cli/main.ts --outfile dist/solforge",
     "build:bin:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 src/cli/main.ts --outfile dist/solforge-darwin-arm64",
     "build:bin:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/cli/main.ts --outfile dist/solforge-darwin-x64",
@@ -16,7 +17,12 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "drizzle-kit": "^0.31.4"
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "3"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -30,6 +36,8 @@
     "@solana/kit": "^3.0.3",
     "@solana/spl-token": "^0.4.14",
     "drizzle-orm": "^0.44.5",
-    "litesvm": "^0.3.3"
+    "litesvm": "^0.3.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   }
 }
