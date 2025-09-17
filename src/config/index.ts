@@ -15,6 +15,9 @@ export interface SolforgeConfig {
     programAccounts: Array<{ programId: string; limit?: number; filters?: unknown[] }>;
   };
   gui: { enabled: boolean; port: number | null };
+  bootstrap: {
+    airdrops: Array<{ address: string; amountSol: number }>;
+  };
 }
 
 export const defaultConfig: SolforgeConfig = {
@@ -31,6 +34,7 @@ export const defaultConfig: SolforgeConfig = {
     programAccounts: [],
   },
   gui: { enabled: false, port: null },
+  bootstrap: { airdrops: [] },
 };
 
 export async function readConfig(path?: string): Promise<SolforgeConfig> {

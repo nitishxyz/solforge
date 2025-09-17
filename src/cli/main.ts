@@ -6,7 +6,13 @@ const argv = Bun.argv.slice(2);
 async function main() {
   const [cmd, sub, ...rest] = argv;
 
-  if (!cmd || cmd === "help" || cmd === "-h" || cmd === "--help") {
+  if (!cmd) {
+    const { runSolforge } = await import("./run-solforge");
+    await runSolforge();
+    return;
+  }
+
+  if (cmd === "help" || cmd === "-h" || cmd === "--help") {
     printHelp();
     return;
   }
@@ -81,6 +87,7 @@ function printHelp() {
 solforge <command>
 
 Commands:
+  (no command)        Run setup then start RPC & WS servers
   rpc start           Start RPC & WS servers
   start               Alias for 'rpc start'
   config init         Create sf.config.json in CWD
