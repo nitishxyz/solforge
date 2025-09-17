@@ -1,7 +1,19 @@
 import type { RpcMethodHandler } from "../types";
+import type { AccountInfo } from "@solana/web3.js";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, AccountLayout, ACCOUNT_SIZE, MintLayout, MINT_SIZE } from "@solana/spl-token";
-import { createAssociatedTokenAccountInstruction, createMintToCheckedInstruction } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  AccountLayout,
+  ACCOUNT_SIZE,
+  MintLayout,
+  MINT_SIZE,
+  unpackMint,
+  getMetadataPointerState,
+  createAssociatedTokenAccountInstruction,
+  createMintToCheckedInstruction,
+} from "@solana/spl-token";
 import { Transaction, SystemProgram, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { parseUpgradeableLoader } from "../account/parsers/loader-upgradeable";
 
@@ -127,6 +139,7 @@ export const solforgeAdminCloneTokenMint: RpcMethodHandler = async (id, params, 
       owner: info.owner,
       rentEpoch: 0,
     } as any);
+    await cloneMintExtensionAccounts(conn, context, mintPk, info as AccountInfo<Buffer>);
     try { context.registerMint?.(mintPk); } catch {}
     console.log(`[admin] clone mint done`, { mint: mintPk.toBase58() });
     return context.createSuccessResponse(id, { ok: true, address: mint });
@@ -215,6 +228,51 @@ export const solforgeAdminCloneTokenAccounts: RpcMethodHandler = async (id, para
     return context.createErrorResponse(id, -32603, "Clone token accounts failed", e?.message || String(e));
   }
 };
+
+async function cloneMintExtensionAccounts(
+  conn: Connection,
+  context: any,
+  mint: PublicKey,
+  info: AccountInfo<Buffer>,
+) {
+  if (!info.data || info.data.length <= MINT_SIZE) return;
+  try {
+    const programId = info.owner.equals(TOKEN_2022_PROGRAM_ID) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
+    const mintState = unpackMint(mint, info, programId);
+    if (!mintState.tlvData || mintState.tlvData.length === 0) return;
+
+    const metadataPtr = getMetadataPointerState(mintState);
+    if (metadataPtr?.metadataAddress) {
+      await cloneSingleAccount(conn, context, metadataPtr.metadataAddress, "metadata");
+    }
+  } catch (error) {
+    console.warn("[admin] mint extension clone skipped", { mint: mint.toBase58(), error: String(error) });
+  }
+}
+
+async function cloneSingleAccount(
+  conn: Connection,
+  context: any,
+  address: PublicKey,
+  label: string,
+) {
+  try {
+    const info = await conn.getAccountInfo(address, "confirmed");
+    if (!info) {
+      console.warn(`[admin] ${label} account not found on endpoint`, { address: address.toBase58() });
+      return;
+    }
+    context.svm.setAccount(address, {
+      data: new Uint8Array(info.data as Buffer),
+      executable: info.executable,
+      lamports: Number(info.lamports),
+      owner: info.owner,
+      rentEpoch: 0,
+    } as any);
+  } catch (error) {
+    console.warn(`[admin] clone ${label} account failed`, { address: address.toBase58(), error: String(error) });
+  }
+}
 
 // Create or overwrite a token account (ATA) with a specified amount
 export const solforgeCreateTokenAccount: RpcMethodHandler = async (id, params, context) => {
@@ -532,13 +590,18 @@ export const solforgeAdoptMintAuthority: RpcMethodHandler = async (id, params, c
     mintDecoded.mintAuthorityOption = 1 as any;
     (mintDecoded as any).mintAuthority = faucet.publicKey;
     // keep other fields unchanged
-    const out = Buffer.alloc(MINT_SIZE);
+    const out = Buffer.from(buf); // preserve any extensions beyond MintLayout
     MintLayout.encode(mintDecoded as any, out);
+
+    const ownerBase58 = typeof acct.owner === "string"
+      ? new PublicKey(acct.owner).toBase58()
+      : (acct.owner as PublicKey).toBase58();
+    const ownerPk = new PublicKey(ownerBase58);
 
     context.svm.setAccount(mint, {
       lamports: Number(acct.lamports || 0n),
       data: new Uint8Array(out),
-      owner: TOKEN_PROGRAM_ID,
+      owner: ownerPk,
       executable: false,
       rentEpoch: 0,
     } as any);
@@ -548,10 +611,10 @@ export const solforgeAdoptMintAuthority: RpcMethodHandler = async (id, params, c
         {
           address: mint.toBase58(),
           lamports: Number(acct.lamports || 0n),
-          ownerProgram: TOKEN_PROGRAM_ID.toBase58(),
+          ownerProgram: ownerBase58,
           executable: false,
           rentEpoch: 0,
-          dataLen: MINT_SIZE,
+          dataLen: out.length,
           dataBase64: undefined,
           lastSlot: Number(context.slot),
         },
