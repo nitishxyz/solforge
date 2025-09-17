@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { readConfig, defaultConfig, type SolforgeConfig } from "../config";
+import { readConfig, defaultConfig, writeConfig, type SolforgeConfig } from "../config";
 import { startRpcServers } from "../rpc/start";
 import { runSetupWizard } from "./setup-wizard";
 import { cancelSetup } from "./setup-utils";
@@ -79,6 +79,6 @@ async function waitForRpc(url: string, timeoutMs = 10_000) {
 }
 
 async function saveConfig(config: SolforgeConfig) {
-  await Bun.write(CONFIG_PATH, JSON.stringify(config, null, 2) + "\n");
+  await writeConfig(config, CONFIG_PATH);
   p.log.success(`Updated ${CONFIG_PATH}`);
 }
