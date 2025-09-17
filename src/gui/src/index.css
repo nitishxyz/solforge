@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+	color-scheme: dark;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+	@apply bg-slate-950 text-slate-100 antialiased;
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+	width: 10px;
+	height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: theme("colors.slate.700");
-  border-radius: 9999px;
+	background: theme("colors.slate.700");
+	border-radius: 9999px;
 }

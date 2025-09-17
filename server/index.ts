@@ -1,5 +1,5 @@
-export { LiteSVMRpcServer, createLiteSVMRpcServer } from "./rpc-server";
-export { createLiteSVMWebSocketServer } from "./ws-server";
-export { rpcMethods } from "./methods";
-export * from "./types";
 export * from "./methods";
+export { rpcMethods } from "./methods";
+export { createLiteSVMRpcServer, LiteSVMRpcServer } from "./rpc-server";
+export * from "./types";
+export { createLiteSVMWebSocketServer } from "./ws-server";
