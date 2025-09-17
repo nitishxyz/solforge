@@ -14,7 +14,7 @@ export interface SolforgeConfig {
     tokens: string[];
     programAccounts: Array<{ programId: string; limit?: number; filters?: unknown[] }>;
   };
-  gui: { enabled: boolean; port: number | null };
+  gui: { enabled: boolean; port: number };
   bootstrap: {
     airdrops: Array<{ address: string; amountSol: number }>;
   };
@@ -33,7 +33,7 @@ export const defaultConfig: SolforgeConfig = {
     tokens: [],
     programAccounts: [],
   },
-  gui: { enabled: false, port: null },
+  gui: { enabled: true, port: 42069 },
   bootstrap: { airdrops: [] },
 };
 
