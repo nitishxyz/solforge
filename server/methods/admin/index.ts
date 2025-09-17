@@ -75,6 +75,7 @@ export const solforgeAdminCloneProgram: RpcMethodHandler = async (id, params, co
     }
 
     console.log("[admin] clone program done", { programId: pid.toBase58(), added: true, source: addSource });
+    try { context.registerProgram?.(pid); } catch {}
     return context.createSuccessResponse(id, { ok: true, programId, added: true, source: addSource });
   } catch (e: any) {
     console.error("[admin] clone program error", e);
@@ -380,6 +381,7 @@ export const solforgeLoadProgram: RpcMethodHandler = async (id, params, context)
       executable: true,
       rentEpoch: 0,
     } as any);
+    try { context.registerProgram?.(pid); } catch {}
     return context.createSuccessResponse(id, { ok: true, programId: programIdStr, size: bytes.length });
   } catch (e: any) {
     return context.createErrorResponse(id, -32603, "Load program failed", e?.message || String(e));
@@ -489,8 +491,35 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
     if (!ataAcc || (ataAcc.data?.length ?? 0) < ACCOUNT_SIZE) {
       ixs.push(createAssociatedTokenAccountInstruction(faucet.publicKey, ata, owner, mint));
     }
+    // Detect which token program the mint belongs to (SPL v1 vs Token-2022)
+    const mintOwnerStr = (() => {
+      try { return (mintAcc.owner as PublicKey).toBase58(); } catch { return String(mintAcc.owner); }
+    })();
+    const tokenProgramId = mintOwnerStr === TOKEN_2022_PROGRAM_ID.toBase58()
+      ? TOKEN_2022_PROGRAM_ID
+      : TOKEN_PROGRAM_ID;
+
+    // Ensure ATA exists under the correct token program
+    if (!ataAcc || (ataAcc.data?.length ?? 0) < ACCOUNT_SIZE) {
+      ixs.push(createAssociatedTokenAccountInstruction(
+        faucet.publicKey,
+        ata,
+        owner,
+        mint,
+        tokenProgramId,
+      ));
+    }
+
     const amount = typeof rawAmount === "bigint" ? rawAmount : BigInt(rawAmount);
-    ixs.push(createMintToCheckedInstruction(mint, ata, faucet.publicKey, amount, decimals));
+    ixs.push(createMintToCheckedInstruction(
+      mint,
+      ata,
+      faucet.publicKey,
+      amount,
+      decimals,
+      [],
+      tokenProgramId,
+    ));
 
     // Build a VersionedTransaction (legacy message) to ensure consistent encoding/decoding downstream
     let rb = context.svm.latestBlockhash();

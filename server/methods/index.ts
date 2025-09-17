@@ -100,6 +100,11 @@ import {
   solforgeMintTo,
   solforgeAdoptMintAuthority,
 } from "./admin";
+import {
+  solforgeGetStatus,
+  solforgeListPrograms,
+  solforgeListTokensDetailed,
+} from "./solforge";
 
 export const rpcMethods: Record<string, RpcMethodHandler> = {
   // Account methods
@@ -177,7 +182,12 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
   getFeeForMessage,
   getFees,
   getFeeCalculatorForBlockhash,
-  getFeeRateGovernor
+  getFeeRateGovernor,
+  
+  // Solforge helpers
+  solforgeGetStatus,
+  solforgeListPrograms,
+  solforgeListTokensDetailed
 };
 
 // Admin methods (gated by SOLFORGE_ADMIN=1)
@@ -251,6 +261,9 @@ export {
   getRecentPerformanceSamples,
   getTransactionCount,
   getAddressLookupTable,
+  solforgeGetStatus,
+  solforgeListPrograms,
+  solforgeListTokensDetailed,
   getRecentPrioritizationFees,
   getFeeForMessage,
   getFees,

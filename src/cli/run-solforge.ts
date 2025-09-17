@@ -40,9 +40,12 @@ async function startWithConfig(config: SolforgeConfig) {
   const host = String(process.env.RPC_HOST || "127.0.0.1");
   const rpcPort = Number(config.server.rpcPort || defaultConfig.server.rpcPort);
   const wsPort = Number(config.server.wsPort || rpcPort + 1);
+  const guiEnabled = config.gui?.enabled !== false;
+  const guiPort = Number(config.gui?.port ?? defaultConfig.gui.port);
 
   const spinner = p.spinner();
-  spinner.start(`Starting RPC on ${host}:${rpcPort} (WS ${wsPort})...`);
+  const guiPart = guiEnabled ? `, GUI ${guiPort}` : "";
+  spinner.start(`Starting RPC on ${host}:${rpcPort} (WS ${wsPort}${guiPart})...`);
   try {
     const started = startRpcServers({
       rpcPort,
@@ -50,6 +53,8 @@ async function startWithConfig(config: SolforgeConfig) {
       dbMode: config.server.db.mode,
       dbPath: config.server.db.path,
       host,
+      guiEnabled,
+      guiPort,
     });
     spinner.stop("RPC started");
 
@@ -57,7 +62,9 @@ async function startWithConfig(config: SolforgeConfig) {
     await bootstrapEnvironment(config, host, started.rpcPort);
 
     p.log.success(
-      `Solforge ready ➜ HTTP http://${host}:${started.rpcPort} | WS ws://${host}:${started.wsPort}`,
+      `Solforge ready ➜ HTTP http://${host}:${started.rpcPort} | WS ws://${host}:${started.wsPort}${
+        started.guiPort ? ` | GUI http://${host}:${started.guiPort}` : ""
+      }`,
     );
   } catch (error) {
     spinner.stop("Failed to start RPC");

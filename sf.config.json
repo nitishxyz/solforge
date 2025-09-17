@@ -15,23 +15,17 @@
     "endpoint": "https://api.mainnet-beta.solana.com",
     "programs": [
       "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
-      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
-      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
-      "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
       "JARSq9S9RgyynuAwcdWh2yEG6MbhfntWq7zjXjAo87uQ"
     ],
     "tokens": [
       "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-      "2AFzzF7EKDygNJ2VthGWNSftCthpSkTmqSg9p8bFsend",
-      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
       "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB"
     ],
     "programAccounts": []
   },
   "gui": {
-    "enabled": false,
-    "port": null
+    "enabled": true,
+    "port": 42069
   },
   "bootstrap": {
     "airdrops": [

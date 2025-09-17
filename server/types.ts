@@ -39,6 +39,8 @@ export interface RpcMethodContext {
   getTxCount: () => bigint;
   registerMint?: (mint: PublicKey | string) => void;
   listMints?: () => string[];
+  registerProgram?: (program: PublicKey | string) => void;
+  listPrograms?: () => string[];
   recordTransaction: (
     signature: string,
     tx: VersionedTransaction,
