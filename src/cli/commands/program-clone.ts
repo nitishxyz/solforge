@@ -1,18 +1,19 @@
 import * as p from "@clack/prompts";
 import { parseFlags } from "../utils/args";
-import { readConfig } from "../../config";
+import { readConfig, writeConfig } from "../../config";
 
 export async function programCloneCommand(args: string[]) {
   const { flags, rest } = parseFlags(args);
-  const programId = rest[0] || (flags["program"] as string);
-  const endpoint = (flags["endpoint"] as string) || (await readConfig()).clone.endpoint;
+  const programId = ((rest[0] as string) || (flags["program"] as string) || "").trim();
+  const configPath = flags["config"] as string | undefined;
+  const cfg = await readConfig(configPath);
+  const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
   const withAccounts = !!flags["with-accounts"];
   const accountsLimit = flags["accounts-limit"] ? Number(flags["accounts-limit"]) : undefined;
   if (!programId) {
     p.log.error("Usage: solforge program clone <programId> [--endpoint URL] [--with-accounts] [--accounts-limit N]");
     return;
   }
-  const cfg = await readConfig();
   const url = `http://localhost:${cfg.server.rpcPort}`;
   const s = p.spinner(); s.start("Cloning program...");
   try {
@@ -26,6 +27,7 @@ export async function programCloneCommand(args: string[]) {
     }
     s.stop("Program cloned");
     console.log(JSON.stringify(json.result, null, 2));
+    await recordProgramClone(configPath, programId);
   } catch (e) {
     s.stop("Clone failed");
     p.log.error(String(e));
@@ -34,15 +36,16 @@ export async function programCloneCommand(args: string[]) {
 
 export async function programAccountsCloneCommand(args: string[]) {
   const { flags, rest } = parseFlags(args);
-  const programId = rest[0] || (flags["program"] as string);
-  const endpoint = (flags["endpoint"] as string) || (await readConfig()).clone.endpoint;
+  const programId = ((rest[0] as string) || (flags["program"] as string) || "").trim();
+  const configPath = flags["config"] as string | undefined;
+  const cfg = await readConfig(configPath);
+  const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
   const limit = flags["limit"] ? Number(flags["limit"]) : undefined;
   const filters = flags["filters"] ? safeJson(flags["filters"] as string) : undefined;
   if (!programId) {
     p.log.error("Usage: solforge program accounts clone <programId> [--endpoint URL] [--limit N] [--filters JSON]");
     return;
   }
-  const cfg = await readConfig();
   const url = `http://localhost:${cfg.server.rpcPort}`;
   const s = p.spinner(); s.start("Cloning program accounts...");
   try {
@@ -61,4 +64,19 @@ export async function programAccountsCloneCommand(args: string[]) {
 
 function safeJson(s: string): any {
   try { return JSON.parse(s); } catch { return undefined; }
+}
+
+async function recordProgramClone(configPath: string | undefined, programId: string) {
+  try {
+    const cfg = await readConfig(configPath);
+    const next = new Set(cfg.clone.programs ?? []);
+    if (!next.has(programId)) {
+      next.add(programId);
+      cfg.clone.programs = Array.from(next);
+      await writeConfig(cfg, configPath ?? "sf.config.json");
+      p.log.info(`Added ${programId} to clone programs in config`);
+    }
+  } catch (error) {
+    console.warn(`[config] Failed to update clone programs: ${String(error)}`);
+  }
 }

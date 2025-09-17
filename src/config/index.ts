@@ -60,6 +60,14 @@ export async function writeDefaultConfig(opts: { force?: boolean } = {}) {
   writeFileSync(p, JSON.stringify(defaultConfig, null, 2) + "\n");
 }
 
+export async function writeConfig(config: SolforgeConfig, path = "sf.config.json") {
+  const dir = dirname(path);
+  if (dir && dir !== ".") {
+    try { mkdirSync(dir, { recursive: true }); } catch {}
+  }
+  await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
+}
+
 export function getConfigValue(cfg: any, path?: string) {
   if (!path) return cfg;
   return path.split(".").reduce((o, k) => (o ? o[k] : undefined), cfg);

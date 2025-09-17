@@ -1,8 +1,6 @@
 import * as p from "@clack/prompts";
 import { parseFlags } from "../utils/args";
-import { readConfig } from "../../config";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { MintLayout } from "@solana/spl-token";
+import { readConfig, writeConfig } from "../../config";
 
 // Simplified token "clone": create an ATA locally with the requested amount.
 // Usage:
@@ -10,16 +8,16 @@ import { MintLayout } from "@solana/spl-token";
 //   solforge token clone <mint> --to <owner> --ui-amount <num> --decimals <d>
 export async function tokenCloneCommand(args: string[]) {
   const { flags, rest } = parseFlags(args);
-  const mint = (rest[0] as string) || (flags["mint"] as string);
+  const mint = ((rest[0] as string) || (flags["mint"] as string) || "").trim();
   if (!mint) {
     p.log.error("Usage: solforge token clone <mint> [--amount <baseUnits> | --ui-amount <num>] [--endpoint URL]");
     return;
   }
 
   const owner = flags["to"] as string | undefined; // optional; defaults to faucet on server
-  const endpoint = (flags["endpoint"] as string) || (await readConfig()).clone.endpoint;
-
-  const cfg = await readConfig();
+  const configPath = flags["config"] as string | undefined;
+  const cfg = await readConfig(configPath);
+  const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
   const url = `http://localhost:${cfg.server.rpcPort}`;
   const s = p.spinner(); s.start("Cloning mint into LiteSVM...");
   try {
@@ -45,6 +43,7 @@ export async function tokenCloneCommand(args: string[]) {
     if (jsonAdopt.error) throw new Error(jsonAdopt.error.message || "adopt authority failed");
     s.stop("Mint cloned and authority adopted");
     console.log(JSON.stringify({ mint: jsonMint.result, adopt: jsonAdopt.result }, null, 2));
+    await recordTokenClone(configPath, mint);
     return;
   } catch (e) {
     s.stop("Clone failed");
@@ -54,3 +53,18 @@ export async function tokenCloneCommand(args: string[]) {
 }
 
 // intentionally no UI conversion here; clone mirrors the on-chain mint only
+
+async function recordTokenClone(configPath: string | undefined, mint: string) {
+  try {
+    const cfg = await readConfig(configPath);
+    const next = new Set(cfg.clone.tokens ?? []);
+    if (!next.has(mint)) {
+      next.add(mint);
+      cfg.clone.tokens = Array.from(next);
+      await writeConfig(cfg, configPath ?? "sf.config.json");
+      p.log.info(`Added ${mint} to clone tokens in config`);
+    }
+  } catch (error) {
+    console.warn(`[config] Failed to update clone tokens: ${String(error)}`);
+  }
+}
