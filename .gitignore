@@ -42,3 +42,6 @@ test-program
 *-bak
 .keep
 
+
+# sst
+.sst
