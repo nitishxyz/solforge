@@ -85,6 +85,36 @@ function run(cmd, args) {
 }
 
 (async () => {
+  // Fast path for --version/--help without booting the app
+  const args = process.argv.slice(2);
+  if (args.includes("-v") || args.includes("--version") || args[0] === "version") {
+    console.log(pkg().version || "");
+    process.exit(0);
+  }
+  if (args.includes("-h") || args.includes("--help") || args[0] === "help") {
+    console.log(`
+solforge <command>
+
+Commands:
+  (no command)        Run setup then start RPC & WS servers
+  rpc start           Start RPC & WS servers
+  start               Alias for 'rpc start'
+  config init         Create sf.config.json in CWD
+  config get <key>    Read a config value (dot path)
+  config set <k> <v>  Set a config value
+  airdrop --to <pubkey> --sol <amount>  Airdrop SOL via RPC faucet
+  mint                 Interactive: pick mint, receiver, amount
+  token clone <mint>  Clone SPL token mint + accounts
+  program clone <programId>              Clone program code (and optionally accounts)
+  program accounts clone <programId>     Clone accounts owned by program
+
+Options:
+  -h, --help          Show help
+  -v, --version       Show version
+`);
+    process.exit(0);
+  }
+
   const vp = await ensureBinary();
   if (vp) {
     const code = await run(vp, process.argv.slice(2));
@@ -99,4 +129,3 @@ function run(cmd, args) {
   }
   process.exit(code);
 })();
-
