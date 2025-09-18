@@ -38,6 +38,7 @@ bin
 debug
 target
 test-program
-.solforge/
+.solforge
 *-bak
 .keep
+
