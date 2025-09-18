@@ -11,11 +11,106 @@ permissions:
   contents: read
 
 jobs:
+  build-binaries-from-tag:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: darwin
+            arch: x64
+            runner: macos-latest
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+          - os: linux
+            arch: arm64
+            runner: ubuntu-latest
+          - os: windows
+            arch: x64
+            runner: windows-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install
+
+      - name: Build platform binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.os }}-${{ matrix.arch }}" in
+            darwin-arm64)
+              bun run build:bin:darwin-arm64
+              ;;
+            darwin-x64)
+              bun run build:bin:darwin-x64
+              ;;
+            linux-x64)
+              bun run build:bin:linux-x64
+              ;;
+            linux-arm64)
+              bun run build:bin:linux-arm64
+              ;;
+            windows-x64)
+              bun run build:bin:windows-x64
+              ;;
+          esac
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solforge-${{ matrix.os }}-${{ matrix.arch }}
+          path: dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
+
+  github-release-from-tag:
+    needs: build-binaries-from-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p ./release
+          find ./artifacts -type f -exec cp {} ./release/ \;
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: "SolForge ${{ github.event.inputs.tag }}"
+          body: |
+            Prebuilt binaries for ${{ github.event.inputs.tag }}.
+          files: ./release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish-npm-from-tag:
     runs-on: ubuntu-latest
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    needs: [github-release-from-tag]
     steps:
       - name: Checkout tag
         uses: actions/checkout@v4
@@ -56,9 +151,13 @@ jobs:
           rm -f bun.lock
           bun install
 
+      - name: Ensure CLI entry is executable
+        shell: bash
+        run: |
+          chmod +x bin/solforge || true
+
       - name: Publish to npm (Bun)
         shell: bash
         run: |
           set -euo pipefail
           bun publish --access public --tag latest
-
