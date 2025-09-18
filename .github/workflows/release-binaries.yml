@@ -138,7 +138,7 @@ jobs:
           path: dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
 
   publish-npm:
-    needs: check-version
+    needs: [publish]
     runs-on: ubuntu-latest
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -173,6 +173,11 @@ jobs:
           printf "//registry.npmjs.org/:_authToken=%s\n" "$NPM_TOKEN" > .npmrc
           echo "always-auth=true" >> .npmrc
 
+      - name: Ensure CLI entry is executable
+        shell: bash
+        run: |
+          chmod +x bin/solforge || true
+
       - name: Verify publish token present
         shell: bash
         run: |
@@ -191,7 +196,7 @@ jobs:
           bun publish --access public --tag latest
 
   publish:
-    needs: [check-version, build-binaries, publish-npm]
+    needs: [check-version, build-binaries]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

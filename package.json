@@ -4,10 +4,19 @@
   "module": "index.ts",
   "type": "module",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nitishxyz/solforge.git"
+  },
+  "homepage": "https://github.com/nitishxyz/solforge#readme",
+  "bugs": {
+    "url": "https://github.com/nitishxyz/solforge/issues"
+  },
   "bin": {
-    "solforge": "dist/solforge"
+    "solforge": "bin/solforge"
   },
   "files": [
+    "bin",
     "dist",
     "src",
     "server",
@@ -18,6 +27,7 @@
   "scripts": {
     "lint": "biome check",
     "cli": "bun src/cli/main.ts",
+    "postinstall": "node scripts/postinstall.cjs || true",
     "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify",
     "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
     "build": "bun run build:bin",
@@ -27,7 +37,8 @@
     "build:bin:linux-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-x64 src/cli/main.ts --outfile dist/solforge-linux-x64",
     "build:bin:linux-arm64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-arm64 src/cli/main.ts --outfile dist/solforge-linux-arm64",
     "build:bin:windows-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-windows-x64 src/cli/main.ts --outfile dist/solforge-windows-x64.exe",
-    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64"
+    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
+    "prepack": "chmod +x bin/solforge || true"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

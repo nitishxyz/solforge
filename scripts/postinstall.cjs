@@ -1,103 +1,110 @@
 #!/usr/bin/env node
-
+/*
+  SolForge postinstall: fetch the platform-specific prebuilt binary from GitHub Releases.
+  - Skips if SOLFORGE_SKIP_DOWNLOAD=true
+  - Falls back silently on errors (CLI will still work via Bun if installed)
+*/
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
-const { execSync } = require("child_process");
 
-const PACKAGE_NAME = "solforge";
-const VERSION = require("../package.json").version;
-
-// Platform mapping
-const PLATFORM_MAP = {
-  "darwin-x64": "darwin-x64",
-  "darwin-arm64": "darwin-arm64",
-  "linux-x64": "linux-x64",
-  "linux-arm64": "linux-arm64",
-  "win32-x64": "win32-x64.exe",
-};
-
-function getPlatform() {
-  const platform = process.platform;
-  const arch = process.arch;
-  const key = `${platform}-${arch}`;
-
-  if (!PLATFORM_MAP[key]) {
-    console.error(`Unsupported platform: ${platform}-${arch}`);
-    console.error("Supported platforms:", Object.keys(PLATFORM_MAP).join(", "));
-    process.exit(1);
-  }
-
-  return PLATFORM_MAP[key];
+function log(msg) {
+  console.log(`[solforge] ${msg}`);
+}
+function warn(msg) {
+  console.warn(`[solforge] ${msg}`);
 }
 
-function downloadBinary(url, destination) {
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(destination);
-
-    https
-      .get(url, (response) => {
-        if (response.statusCode === 200) {
-          response.pipe(file);
-          file.on("finish", () => {
-            file.close();
-            fs.chmodSync(destination, 0o755); // Make executable
-            resolve();
-          });
-        } else if (response.statusCode === 302 || response.statusCode === 301) {
-          // Handle redirects
-          downloadBinary(response.headers.location, destination)
-            .then(resolve)
-            .catch(reject);
-        } else {
-          reject(new Error(`Failed to download: ${response.statusCode}`));
-        }
-      })
-      .on("error", reject);
-  });
+if (String(process.env.SOLFORGE_SKIP_DOWNLOAD || "").toLowerCase() === "true") {
+  log("Skipping binary download due to SOLFORGE_SKIP_DOWNLOAD=true");
+  process.exit(0);
 }
 
-async function install() {
+function assetName() {
+  const p = process.platform;
+  const a = process.arch;
+  if (p === "darwin" && a === "arm64") return "solforge-darwin-arm64";
+  if (p === "darwin" && a === "x64") return "solforge-darwin-x64";
+  if (p === "linux" && a === "x64") return "solforge-linux-x64";
+  if (p === "linux" && a === "arm64") return "solforge-linux-arm64";
+  if (p === "win32" && a === "x64") return "solforge-windows-x64.exe";
+  return null;
+}
+
+function getRepo() {
   try {
-    const platform = getPlatform();
-    const binDir = path.join(__dirname, "..", "bin");
-    const binaryName =
-      process.platform === "win32" ? "solforge.exe" : "solforge";
-    const binaryPath = path.join(binDir, binaryName);
-
-    // Create bin directory
-    if (!fs.existsSync(binDir)) {
-      fs.mkdirSync(binDir, { recursive: true });
+    const pkg = require(path.join(__dirname, "..", "package.json"));
+    if (pkg.repository) {
+      if (typeof pkg.repository === "string") return pkg.repository.replace(/^github:/, "");
+      if (pkg.repository.url) {
+        const m = pkg.repository.url.match(/github\.com[:/](.+?)\.git$/);
+        if (m) return m[1];
+      }
     }
+  } catch {}
+  return process.env.SOLFORGE_REPO || "nitishxyz/solforge";
+}
 
-    // Try to build locally first (if Bun is available)
-    try {
-      console.log("Attempting to build locally with Bun...");
-      execSync(`bun build src/index.ts --compile --outfile ${binaryPath}`, {
-        cwd: path.join(__dirname, ".."),
-        stdio: "pipe",
-      });
-      console.log("✅ Built successfully with local Bun");
-      return;
-    } catch (e) {
-      console.log("Local Bun build failed, downloading pre-built binary...");
-    }
-
-    // Download pre-built binary from GitHub releases
-    const downloadUrl = `https://github.com/nitishxyz/solforge/releases/download/v${VERSION}/solforge-${platform}`;
-
-    console.log(`Downloading ${PACKAGE_NAME} binary for ${platform}...`);
-    console.log(`URL: ${downloadUrl}`);
-
-    await downloadBinary(downloadUrl, binaryPath);
-    console.log("✅ Binary downloaded and installed successfully");
-  } catch (error) {
-    console.error("❌ Installation failed:", error.message);
-    console.error("\nFallback options:");
-    console.error("1. Install Bun and run: bun install -g solforge");
-    console.error("2. Clone the repo and build manually");
-    process.exit(1);
+function getVersion() {
+  try {
+    const pkg = require(path.join(__dirname, "..", "package.json"));
+    return pkg.version;
+  } catch {
+    return process.env.npm_package_version || "";
   }
 }
 
-install();
+const name = assetName();
+if (!name) {
+  warn(`No prebuilt binary for ${process.platform}/${process.arch}; skipping`);
+  process.exit(0);
+}
+
+const version = getVersion();
+if (!version) {
+  warn("Unable to determine package version; skipping binary download");
+  process.exit(0);
+}
+
+const repo = getRepo();
+const url = `https://github.com/${repo}/releases/download/v${version}/${name}`;
+
+const vendorDir = path.join(__dirname, "..", "vendor");
+const outPath = path.join(vendorDir, name);
+
+if (fs.existsSync(outPath)) {
+  log(`Binary already present at vendor/${name}`);
+  process.exit(0);
+}
+
+fs.mkdirSync(vendorDir, { recursive: true });
+
+function download(to, from, cb, redirects = 0) {
+  const req = https.get(from, (res) => {
+    if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && redirects < 5) {
+      return download(to, res.headers.location, cb, redirects + 1);
+    }
+    if (res.statusCode !== 200) {
+      return cb(new Error(`HTTP ${res.statusCode} for ${from}`));
+    }
+    const file = fs.createWriteStream(to, { mode: 0o755 });
+    res.pipe(file);
+    file.on("finish", () => file.close(cb));
+  });
+  req.on("error", (err) => cb(err));
+}
+
+log(`Fetching ${name} for v${version}...`);
+download(outPath, url, (err) => {
+  if (err) {
+    warn(`Could not download prebuilt binary: ${err.message}`);
+    warn("CLI will fall back to running via Bun if available.");
+    try { fs.unlinkSync(outPath); } catch {}
+    process.exit(0);
+  }
+  if (process.platform !== "win32") {
+    try { fs.chmodSync(outPath, 0o755); } catch {}
+  }
+  log(`Installed vendor/${name}`);
+});
+
