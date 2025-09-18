@@ -50,74 +50,133 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 			onClose={() => {
 				if (!pending) onClose();
 			}}
-			title="Clone program from RPC"
+			title="Clone Program"
+			icon="fa-code"
+			iconColor="blue"
 			footer={
-				<div className="flex justify-end gap-2">
-					<button
-						type="button"
-						onClick={handleSubmit}
-						disabled={pending || programId.trim().length === 0}
-						className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-					>
-						{pending ? "Cloning…" : "Clone"}
-					</button>
+				<div className="flex justify-between items-center">
+					<div className="text-xs text-gray-500">
+						<i className="fas fa-info-circle mr-1"></i>
+						Clone from Solana mainnet or custom RPC
+					</div>
+					<div className="flex gap-3">
+						<button
+							type="button"
+							onClick={() => !pending && onClose()}
+							disabled={pending}
+							className="btn-secondary"
+						>
+							Cancel
+						</button>
+						<button
+							type="button"
+							onClick={handleSubmit}
+							disabled={pending || programId.trim().length === 0}
+							className={`btn-primary ${(pending || programId.trim().length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+						>
+							{pending ? (
+								<>
+									<div className="spinner"></div>
+									<span>Cloning Program</span>
+								</>
+							) : (
+								<>
+									<i className="fas fa-download"></i>
+									<span>Clone Program</span>
+								</>
+							)}
+						</button>
+					</div>
 				</div>
 			}
 		>
-			<div className="space-y-4">
-				<label className="flex flex-col gap-2">
-					<span className="text-xs uppercase tracking-wide text-slate-500">
-						Program ID
-					</span>
-					<input
-						value={programId}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setProgramId(event.target.value)
-						}
-						placeholder="Enter program public key"
-						className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-					/>
-				</label>
-				<label className="flex flex-col gap-2">
-					<span className="text-xs uppercase tracking-wide text-slate-500">
-						Source endpoint (optional)
-					</span>
-					<input
-						value={endpoint}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setEndpoint(event.target.value)
-						}
-						placeholder="https://api.mainnet-beta.solana.com"
-						className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-					/>
-				</label>
-				<label className="flex items-center gap-2 text-xs text-slate-400">
-					<input
-						type="checkbox"
-						checked={withAccounts}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setWithAccounts(event.target.checked)
-						}
-						className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-400"
-					/>
-					Clone owned accounts
-				</label>
-				{withAccounts ? (
-					<label className="flex flex-col gap-2">
-						<span className="text-xs uppercase tracking-wide text-slate-500">
-							Accounts limit
-						</span>
-						<input
-							value={accountsLimit}
-							onChange={(event: ChangeEvent<HTMLInputElement>) =>
-								setAccountsLimit(event.target.value)
-							}
-							placeholder="100"
-							className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-						/>
+			<div className="space-y-5">
+				<div className="space-y-2">
+					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+						Program ID *
 					</label>
-				) : null}
-				{error ? <p className="text-sm text-rose-400">{error}</p> : null}
+					<div className="relative">
+						<input
+							value={programId}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setProgramId(event.target.value)
+							}
+							placeholder="Enter program public key (e.g., TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA)"
+							className="input pl-10 font-mono text-sm"
+						/>
+						<i className="fas fa-fingerprint absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+					</div>
+				</div>
+				
+				<div className="space-y-2">
+					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+						RPC Endpoint (Optional)
+					</label>
+					<div className="relative">
+						<input
+							value={endpoint}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setEndpoint(event.target.value)
+							}
+							placeholder="https://api.mainnet-beta.solana.com (default)"
+							className="input pl-10"
+						/>
+						<i className="fas fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+					</div>
+				</div>
+				
+				<div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+					<label className="flex items-center gap-3 cursor-pointer group">
+						<input
+							type="checkbox"
+							checked={withAccounts}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setWithAccounts(event.target.checked)
+							}
+							className="checkbox"
+						/>
+						<div>
+							<span className="text-sm text-white group-hover:text-purple-300 transition-colors">
+								Clone Program Accounts
+							</span>
+							<p className="text-xs text-gray-500 mt-0.5">
+								Include accounts owned by this program
+							</p>
+						</div>
+					</label>
+					
+					{withAccounts && (
+						<div className="ml-8 space-y-2 pt-2 border-t border-white/5">
+							<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+								Account Limit
+							</label>
+							<div className="relative">
+								<input
+									value={accountsLimit}
+									onChange={(event: ChangeEvent<HTMLInputElement>) =>
+										setAccountsLimit(event.target.value)
+									}
+									placeholder="100"
+									type="number"
+									min="1"
+									max="1000"
+									className="input pl-10"
+								/>
+								<i className="fas fa-list-ol absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+							</div>
+							<p className="text-xs text-gray-500">
+								Maximum number of accounts to clone
+							</p>
+						</div>
+					)}
+				</div>
+				
+				{error && (
+					<div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+						<i className="fas fa-exclamation-circle text-red-400 mt-0.5"></i>
+						<p className="text-sm text-red-300">{error}</p>
+					</div>
+				)}
 			</div>
 		</Modal>
 	);

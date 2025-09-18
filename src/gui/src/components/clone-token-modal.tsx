@@ -55,89 +55,156 @@ export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
 			onClose={() => {
 				if (!pending) onClose();
 			}}
-			title="Clone token mint"
+			title="Clone Token"
+			icon="fa-coins"
+			iconColor="amber"
 			footer={
-				<div className="flex justify-end gap-2">
-					<button
-						type="button"
-						onClick={handleSubmit}
-						disabled={pending || mint.trim().length === 0}
-						className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-					>
-						{pending ? "Cloning…" : "Clone"}
-					</button>
+				<div className="flex justify-between items-center">
+					<div className="text-xs text-gray-500">
+						<i className="fas fa-info-circle mr-1"></i>
+						Clone SPL tokens from mainnet
+					</div>
+					<div className="flex gap-3">
+						<button
+							type="button"
+							onClick={() => !pending && onClose()}
+							disabled={pending}
+							className="btn-secondary"
+						>
+							Cancel
+						</button>
+						<button
+							type="button"
+							onClick={handleSubmit}
+							disabled={pending || mint.trim().length === 0}
+							className={`btn-primary ${(pending || mint.trim().length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+						>
+							{pending ? (
+								<>
+									<div className="spinner"></div>
+									<span>Cloning Token</span>
+								</>
+							) : (
+								<>
+									<i className="fas fa-download"></i>
+									<span>Clone Token</span>
+								</>
+							)}
+						</button>
+					</div>
 				</div>
 			}
 		>
-			<div className="space-y-4">
-				<label className="flex flex-col gap-2">
-					<span className="text-xs uppercase tracking-wide text-slate-500">
-						Mint address
-					</span>
-					<input
-						value={mint}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setMint(event.target.value)
-						}
-						placeholder="Enter mint public key"
-						className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-					/>
-				</label>
-				<label className="flex flex-col gap-2">
-					<span className="text-xs uppercase tracking-wide text-slate-500">
-						Source endpoint (optional)
-					</span>
-					<input
-						value={endpoint}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setEndpoint(event.target.value)
-						}
-						placeholder="https://api.mainnet-beta.solana.com"
-						className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-					/>
-				</label>
-				<label className="flex items-center gap-2 text-xs text-slate-400">
-					<input
-						type="checkbox"
-						checked={cloneAccounts}
-						onChange={(event: ChangeEvent<HTMLInputElement>) =>
-							setCloneAccounts(event.target.checked)
-						}
-						className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-400"
-					/>
-					Clone token accounts
-				</label>
-				{cloneAccounts ? (
-					<div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/70 p-3">
-						<label className="flex items-center gap-2 text-xs text-slate-400">
-							<input
-								type="checkbox"
-								checked={allAccounts}
-								onChange={(event: ChangeEvent<HTMLInputElement>) =>
-									setAllAccounts(event.target.checked)
-								}
-								className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-400"
-							/>
-							Clone all accounts (may be slow)
-						</label>
-						{!allAccounts ? (
-							<label className="flex flex-col gap-2">
-								<span className="text-xs uppercase tracking-wide text-slate-500">
-									Top holders
-								</span>
-								<input
-									value={holders}
-									onChange={(event: ChangeEvent<HTMLInputElement>) =>
-										setHolders(event.target.value)
-									}
-									placeholder="20"
-									className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/40"
-								/>
-							</label>
-						) : null}
+			<div className="space-y-5">
+				<div className="space-y-2">
+					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+						Mint Address *
+					</label>
+					<div className="relative">
+						<input
+							value={mint}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setMint(event.target.value)
+							}
+							placeholder="Enter token mint address (e.g., EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)"
+							className="input pl-10 font-mono text-sm"
+						/>
+						<i className="fas fa-coin absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
 					</div>
-				) : null}
-				{error ? <p className="text-sm text-rose-400">{error}</p> : null}
+				</div>
+				
+				<div className="space-y-2">
+					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+						RPC Endpoint (Optional)
+					</label>
+					<div className="relative">
+						<input
+							value={endpoint}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setEndpoint(event.target.value)
+							}
+							placeholder="https://api.mainnet-beta.solana.com (default)"
+							className="input pl-10"
+						/>
+						<i className="fas fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+					</div>
+				</div>
+				
+				<div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+					<label className="flex items-center gap-3 cursor-pointer group">
+						<input
+							type="checkbox"
+							checked={cloneAccounts}
+							onChange={(event: ChangeEvent<HTMLInputElement>) =>
+								setCloneAccounts(event.target.checked)
+							}
+							className="checkbox"
+						/>
+						<div>
+							<span className="text-sm text-white group-hover:text-purple-300 transition-colors">
+								Clone Token Accounts
+							</span>
+							<p className="text-xs text-gray-500 mt-0.5">
+								Include holder accounts for this token
+							</p>
+						</div>
+					</label>
+					
+					{cloneAccounts && (
+						<div className="ml-8 space-y-4 pt-3 border-t border-white/5">
+							<label className="flex items-center gap-3 cursor-pointer group">
+								<input
+									type="checkbox"
+									checked={allAccounts}
+									onChange={(event: ChangeEvent<HTMLInputElement>) =>
+										setAllAccounts(event.target.checked)
+									}
+									className="checkbox"
+								/>
+								<div>
+									<span className="text-sm text-white group-hover:text-purple-300 transition-colors">
+										Clone All Accounts
+									</span>
+									<p className="text-xs text-gray-500 mt-0.5">
+										Warning: This may be slow for popular tokens
+									</p>
+								</div>
+							</label>
+							
+							{!allAccounts && (
+								<div className="space-y-2">
+									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+										Top Holders Limit
+									</label>
+									<div className="relative">
+										<input
+											value={holders}
+											onChange={(event: ChangeEvent<HTMLInputElement>) =>
+												setHolders(event.target.value)
+											}
+											placeholder="20"
+											type="number"
+											min="1"
+											max="100"
+											className="input pl-10"
+										/>
+										<i className="fas fa-users absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+									</div>
+									<p className="text-xs text-gray-500">
+										Number of top holders to clone
+									</p>
+								</div>
+							)}
+						</div>
+					)}
+				</div>
+				
+				{error && (
+					<div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+						<i className="fas fa-exclamation-circle text-red-400 mt-0.5"></i>
+						<p className="text-sm text-red-300">{error}</p>
+					</div>
+				)}
 			</div>
 		</Modal>
 	);
