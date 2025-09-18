@@ -131,8 +131,55 @@ jobs:
           name: solforge-${{ matrix.os }}-${{ matrix.arch }}
           path: dist/solforge-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
 
+  publish-npm:
+    needs: check-version
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to latest branch tip
+        shell: bash
+        run: |
+          git fetch origin
+          git checkout "${{ github.ref_name }}"
+          git pull --ff-only origin "${{ github.ref_name }}"
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Configure npm auth
+        if: ${{ env.NPM_TOKEN != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf "//registry.npmjs.org/:_authToken=%s\n" "$NPM_TOKEN" > .npmrc
+          echo "always-auth=true" >> .npmrc
+
+      - name: Verify publish token present
+        shell: bash
+        run: |
+          if [ -z "${NPM_TOKEN}" ]; then
+            echo "NPM_TOKEN is not set; skipping npm publish" >&2
+            exit 1
+          fi
+
+      - name: Publish to npm (Bun)
+        env:
+          VERSION: ${{ needs.check-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Publishing solforge@${VERSION} to npm..."
+          bun publish --access public --tag latest
+
   publish:
-    needs: [check-version, build-binaries]
+    needs: [check-version, build-binaries, publish-npm]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
