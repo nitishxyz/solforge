@@ -1,0 +1,64 @@
+name: Publish From Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to publish (e.g., v0.2.0)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish-npm-from-tag:
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Configure npm auth
+        if: ${{ env.NPM_TOKEN != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf "//registry.npmjs.org/:_authToken=%s\n" "$NPM_TOKEN" > .npmrc
+          echo "always-auth=true" >> .npmrc
+
+      - name: Verify token and version match
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${NPM_TOKEN}" ]; then
+            echo "NPM_TOKEN is not set; cannot publish" >&2
+            exit 1
+          fi
+          TAG="${{ github.event.inputs.tag }}"
+          PKG_VERSION=$(jq -r .version package.json)
+          if [ "v${PKG_VERSION}" != "$TAG" ]; then
+            echo "Tag ($TAG) does not match package.json version (v${PKG_VERSION})" >&2
+            exit 1
+          fi
+
+      - name: Regenerate clean lockfile
+        shell: bash
+        run: |
+          rm -f bun.lock
+          bun install
+
+      - name: Publish to npm (Bun)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun publish --access public --tag latest
+
