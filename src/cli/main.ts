@@ -1,7 +1,22 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
 
-const argv = Bun.argv.slice(2);
+// Robust arg parsing for both bun script and compiled binary
+const known = new Set([
+  "help",
+  "-h",
+  "--help",
+  "rpc",
+  "start",
+  "config",
+  "airdrop",
+  "mint",
+  "token",
+  "program",
+]);
+const raw = Bun.argv.slice(1);
+const firstIdx = raw.findIndex((a) => known.has(String(a)));
+const argv = firstIdx >= 0 ? raw.slice(firstIdx) : [];
 
 async function main() {
 	const [cmd, sub, ...rest] = argv;
