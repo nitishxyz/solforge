@@ -2,7 +2,7 @@ import { createLiteSVMRpcServer, createLiteSVMWebSocketServer } from "./server";
 
 const PORT = Number(process.env.RPC_PORT) || 8899;
 
-const { httpServer, rpcServer } = createLiteSVMRpcServer(PORT);
+const { rpcServer } = createLiteSVMRpcServer(PORT);
 createLiteSVMWebSocketServer(rpcServer, PORT + 1);
 
 console.log(`
