@@ -193,10 +193,30 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 			const mints = context.listMints ? context.listMints() : [];
 			for (const m of mints) {
 				try {
+					const mintPk = new PublicKey(m);
+					const mintAcc = context.svm.getAccount(mintPk);
+					const mintOwnerPk = mintAcc
+						? typeof (mintAcc as any).owner?.toBase58 === "function"
+							? (mintAcc as any).owner
+							: new PublicKey(mintAcc.owner)
+						: TOKEN_PROGRAM_ID;
+					// Determine which token program this mint belongs to
+					const programForMint = mintOwnerPk.equals(TOKEN_2022_PROGRAM_ID)
+						? TOKEN_2022_PROGRAM_ID
+						: TOKEN_PROGRAM_ID;
+					// If a specific programId filter was requested, honor it strictly
+					if (
+						requestedProgramId &&
+						programForMint.toBase58() !== requestedProgramId
+					) {
+						continue;
+					}
+
 					const ata = getAssociatedTokenAddressSync(
-						new PublicKey(m),
+						mintPk,
 						owner,
 						true,
+						programForMint,
 					);
 					const acc = context.svm.getAccount(ata);
 					if (!acc || (acc.data?.length ?? 0) < ACCOUNT_SIZE) continue;
@@ -210,6 +230,13 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 					const programPk = ownerPk.equals(TOKEN_2022_PROGRAM_ID)
 						? TOKEN_2022_PROGRAM_ID
 						: TOKEN_PROGRAM_ID;
+					// If a programId filter was provided, skip non-matching accounts
+					if (
+						requestedProgramId &&
+						programPk.toBase58() !== requestedProgramId
+					) {
+						continue;
+					}
 					const dec = unpackAccount(
 						ata,
 						{ data: Buffer.from(acc.data), owner: ownerPk },
@@ -281,6 +308,70 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 				} catch {}
 			}
 		} catch {}
+
+		// Deduplicate: prefer the canonical ATA for each (owner,mint) under the mint's token program
+		if (encoding === "jsonParsed") {
+			try {
+				const pick = new Map<string, number>();
+				for (let i = 0; i < out.length; i++) {
+					const entry = out[i];
+					const pubkey: string = entry.pubkey;
+					const info = entry.account?.data?.parsed?.info;
+					const mintStr: string | undefined = info?.mint;
+					const ownerStr: string | undefined = info?.owner;
+					if (!mintStr || !ownerStr) continue;
+					let canonical = pubkey;
+					try {
+						const mintPk = new PublicKey(mintStr);
+						const ownerPk = new PublicKey(ownerStr);
+						const mintAcc = context.svm.getAccount(mintPk);
+						const mintOwnerPk = mintAcc
+							? typeof (mintAcc as any).owner?.toBase58 === "function"
+								? (mintAcc as any).owner
+								: new PublicKey(mintAcc.owner)
+							: TOKEN_PROGRAM_ID;
+						const programForMint = mintOwnerPk.equals(TOKEN_2022_PROGRAM_ID)
+							? TOKEN_2022_PROGRAM_ID
+							: TOKEN_PROGRAM_ID;
+						const ata = getAssociatedTokenAddressSync(
+							mintPk,
+							ownerPk,
+							true,
+							programForMint,
+						);
+						canonical = ata.toBase58();
+					} catch {}
+					const key = `${ownerStr}:${mintStr}`;
+					const prev = pick.get(key);
+					if (prev === undefined) {
+						// First time; keep if canonical, otherwise tentatively keep
+						pick.set(key, i);
+						// Prefer canonical if current isn't canonical but later we may find it
+						if (pubkey !== canonical) pick.set(`${key}:prefer`, -1);
+					} else {
+						// If previous wasn't canonical and this one is, replace
+						const prefer = pick.get(`${key}:prefer`) === -1;
+						if (prefer && pubkey === canonical) {
+							pick.set(key, i);
+							pick.delete(`${key}:prefer`);
+						}
+					}
+				}
+
+				// Build filtered list keeping only chosen indices
+				const keep = new Set<number>(Array.from(pick.values()).filter((v) => typeof v === "number" && v >= 0));
+				const filtered: any[] = [];
+				for (let i = 0; i < out.length; i++) {
+					const e = out[i];
+					const info = e.account?.data?.parsed?.info;
+					const key = info?.owner && info?.mint ? `${info.owner}:${info.mint}` : null;
+					if (key && keep.has(i)) filtered.push(e);
+					else if (!key) filtered.push(e); // non-parsed or unexpected shape
+				}
+				out.length = 0;
+				out.push(...filtered);
+			} catch {}
+		}
 		return context.createSuccessResponse(id, {
 			context: { slot: Number(context.slot) },
 			value: out,
