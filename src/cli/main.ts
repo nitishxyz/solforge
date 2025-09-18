@@ -1,11 +1,17 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
+// Load version for --version in both bun script and compiled binary
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import pkg from "../../package.json" assert { type: "json" };
 
 // Robust arg parsing for both bun script and compiled binary
 const known = new Set([
   "help",
   "-h",
   "--help",
+  "version",
+  "-v",
+  "--version",
   "rpc",
   "start",
   "config",
@@ -21,16 +27,21 @@ const argv = firstIdx >= 0 ? raw.slice(firstIdx) : [];
 async function main() {
 	const [cmd, sub, ...rest] = argv;
 
-	if (!cmd) {
-		const { runSolforge } = await import("./run-solforge");
-		await runSolforge();
-		return;
-	}
+  if (!cmd) {
+    const { runSolforge } = await import("./run-solforge");
+    await runSolforge();
+    return;
+  }
 
-	if (cmd === "help" || cmd === "-h" || cmd === "--help") {
-		printHelp();
-		return;
-	}
+  if (cmd === "help" || cmd === "-h" || cmd === "--help") {
+    printHelp();
+    return;
+  }
+
+  if (cmd === "version" || cmd === "-v" || cmd === "--version") {
+    printVersion();
+    return;
+  }
 
 	// Alias: solforge start -> solforge rpc start
 	if (cmd === "start") {
@@ -104,7 +115,7 @@ async function main() {
 }
 
 function printHelp() {
-	console.log(`
+  console.log(`
 solforge <command>
 
 Commands:
@@ -119,12 +130,22 @@ Commands:
   token clone <mint>  Clone SPL token mint + accounts
   program clone <programId>              Clone program code (and optionally accounts)
   program accounts clone <programId>     Clone accounts owned by program
+
+Options:
+  -h, --help          Show help
+  -v, --version       Show version
 `);
 }
 
 async function unknownCommand(parts: (string | undefined)[]) {
-	p.log.error(`Unknown command: ${parts.filter(Boolean).join(" ")}`);
-	printHelp();
+  p.log.error(`Unknown command: ${parts.filter(Boolean).join(" ")}`);
+  printHelp();
+}
+
+function printVersion() {
+	// Prefer package.json version if available
+	const v = (pkg as any)?.version ?? "";
+	console.log(String(v));
 }
 
 main();
