@@ -3,7 +3,7 @@ set -e
 
 # SolForge installer (downloads GitHub release binary)
 # Usage: curl -fsSL https://sh.solforge.sh | sh
-# Optional: SOLFORGE_VERSION=v0.2.3 curl -fsSL https://sh.solforge.sh | sh
+# Optional: SOLFORGE_VERSION=v0.2.5 curl -fsSL https://sh.solforge.sh | sh
 
 REPO="nitishxyz/solforge"
 BIN_NAME="solforge"

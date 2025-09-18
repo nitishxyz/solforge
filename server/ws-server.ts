@@ -6,6 +6,7 @@ type Sub = { id: number; type: "signature"; signature: string };
 export function createLiteSVMWebSocketServer(
 	rpcServer: LiteSVMRpcServer,
 	port: number = 8900,
+	host?: string,
 ) {
 	let nextSubId = 1;
 	const subs = new Map<number, Sub>();
@@ -67,6 +68,7 @@ export function createLiteSVMWebSocketServer(
 
 	const server: Server = Bun.serve({
 		port,
+		hostname: host || process.env.RPC_HOST || "127.0.0.1",
 		fetch(req, srv) {
 			if (srv.upgrade(req)) return undefined as any;
 			return new Response("Not a websocket", { status: 400 });
@@ -160,7 +162,8 @@ export function createLiteSVMWebSocketServer(
 		},
 	});
 
-	console.log(`📣 LiteSVM RPC PubSub running on ws://localhost:${port}`);
+	const hostname = (host || process.env.RPC_HOST || "127.0.0.1").toString();
+	console.log(`📣 LiteSVM RPC PubSub running on ws://${hostname}:${port}`);
 	return {
 		wsServer: server,
 		stop: () => {

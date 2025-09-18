@@ -29,7 +29,8 @@ async function main() {
 
   if (!cmd) {
     const { runSolforge } = await import("./run-solforge");
-    await runSolforge();
+    // Pass through any flags provided when no explicit command was given
+    await runSolforge(raw);
     return;
   }
 
@@ -45,8 +46,9 @@ async function main() {
 
 	// Alias: solforge start -> solforge rpc start
 	if (cmd === "start") {
-		const { rpcStartCommand } = await import("./commands/rpc-start");
-		await rpcStartCommand(rest);
+		// Run the full Solforge flow (config ensure + bootstrap + servers)
+		const { runSolforge } = await import("./run-solforge");
+		await runSolforge(rest);
 		return;
 	}
 
@@ -134,6 +136,8 @@ Commands:
 Options:
   -h, --help          Show help
   -v, --version       Show version
+  --network           Bind servers to 0.0.0.0 (LAN access)
+  -y, --ci            Non-interactive; auto-accept prompts (use existing config)
 `);
 }
 

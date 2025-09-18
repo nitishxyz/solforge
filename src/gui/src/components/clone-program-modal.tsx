@@ -72,7 +72,7 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 							type="button"
 							onClick={handleSubmit}
 							disabled={pending || programId.trim().length === 0}
-							className={`btn-primary ${(pending || programId.trim().length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+							className={`btn-primary ${pending || programId.trim().length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
 						>
 							{pending ? (
 								<>
@@ -107,7 +107,7 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 						<i className="fas fa-fingerprint absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
 					</div>
 				</div>
-				
+
 				<div className="space-y-2">
 					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
 						RPC Endpoint (Optional)
@@ -124,7 +124,7 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 						<i className="fas fa-globe absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
 					</div>
 				</div>
-				
+
 				<div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
 					<label className="flex items-center gap-3 cursor-pointer group">
 						<input
@@ -144,7 +144,7 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 							</p>
 						</div>
 					</label>
-					
+
 					{withAccounts && (
 						<div className="ml-8 space-y-2 pt-2 border-t border-white/5">
 							<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -170,7 +170,7 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 						</div>
 					)}
 				</div>
-				
+
 				{error && (
 					<div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
 						<i className="fas fa-exclamation-circle text-red-400 mt-0.5"></i>

@@ -9,17 +9,25 @@ import { startRpcServers } from "../rpc/start";
 import { bootstrapEnvironment } from "./bootstrap";
 import { cancelSetup } from "./setup-utils";
 import { runSetupWizard } from "./setup-wizard";
+import { parseFlags } from "./utils/args";
 
 const CONFIG_PATH = "sf.config.json";
 
-export async function runSolforge() {
-	const config = await ensureConfig();
-	await startWithConfig(config);
+export async function runSolforge(args: string[] = []) {
+	const { flags } = parseFlags(args);
+	const ci = flags["ci"] === true || flags["y"] === true;
+	const config = await ensureConfig(ci);
+	await startWithConfig(config, args);
 }
 
-async function ensureConfig(): Promise<SolforgeConfig> {
+async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 	const exists = await Bun.file(CONFIG_PATH).exists();
 	if (!exists) {
+		if (ci) {
+			// Non-interactive: write defaults and continue
+			await saveConfig(defaultConfig);
+			return defaultConfig;
+		}
 		p.intro("Solforge setup");
 		const config = await runSetupWizard();
 		await saveConfig(config);
@@ -28,6 +36,7 @@ async function ensureConfig(): Promise<SolforgeConfig> {
 	}
 
 	const current = await readConfig(CONFIG_PATH);
+	if (ci) return current; // Non-interactive: always reuse existing config
 	const reuse = await p.confirm({
 		message: `Use existing config at ${CONFIG_PATH}?`,
 		initialValue: true,
@@ -41,8 +50,13 @@ async function ensureConfig(): Promise<SolforgeConfig> {
 	return updated;
 }
 
-async function startWithConfig(config: SolforgeConfig) {
-	const host = String(process.env.RPC_HOST || "127.0.0.1");
+async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
+	const { flags } = parseFlags(args);
+	const host = String(
+		flags["network"] === true
+			? "0.0.0.0"
+			: ((flags["host"] as string) ?? process.env.RPC_HOST ?? "127.0.0.1"),
+	);
 	const rpcPort = Number(config.server.rpcPort || defaultConfig.server.rpcPort);
 	const wsPort = Number(config.server.wsPort || rpcPort + 1);
 	const guiEnabled = config.gui?.enabled !== false;

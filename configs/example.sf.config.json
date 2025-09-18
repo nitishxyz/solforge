@@ -1,53 +1,53 @@
 {
-  "name": "solforge-example",
-  "description": "SolForge example configuration with popular tokens and programs",
-  "tokens": [
-    {
-      "symbol": "USDC",
-      "mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "mintAuthority": "./keypairs/mint-authority.json",
-      "mintAmount": 1000000,
-      "cloneMetadata": true,
-      "recipients": [
-        {
-          "wallet": "YourWalletPublicKeyHere",
-          "amount": 1000000000
-        }
-      ]
-    },
-    {
-      "symbol": "USDT",
-      "mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-      "mintAuthority": "./keypairs/mint-authority.json",
-      "mintAmount": 1000000,
-      "cloneMetadata": true,
-      "recipients": [
-        {
-          "wallet": "YourWalletPublicKeyHere",
-          "amount": 500000000
-        }
-      ]
-    }
-  ],
-  "programs": [
-    {
-      "name": "Token Metadata",
-      "mainnetProgramId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-      "cluster": "mainnet-beta"
-    },
-    {
-      "name": "Token Program",
-      "mainnetProgramId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-      "cluster": "mainnet-beta"
-    }
-  ],
-  "localnet": {
-    "airdropAmount": 100,
-    "faucetAccounts": ["YourWalletPublicKeyHere"],
-    "port": 8899,
-    "faucetPort": 9900,
-    "reset": false,
-    "logLevel": "info",
-    "rpc": "https://api.mainnet-beta.solana.com"
-  }
+	"name": "solforge-example",
+	"description": "SolForge example configuration with popular tokens and programs",
+	"tokens": [
+		{
+			"symbol": "USDC",
+			"mainnetMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+			"mintAuthority": "./keypairs/mint-authority.json",
+			"mintAmount": 1000000,
+			"cloneMetadata": true,
+			"recipients": [
+				{
+					"wallet": "YourWalletPublicKeyHere",
+					"amount": 1000000000
+				}
+			]
+		},
+		{
+			"symbol": "USDT",
+			"mainnetMint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+			"mintAuthority": "./keypairs/mint-authority.json",
+			"mintAmount": 1000000,
+			"cloneMetadata": true,
+			"recipients": [
+				{
+					"wallet": "YourWalletPublicKeyHere",
+					"amount": 500000000
+				}
+			]
+		}
+	],
+	"programs": [
+		{
+			"name": "Token Metadata",
+			"mainnetProgramId": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+			"cluster": "mainnet-beta"
+		},
+		{
+			"name": "Token Program",
+			"mainnetProgramId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+			"cluster": "mainnet-beta"
+		}
+	],
+	"localnet": {
+		"airdropAmount": 100,
+		"faucetAccounts": ["YourWalletPublicKeyHere"],
+		"port": 8899,
+		"faucetPort": 9900,
+		"reset": false,
+		"logLevel": "info",
+		"rpc": "https://api.mainnet-beta.solana.com"
+	}
 }

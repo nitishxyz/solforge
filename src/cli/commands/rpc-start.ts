@@ -8,7 +8,10 @@ export async function rpcStartCommand(args: string[]) {
 	const cfg = await readConfig(flags["config"] as string | undefined);
 	const rpcPort = Number(flags["port"] ?? cfg.server.rpcPort ?? 8899);
 	const wsPort = Number(flags["ws-port"] ?? cfg.server.wsPort ?? rpcPort + 1);
-	const host = (flags["host"] as string) || "127.0.0.1";
+	const host =
+		flags["network"] === true
+			? "0.0.0.0"
+			: (flags["host"] as string) || "127.0.0.1";
 	const dbMode =
 		(flags["db-mode"] as string) || cfg.server.db.mode || "ephemeral";
 	const dbPath =

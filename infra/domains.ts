@@ -4,6 +4,7 @@ const HOST = "solforge.sh";
 
 export const domains = {
 	web: `${SUB}${HOST}`,
-	platform: `${SUB}rpc.${HOST}`,
+	rpc: `${SUB}rpc.${HOST}`,
+	gui: `${SUB}gui.${HOST}`,
 	sh: `${SUB}install.${HOST}`,
 };

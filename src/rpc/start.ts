@@ -27,7 +27,7 @@ export function startRpcServers(opts: RpcStartOptions = {}) {
 	if (opts.dbPath) process.env.SOLFORGE_DB_PATH = opts.dbPath;
 
 	const { httpServer, rpcServer } = createLiteSVMRpcServer(rpcPort, host);
-	const { wsServer } = createLiteSVMWebSocketServer(rpcServer, wsPort);
+	const { wsServer } = createLiteSVMWebSocketServer(rpcServer, wsPort, host);
 	const guiServer = guiEnabled
 		? startGuiServer({ port: guiPort, host, rpcPort, rpcServer })
 		: null;
