@@ -13,11 +13,11 @@
     "url": "https://github.com/nitishxyz/solforge/issues"
   },
   "bin": {
-    "solforge": "bin/solforge"
+    "solforge": "cli.cjs"
   },
   "files": [
-    "bin",
-    "dist",
+    "cli.cjs",
+    "scripts",
     "src",
     "server",
     "docs",
@@ -25,23 +25,24 @@
     "LICENSE"
   ],
   "scripts": {
-    "lint": "biome check",
-    "cli": "bun src/cli/main.ts",
-    "postinstall": "node scripts/postinstall.cjs || true",
-    "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify",
-    "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
     "build": "bun run build:bin",
     "build:bin": "bun run build:css && bun run build:gui && bun build --compile src/cli/main.ts --outfile dist/solforge",
+    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
     "build:bin:darwin-arm64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-darwin-arm64 src/cli/main.ts --outfile dist/solforge-darwin-arm64",
     "build:bin:darwin-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-darwin-x64 src/cli/main.ts --outfile dist/solforge-darwin-x64",
-    "build:bin:linux-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-x64 src/cli/main.ts --outfile dist/solforge-linux-x64",
     "build:bin:linux-arm64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-arm64 src/cli/main.ts --outfile dist/solforge-linux-arm64",
+    "build:bin:linux-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-x64 src/cli/main.ts --outfile dist/solforge-linux-x64",
     "build:bin:windows-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-windows-x64 src/cli/main.ts --outfile dist/solforge-windows-x64.exe",
-    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
-    "prepack": "chmod +x bin/solforge || true"
+    "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
+    "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify",
+    "cli": "bun src/cli/main.ts",
+    "lint": "biome check",
+    "postinstall": "node scripts/postinstall.cjs || true",
+    "prepack": "chmod +x cli.cjs || true"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
+    "@types/aws-lambda": "8.10.152",
     "@types/bun": "latest",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
@@ -64,6 +65,7 @@
     "drizzle-orm": "^0.44.5",
     "litesvm": "^0.3.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "sst": "3.17.13"
   }
 }

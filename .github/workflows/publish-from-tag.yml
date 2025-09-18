@@ -154,7 +154,7 @@ jobs:
       - name: Ensure CLI entry is executable
         shell: bash
         run: |
-          chmod +x bin/solforge || true
+          chmod +x cli.cjs || true
 
       - name: Publish to npm (Bun)
         shell: bash
