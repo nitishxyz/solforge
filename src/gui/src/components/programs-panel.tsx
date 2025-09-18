@@ -9,63 +9,97 @@ interface Props {
 
 export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 	return (
-		<section className="rounded-xl bg-slate-900/60 p-6 shadow-soft backdrop-blur">
-			<header className="flex flex-wrap items-center justify-between gap-3">
-				<div>
-					<h2 className="text-lg font-semibold text-slate-100">Programs</h2>
-					<p className="text-xs text-slate-500">
-						Programs cloned or loaded into LiteSVM.
-					</p>
+		<section className="glass-panel p-6">
+			<header className="flex flex-wrap items-center justify-between gap-3 mb-6">
+				<div className="flex items-center gap-3">
+					<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+						<i className="fas fa-code text-blue-400"></i>
+					</div>
+					<div>
+						<h2 className="text-xl font-bold text-white">Programs</h2>
+						<p className="text-xs text-gray-500">
+							{programs.length} deployed programs
+						</p>
+					</div>
 				</div>
 				<div className="flex items-center gap-2">
 					<button
 						type="button"
 						onClick={onRefresh}
 						disabled={loading}
-						className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 transition hover:border-cyan-400 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500"
+						className={`btn-secondary text-sm ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
 					>
-						{loading ? "Refreshing…" : "Refresh"}
+						<i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
+						<span>{loading ? "Refreshing" : "Refresh"}</span>
 					</button>
 					<button
 						type="button"
 						onClick={onAdd}
-						className="rounded-lg bg-cyan-500 px-3 py-1 text-xs font-semibold text-slate-950 transition hover:bg-cyan-400"
+						className="btn-primary text-sm"
 					>
-						Add program
+						<i className="fas fa-plus"></i>
+						<span>Add Program</span>
 					</button>
 				</div>
 			</header>
-			<div className="mt-4 overflow-x-auto">
+			
+			<div className="overflow-x-auto rounded-xl">
 				{programs.length === 0 ? (
-					<p className="text-sm text-slate-500">No programs registered yet.</p>
+					<div className="flex flex-col items-center justify-center py-12 text-center">
+						<div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600/20 to-cyan-600/20 flex items-center justify-center mb-4">
+							<i className="fas fa-code text-blue-500 text-2xl"></i>
+						</div>
+						<p className="text-gray-400 mb-2">No programs deployed</p>
+						<p className="text-sm text-gray-500">Click "Add Program" to clone from mainnet</p>
+					</div>
 				) : (
-					<table className="w-full min-w-full text-left text-sm text-slate-300">
-						<thead className="text-xs uppercase text-slate-500">
+					<table className="table-modern">
+						<thead>
 							<tr>
-								<th className="pb-2 pr-4">Program ID</th>
-								<th className="pb-2 pr-4">Owner</th>
-								<th className="pb-2 pr-4">Executable</th>
-								<th className="pb-2 pr-4">Data (bytes)</th>
-								<th className="pb-2">Lamports</th>
+								<th>Program ID</th>
+								<th>Owner</th>
+								<th>Status</th>
+								<th>Data Size</th>
+								<th>Balance</th>
 							</tr>
 						</thead>
-						<tbody className="divide-y divide-slate-800/60">
-							{programs.map((program) => (
-								<tr key={program.programId} className="hover:bg-slate-900/80">
-									<td className="py-2 pr-4 font-mono text-xs text-cyan-200">
-										{program.programId}
+						<tbody>
+							{programs.map((program, index) => (
+								<tr key={program.programId} style={{animationDelay: `${index * 50}ms`}} className="animate-fadeIn">
+									<td>
+										<div className="flex items-center gap-2">
+											<i className="fas fa-cube text-blue-400 text-xs"></i>
+											<span className="font-mono text-xs text-blue-300">
+												{program.programId.slice(0, 8)}...{program.programId.slice(-6)}
+											</span>
+										</div>
 									</td>
-									<td className="py-2 pr-4 font-mono text-xs text-slate-400">
-										{program.owner}
+									<td>
+										<span className="font-mono text-xs text-gray-400">
+											{program.owner.slice(0, 8)}...
+										</span>
 									</td>
-									<td className="py-2 pr-4 text-xs">
-										{program.executable ? "Yes" : "No"}
+									<td>
+										<span className={`badge ${program.executable ? 'badge-success' : 'badge-warning'}`}>
+											<i className={`fas fa-${program.executable ? 'check' : 'pause'} text-xs`}></i>
+											<span>{program.executable ? "Executable" : "Data Only"}</span>
+										</span>
 									</td>
-									<td className="py-2 pr-4 text-xs">
-										{program.dataLen.toLocaleString()}
+									<td>
+										<div className="flex items-center gap-2">
+											<i className="fas fa-database text-gray-400 text-xs"></i>
+											<span className="text-gray-300">
+												{(program.dataLen / 1024).toFixed(1)} KB
+											</span>
+										</div>
 									</td>
-									<td className="py-2 text-xs">
-										{BigInt(program.lamports).toString()}
+									<td>
+										<div className="flex items-center gap-2">
+											<i className="fas fa-wallet text-gray-400 text-xs"></i>
+											<span className="text-gray-300">
+												{(Number(BigInt(program.lamports)) / 1e9).toFixed(4)} SOL
+											</span>
+										</div>
 									</td>
 								</tr>
 							))}
