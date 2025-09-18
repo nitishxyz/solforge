@@ -359,12 +359,17 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 				}
 
 				// Build filtered list keeping only chosen indices
-				const keep = new Set<number>(Array.from(pick.values()).filter((v) => typeof v === "number" && v >= 0));
+				const keep = new Set<number>(
+					Array.from(pick.values()).filter(
+						(v) => typeof v === "number" && v >= 0,
+					),
+				);
 				const filtered: any[] = [];
 				for (let i = 0; i < out.length; i++) {
 					const e = out[i];
 					const info = e.account?.data?.parsed?.info;
-					const key = info?.owner && info?.mint ? `${info.owner}:${info.mint}` : null;
+					const key =
+						info?.owner && info?.mint ? `${info.owner}:${info.mint}` : null;
 					if (key && keep.has(i)) filtered.push(e);
 					else if (!key) filtered.push(e); // non-parsed or unexpected shape
 				}

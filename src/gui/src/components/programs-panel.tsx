@@ -27,22 +27,20 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 						type="button"
 						onClick={onRefresh}
 						disabled={loading}
-						className={`btn-secondary text-sm ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+						className={`btn-secondary text-sm ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
 					>
-						<i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
+						<i
+							className={`fas fa-sync-alt ${loading ? "animate-spin" : ""}`}
+						></i>
 						<span>{loading ? "Refreshing" : "Refresh"}</span>
 					</button>
-					<button
-						type="button"
-						onClick={onAdd}
-						className="btn-primary text-sm"
-					>
+					<button type="button" onClick={onAdd} className="btn-primary text-sm">
 						<i className="fas fa-plus"></i>
 						<span>Add Program</span>
 					</button>
 				</div>
 			</header>
-			
+
 			<div className="overflow-x-auto rounded-xl">
 				{programs.length === 0 ? (
 					<div className="flex flex-col items-center justify-center py-12 text-center">
@@ -50,7 +48,9 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 							<i className="fas fa-code text-blue-500 text-2xl"></i>
 						</div>
 						<p className="text-gray-400 mb-2">No programs deployed</p>
-						<p className="text-sm text-gray-500">Click "Add Program" to clone from mainnet</p>
+						<p className="text-sm text-gray-500">
+							Click "Add Program" to clone from mainnet
+						</p>
 					</div>
 				) : (
 					<table className="table-modern">
@@ -65,12 +65,17 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 						</thead>
 						<tbody>
 							{programs.map((program, index) => (
-								<tr key={program.programId} style={{animationDelay: `${index * 50}ms`}} className="animate-fadeIn">
+								<tr
+									key={program.programId}
+									style={{ animationDelay: `${index * 50}ms` }}
+									className="animate-fadeIn"
+								>
 									<td>
 										<div className="flex items-center gap-2">
 											<i className="fas fa-cube text-blue-400 text-xs"></i>
 											<span className="font-mono text-xs text-blue-300">
-												{program.programId.slice(0, 8)}...{program.programId.slice(-6)}
+												{program.programId.slice(0, 8)}...
+												{program.programId.slice(-6)}
 											</span>
 										</div>
 									</td>
@@ -80,9 +85,15 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 										</span>
 									</td>
 									<td>
-										<span className={`badge ${program.executable ? 'badge-success' : 'badge-warning'}`}>
-											<i className={`fas fa-${program.executable ? 'check' : 'pause'} text-xs`}></i>
-											<span>{program.executable ? "Executable" : "Data Only"}</span>
+										<span
+											className={`badge ${program.executable ? "badge-success" : "badge-warning"}`}
+										>
+											<i
+												className={`fas fa-${program.executable ? "check" : "pause"} text-xs`}
+											></i>
+											<span>
+												{program.executable ? "Executable" : "Data Only"}
+											</span>
 										</span>
 									</td>
 									<td>
@@ -97,7 +108,8 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 										<div className="flex items-center gap-2">
 											<i className="fas fa-wallet text-gray-400 text-xs"></i>
 											<span className="text-gray-300">
-												{(Number(BigInt(program.lamports)) / 1e9).toFixed(4)} SOL
+												{(Number(BigInt(program.lamports)) / 1e9).toFixed(4)}{" "}
+												SOL
 											</span>
 										</div>
 									</td>

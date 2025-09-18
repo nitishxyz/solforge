@@ -18,20 +18,22 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 					</div>
 					<div>
 						<h2 className="text-xl font-bold text-white">Network Status</h2>
-						<p className="text-xs text-gray-500">Real-time blockchain metrics</p>
+						<p className="text-xs text-gray-500">
+							Real-time blockchain metrics
+						</p>
 					</div>
 				</div>
 				<button
 					type="button"
 					onClick={onRefresh}
 					disabled={loading}
-					className={`btn-secondary ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+					className={`btn-secondary ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
 				>
-					<i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
+					<i className={`fas fa-sync-alt ${loading ? "animate-spin" : ""}`}></i>
 					<span>{loading ? "Refreshing" : "Refresh"}</span>
 				</button>
 			</div>
-			
+
 			{status ? (
 				<>
 					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -64,14 +66,18 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 							color="green"
 						/>
 					</div>
-					
+
 					{status.latestBlockhash && (
 						<div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
 							<div className="flex items-center gap-2 mb-2">
 								<i className="fas fa-fingerprint text-violet-400 text-xs"></i>
-								<span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Latest Blockhash</span>
+								<span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+									Latest Blockhash
+								</span>
 							</div>
-							<p className="text-sm font-mono text-violet-300 break-all">{status.latestBlockhash}</p>
+							<p className="text-sm font-mono text-violet-300 break-all">
+								{status.latestBlockhash}
+							</p>
 						</div>
 					)}
 				</>
@@ -81,7 +87,9 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 						<i className="fas fa-server text-gray-500 text-2xl"></i>
 					</div>
 					<p className="text-gray-400 mb-2">No connection to RPC</p>
-					<p className="text-sm text-gray-500">Start the RPC server to see network status</p>
+					<p className="text-sm text-gray-500">
+						Start the RPC server to see network status
+					</p>
 				</div>
 			)}
 		</section>
@@ -93,29 +101,35 @@ interface StatusCardProps {
 	value: string;
 	subtitle?: string;
 	icon: string;
-	color: 'purple' | 'blue' | 'amber' | 'green';
+	color: "purple" | "blue" | "amber" | "green";
 }
 
 const colorClasses = {
-	purple: 'from-purple-500/20 to-violet-500/20 text-purple-400',
-	blue: 'from-blue-500/20 to-cyan-500/20 text-blue-400',
-	amber: 'from-amber-500/20 to-orange-500/20 text-amber-400',
-	green: 'from-green-500/20 to-emerald-500/20 text-green-400',
+	purple: "from-purple-500/20 to-violet-500/20 text-purple-400",
+	blue: "from-blue-500/20 to-cyan-500/20 text-blue-400",
+	amber: "from-amber-500/20 to-orange-500/20 text-amber-400",
+	green: "from-green-500/20 to-emerald-500/20 text-green-400",
 };
 
 function StatusCard({ title, value, subtitle, icon, color }: StatusCardProps) {
 	return (
 		<div className="card group hover:scale-[1.02] transition-all duration-200">
 			<div className="flex items-start justify-between mb-3">
-				<div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+				<div
+					className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform`}
+				>
 					<i className={`fas ${icon} text-sm`}></i>
 				</div>
 				<span className="status-dot online"></span>
 			</div>
-			<p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{title}</p>
+			<p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+				{title}
+			</p>
 			<p className="text-2xl font-bold text-white">{value}</p>
 			{subtitle && (
-				<p className="mt-2 text-xs text-gray-500 font-mono truncate">{subtitle}</p>
+				<p className="mt-2 text-xs text-gray-500 font-mono truncate">
+					{subtitle}
+				</p>
 			)}
 		</div>
 	);

@@ -3,7 +3,7 @@
 > **Lightning-fast Solana localnet for developers** ⚡
 > Drop-in replacement for `solana-test-validator` with sub-second startup and minimal memory footprint.
 
-[![Version](https://img.shields.io/badge/version-0.2.3-blue)](https://github.com/nitishxyz/solforge)
+[![Version](https://img.shields.io/badge/version-0.2.5-blue)](https://github.com/nitishxyz/solforge)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Powered by LiteSVM](https://img.shields.io/badge/powered%20by-LiteSVM-purple)](https://github.com/litesvm/litesvm)
 
@@ -15,7 +15,7 @@
 - **🎨 Web GUI**: Interactive dashboard for airdrops, minting, and monitoring
 - **📦 Program Cloning**: Import programs and accounts from mainnet
 - **🔄 WebSocket Support**: Real-time transaction subscriptions (in the works)
-- **🗃️ Smart Persistence**: Ephemeral or persistent database modes
+ 
 
 ## 🚀 Quick Install
 
@@ -44,7 +44,7 @@ bun install -g solforge
 ### 1️⃣ Start the Localnet
 
 ```bash
-solforge start
+solforge
 ```
 
 This starts:
@@ -82,11 +82,8 @@ solforge start
 # Custom ports
 solforge start --port 8899 --ws-port 8900
 
-# Persistent mode
-solforge start --db-mode persistent --db-path ./my-db.db
-
-# Disable GUI
-solforge start --no-gui
+# Bind to 0.0.0.0 for LAN access
+solforge start --network
 ```
 
 ### 💰 Airdrop Commands
@@ -161,10 +158,6 @@ Create `sf.config.json` in your project root:
   "server": {
     "rpcPort": 8899,
     "wsPort": 8900,
-    "db": {
-      "mode": "ephemeral",
-      "path": ".solforge/db.db"
-    }
   },
   "svm": {
     "initialLamports": "1000000000000000",
@@ -205,8 +198,7 @@ Create `sf.config.json` in your project root:
 | --------------------- | ------------------------------------------- | ------------------------------------- |
 | `server.rpcPort`      | HTTP RPC port                               | `8899`                                |
 | `server.wsPort`       | WebSocket port                              | `8900`                                |
-| `server.db.mode`      | Database mode (`ephemeral` or `persistent`) | `ephemeral`                           |
-| `server.db.path`      | Database file path                          | `.solforge/db.db`                     |
+| `server.network`      | Bind to `0.0.0.0` for LAN access            | `false`                               |
 | `svm.initialLamports` | Initial lamports for accounts               | `1000000000000000`                    |
 | `svm.faucetSOL`       | SOL amount per airdrop                      | `1000`                                |
 | `clone.endpoint`      | RPC endpoint for cloning                    | `https://api.mainnet-beta.solana.com` |
@@ -223,8 +215,6 @@ Override configuration with environment variables:
 ```bash
 # Server settings
 export RPC_PORT=8899
-export SOLFORGE_DB_MODE=persistent
-export SOLFORGE_DB_PATH=./my-db.db
 export SOLFORGE_GUI_PORT=3000
 
 # Debug mode
@@ -380,15 +370,7 @@ export SOLFORGE_GUI_PORT=3000
 solforge start
 ```
 
-### Slow Startup (Persistent Mode)
 
-```bash
-# Clear database
-rm -rf .solforge/db.db
-
-# Switch to ephemeral mode
-solforge start --db-mode ephemeral
-```
 
 ### Connection Refused
 

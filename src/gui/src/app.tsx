@@ -143,7 +143,7 @@ export function App() {
 
 	const scrollToSection = (sectionId: string) => {
 		setActiveSection(sectionId);
-		document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+		document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
 		setSidebarOpen(false);
 	};
 
@@ -155,13 +155,17 @@ export function App() {
 				className="lg:hidden fixed top-4 left-4 z-50 btn-icon bg-gradient-to-br from-purple-600 to-violet-600 border-purple-500/30"
 				aria-label="Menu"
 			>
-				<i className={`fas fa-${sidebarOpen ? 'times' : 'bars'} text-white`}></i>
+				<i
+					className={`fas fa-${sidebarOpen ? "times" : "bars"} text-white`}
+				></i>
 			</button>
 
 			{/* Sidebar Navigation */}
-			<aside className={`fixed top-0 left-0 h-full w-72 glass-panel rounded-none border-r border-white/5 z-40 transition-transform duration-300 ${
-				sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-			}`}>
+			<aside
+				className={`fixed top-0 left-0 h-full w-72 glass-panel rounded-none border-r border-white/5 z-40 transition-transform duration-300 ${
+					sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+				}`}
+			>
 				<div className="p-6 space-y-8">
 					{/* Logo */}
 					<div className="flex items-center gap-3">
@@ -178,45 +182,45 @@ export function App() {
 
 					{/* Navigation Items */}
 					<nav className="space-y-2">
-						<button 
-							onClick={() => scrollToSection('status')}
+						<button
+							onClick={() => scrollToSection("status")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-								activeSection === 'status' 
-									? 'bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300' 
-									: 'text-gray-400 hover:bg-white/5'
+								activeSection === "status"
+									? "bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300"
+									: "text-gray-400 hover:bg-white/5"
 							}`}
 						>
 							<i className="fas fa-server w-5"></i>
 							<span className="font-medium">Network Status</span>
 						</button>
-						<button 
-							onClick={() => scrollToSection('actions')}
+						<button
+							onClick={() => scrollToSection("actions")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-								activeSection === 'actions' 
-									? 'bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300' 
-									: 'text-gray-400 hover:bg-white/5'
+								activeSection === "actions"
+									? "bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300"
+									: "text-gray-400 hover:bg-white/5"
 							}`}
 						>
 							<i className="fas fa-paper-plane w-5"></i>
 							<span className="font-medium">Quick Actions</span>
 						</button>
-						<button 
-							onClick={() => scrollToSection('programs')}
+						<button
+							onClick={() => scrollToSection("programs")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-								activeSection === 'programs' 
-									? 'bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300' 
-									: 'text-gray-400 hover:bg-white/5'
+								activeSection === "programs"
+									? "bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300"
+									: "text-gray-400 hover:bg-white/5"
 							}`}
 						>
 							<i className="fas fa-code w-5"></i>
 							<span className="font-medium">Programs</span>
 						</button>
-						<button 
-							onClick={() => scrollToSection('tokens')}
+						<button
+							onClick={() => scrollToSection("tokens")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-								activeSection === 'tokens' 
-									? 'bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300' 
-									: 'text-gray-400 hover:bg-white/5'
+								activeSection === "tokens"
+									? "bg-gradient-to-r from-purple-600/20 to-violet-600/20 border border-purple-500/30 text-purple-300"
+									: "text-gray-400 hover:bg-white/5"
 							}`}
 						>
 							<i className="fas fa-coins w-5"></i>
@@ -227,13 +231,17 @@ export function App() {
 					{/* Quick Stats */}
 					{config && (
 						<div className="space-y-3">
-							<h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Connection</h3>
+							<h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+								Connection
+							</h3>
 							<div className="p-3 rounded-xl bg-white/5 border border-white/10">
 								<div className="flex items-center gap-2 mb-2">
 									<span className="status-dot online"></span>
 									<span className="text-xs text-gray-400">Connected</span>
 								</div>
-								<p className="text-xs text-gray-500 font-mono break-all">{config.rpcUrl}</p>
+								<p className="text-xs text-gray-500 font-mono break-all">
+									{config.rpcUrl}
+								</p>
 							</div>
 						</div>
 					)}
@@ -242,7 +250,7 @@ export function App() {
 
 			{/* Overlay for mobile */}
 			{sidebarOpen && (
-				<div 
+				<div
 					className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
 					onClick={() => setSidebarOpen(false)}
 				/>
@@ -262,11 +270,10 @@ export function App() {
 									Manage your local Solana development environment
 								</p>
 							</div>
-							<button 
-								onClick={loadStatus}
-								className="btn-secondary"
-							>
-								<i className={`fas fa-sync-alt ${loadingStatus ? 'animate-spin' : ''}`}></i>
+							<button onClick={loadStatus} className="btn-secondary">
+								<i
+									className={`fas fa-sync-alt ${loadingStatus ? "animate-spin" : ""}`}
+								></i>
 								<span>Refresh All</span>
 							</button>
 						</div>
@@ -311,7 +318,11 @@ export function App() {
 					</div>
 
 					{/* Quick Actions - Optional */}
-					<div id="actions" className="glass-panel p-6 animate-fadeIn scroll-mt-24" style={{animationDelay: '0.1s'}}>
+					<div
+						id="actions"
+						className="glass-panel p-6 animate-fadeIn scroll-mt-24"
+						style={{ animationDelay: "0.1s" }}
+					>
 						<AirdropMintForm
 							tokens={tokens}
 							onAirdrop={onAirdrop}
@@ -321,7 +332,11 @@ export function App() {
 
 					{/* Programs and Tokens Stacked */}
 					<div className="space-y-6">
-						<div id="programs" className="animate-fadeIn scroll-mt-24" style={{animationDelay: '0.2s'}}>
+						<div
+							id="programs"
+							className="animate-fadeIn scroll-mt-24"
+							style={{ animationDelay: "0.2s" }}
+						>
 							<ProgramsPanel
 								programs={programs}
 								loading={loadingPrograms}
@@ -329,7 +344,11 @@ export function App() {
 								onAdd={openProgramModal}
 							/>
 						</div>
-						<div id="tokens" className="animate-fadeIn scroll-mt-24" style={{animationDelay: '0.3s'}}>
+						<div
+							id="tokens"
+							className="animate-fadeIn scroll-mt-24"
+							style={{ animationDelay: "0.3s" }}
+						>
 							<TokensPanel
 								tokens={tokens}
 								loading={loadingTokens}

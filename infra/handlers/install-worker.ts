@@ -5,12 +5,12 @@
 import SCRIPT from "../../scripts/install.sh";
 
 export default {
-  async fetch(_req: Request): Promise<Response> {
-    return new Response(SCRIPT as unknown as string, {
-      headers: {
-        "content-type": "text/plain; charset=utf-8",
-        "cache-control": "public, max-age=300",
-      },
-    });
-  },
+	async fetch(_req: Request): Promise<Response> {
+		return new Response(SCRIPT as unknown as string, {
+			headers: {
+				"content-type": "text/plain; charset=utf-8",
+				"cache-control": "public, max-age=300",
+			},
+		});
+	},
 };

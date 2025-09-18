@@ -113,7 +113,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 					</span>
 				</div>
 			</div>
-			
+
 			<div className="grid gap-4 lg:grid-cols-3">
 				<div className="space-y-2">
 					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -131,7 +131,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 						<i className="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
 					</div>
 				</div>
-				
+
 				<div className="space-y-2">
 					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
 						Asset
@@ -153,7 +153,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 						<i className="fas fa-coins absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
 					</div>
 				</div>
-				
+
 				<div className="space-y-2">
 					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
 						Amount
@@ -177,12 +177,12 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 					</p>
 				</div>
 			</div>
-			
+
 			<div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
 				<button
 					type="submit"
 					disabled={pending}
-					className={`btn-primary flex-1 sm:flex-initial ${pending ? 'opacity-50 cursor-not-allowed' : ''}`}
+					className={`btn-primary flex-1 sm:flex-initial ${pending ? "opacity-50 cursor-not-allowed" : ""}`}
 				>
 					{pending ? (
 						<>
@@ -191,23 +191,29 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 						</>
 					) : (
 						<>
-							<i className={`fas fa-${asset === SOL_OPTION.value ? 'parachute-box' : 'coins'}`}></i>
-							<span>{asset === SOL_OPTION.value ? "Airdrop SOL" : "Mint Tokens"}</span>
+							<i
+								className={`fas fa-${asset === SOL_OPTION.value ? "parachute-box" : "coins"}`}
+							></i>
+							<span>
+								{asset === SOL_OPTION.value ? "Airdrop SOL" : "Mint Tokens"}
+							</span>
 						</>
 					)}
 				</button>
-				
+
 				{error && (
 					<div className="flex-1 flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
 						<i className="fas fa-exclamation-circle text-red-400"></i>
 						<p className="text-sm text-red-300">{error}</p>
 					</div>
 				)}
-				
+
 				{message && (
 					<div className="flex-1 flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
 						<i className="fas fa-check-circle text-green-400"></i>
-						<p className="text-sm text-green-300 font-mono text-xs break-all">{message}</p>
+						<p className="text-sm text-green-300 font-mono text-xs break-all">
+							{message}
+						</p>
 					</div>
 				)}
 			</div>

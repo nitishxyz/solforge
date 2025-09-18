@@ -31,27 +31,29 @@ export function Modal({
 	if (!isOpen) return null;
 
 	const colorClasses = {
-		purple: 'from-purple-500/20 to-violet-500/20 text-purple-400',
-		blue: 'from-blue-500/20 to-cyan-500/20 text-blue-400',
-		amber: 'from-amber-500/20 to-orange-500/20 text-amber-400',
-		green: 'from-green-500/20 to-emerald-500/20 text-green-400',
+		purple: "from-purple-500/20 to-violet-500/20 text-purple-400",
+		blue: "from-blue-500/20 to-cyan-500/20 text-blue-400",
+		amber: "from-amber-500/20 to-orange-500/20 text-amber-400",
+		green: "from-green-500/20 to-emerald-500/20 text-green-400",
 	};
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
 			{/* Backdrop */}
-			<div 
+			<div
 				className="absolute inset-0 bg-black/80 backdrop-blur-sm"
 				onClick={onClose}
 			/>
-			
+
 			{/* Modal */}
 			<div className="w-full max-w-lg p-0 relative animate-modalSlideIn overflow-hidden rounded-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl shadow-2xl">
 				{/* Header */}
 				<div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
-							<div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[iconColor as keyof typeof colorClasses]} flex items-center justify-center`}>
+							<div
+								className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[iconColor as keyof typeof colorClasses]} flex items-center justify-center`}
+							>
 								<i className={`fas ${icon}`}></i>
 							</div>
 							<h3 className="text-xl font-bold text-white">{title}</h3>
@@ -66,12 +68,12 @@ export function Modal({
 						</button>
 					</div>
 				</div>
-				
+
 				{/* Content */}
 				<div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
 					{children}
 				</div>
-				
+
 				{/* Footer */}
 				{footer && (
 					<div className="p-6 border-t border-white/10 bg-gradient-to-r from-white/5 to-transparent">
@@ -79,7 +81,7 @@ export function Modal({
 					</div>
 				)}
 			</div>
-			
+
 			<style jsx>{`
 				@keyframes fadeIn {
 					from {
