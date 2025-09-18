@@ -3,6 +3,11 @@ import type { LiteSVMRpcServer } from "../../server/rpc-server";
 import type { JsonRpcResponse } from "../../server/types";
 import { readConfig, writeConfig } from "../config";
 import indexHtml from "./public/index.html";
+import { file } from "bun";
+// Embed built GUI assets as files so the compiled binary can stream them
+import appCssFile from "./public/app.css" with { type: "file" };
+import mainJsFile from "./public/build/main.js" with { type: "file" };
+import bundledCssFile from "./public/build/main.css" with { type: "file" };
 
 type GuiStartOptions = {
 	port?: number;
@@ -41,6 +46,14 @@ const text = (value: string, status = 200) =>
 	});
 
 const okOptions = () => new Response(null, { status: 204, headers: CORS });
+const css = (fpath: string) =>
+    new Response(file(fpath), {
+        headers: { ...CORS, "Content-Type": "text/css" },
+    });
+const js = (fpath: string) =>
+    new Response(file(fpath), {
+        headers: { ...CORS, "Content-Type": "application/javascript" },
+    });
 
 const handleError = (error: unknown) => {
 	if (error instanceof HttpError)
@@ -140,8 +153,11 @@ export function startGuiServer(opts: GuiStartOptions = {}) {
 		}
 	}
 
-	const routes = {
-		"/": indexHtml,
+    const routes = {
+        "/": indexHtml,
+        "/app.css": { GET: () => css(appCssFile) },
+        "/build/main.css": { GET: () => css(bundledCssFile) },
+        "/build/main.js": { GET: () => js(mainJsFile) },
 		"/health": { GET: () => text("ok") },
 		"/api/config": { GET: () => json({ rpcUrl }), OPTIONS: okOptions },
 		"/api/status": {
@@ -268,12 +284,12 @@ export function startGuiServer(opts: GuiStartOptions = {}) {
 		},
 	} as const;
 
-	const server = serve({
-		port,
-		hostname: host,
-		routes,
-		development: process.env.NODE_ENV !== "production",
-	});
+    const server = serve({
+        port,
+        hostname: host,
+        routes,
+        development: false,
+    });
 	console.log(`🖥️  Solforge GUI available at http://${host}:${server.port}`);
 	return { server, port: server.port };
 }
