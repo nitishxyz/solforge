@@ -23,8 +23,8 @@ export type InsertTxBundle = {
 		writable: boolean;
 		programIdIndex?: number;
 	}>;
-	preTokenBalances?: any[];
-	postTokenBalances?: any[];
+	preTokenBalances?: unknown[];
+	postTokenBalances?: unknown[];
 };
 
 export type AccountSnapshot = {
@@ -133,7 +133,7 @@ export class TxStore {
 
 	async getStatuses(signatures: string[]) {
 		if (!Array.isArray(signatures) || signatures.length === 0)
-			return new Map<string, { slot: number; err: any | null }>();
+			return new Map<string, { slot: number; err: unknown | null }>();
 		const results = await db
 			.select({
 				signature: transactions.signature,
@@ -142,7 +142,7 @@ export class TxStore {
 			})
 			.from(transactions)
 			.where(inArraySafe(transactions.signature, signatures));
-		const map = new Map<string, { slot: number; err: any | null }>();
+		const map = new Map<string, { slot: number; err: unknown | null }>();
 		for (const r of results)
 			map.set(r.signature, {
 				slot: Number(r.slot),
@@ -167,7 +167,7 @@ export class TxStore {
 		}
 		const limit = Math.min(Math.max(opts.limit ?? 1000, 1), 1000);
 
-		const whereClauses = [eq(addressSignatures.address, address)] as any[];
+		const whereClauses = [eq(addressSignatures.address, address)] as unknown[];
 		if (typeof beforeSlot === "number")
 			whereClauses.push(lt(addressSignatures.slot, beforeSlot));
 		if (typeof untilSlot === "number")
@@ -216,7 +216,7 @@ export class TxStore {
 	}
 }
 
-function safeParse<T = any>(s: string): T | null {
+function safeParse<T = unknown>(s: string): T | null {
 	try {
 		return JSON.parse(s) as T;
 	} catch {
@@ -224,6 +224,10 @@ function safeParse<T = any>(s: string): T | null {
 	}
 }
 
-function inArraySafe<T>(col: any, arr: T[]) {
-	return arr.length > 0 ? inArray(col, arr as any) : eq(col, "__never__");
+function inArraySafe<T>(col: unknown, arr: T[]) {
+	return arr.length > 0
+		? // biome-ignore lint/suspicious/noExplicitAny: Drizzle generic typing workaround
+			(inArray as unknown as (c: unknown, a: T[]) => any)(col, arr)
+		: // biome-ignore lint/suspicious/noExplicitAny: Force an always-false predicate without over-constraining types
+			eq(col as any, "__never__");
 }

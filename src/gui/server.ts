@@ -107,7 +107,7 @@ export function startGuiServer(opts: GuiStartOptions = {}) {
 	const rpcServer = opts.rpcServer;
 	const rpcUrl = `http://${host}:${rpcPort}`;
 
-	const callRpc = async (method: string, params: any[] = []) => {
+	const callRpc = async (method: string, params: unknown[] = []) => {
 		if (!rpcServer) throw new HttpError(503, "RPC server not available");
 		const response: JsonRpcResponse = await rpcServer.handleRequest({
 			jsonrpc: "2.0",

@@ -5,7 +5,7 @@ import { parseFlags } from "../utils/args";
 // Set the faucet as mint authority for an existing mint in LiteSVM (local-only)
 export async function tokenAdoptAuthorityCommand(args: string[]) {
 	const { flags, rest } = parseFlags(args);
-	const mint = (rest[0] as string) || (flags["mint"] as string);
+	const mint = (rest[0] as string) || (flags.mint as string);
 	if (!mint) {
 		p.log.error("Usage: solforge token adopt-authority <mint>");
 		return;

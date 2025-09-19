@@ -61,7 +61,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 						<StatusCard
 							title="Faucet Balance"
 							value={`${status.faucet.sol.toFixed(3)} SOL`}
-							subtitle={status.faucet.address.slice(0, 10) + "…"}
+							subtitle={`${status.faucet.address.slice(0, 10)}…`}
 							icon="fa-wallet"
 							color="green"
 						/>

@@ -68,7 +68,7 @@ export async function writeDefaultConfig(opts: { force?: boolean } = {}) {
 			mkdirSync(dir, { recursive: true });
 		} catch {}
 	}
-	writeFileSync(p, JSON.stringify(defaultConfig, null, 2) + "\n");
+	writeFileSync(p, `${JSON.stringify(defaultConfig, null, 2)}\n`);
 }
 
 export async function writeConfig(
@@ -81,50 +81,66 @@ export async function writeConfig(
 			mkdirSync(dir, { recursive: true });
 		} catch {}
 	}
-	await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
+	await Bun.write(path, `${JSON.stringify(config, null, 2)}\n`);
 }
 
-export function getConfigValue(cfg: any, path?: string) {
+export function getConfigValue(
+	cfg: Record<string, unknown>,
+	path?: string,
+): unknown {
 	if (!path) return cfg;
-	return path.split(".").reduce((o, k) => (o ? o[k] : undefined), cfg);
+	let cur: unknown = cfg;
+	for (const k of path.split(".")) {
+		if (
+			cur &&
+			typeof cur === "object" &&
+			k in (cur as Record<string, unknown>)
+		) {
+			cur = (cur as Record<string, unknown>)[k];
+		} else {
+			return undefined;
+		}
+	}
+	return cur;
 }
 
-export function setConfigValue<T extends Record<string, any>>(
+export function setConfigValue<T extends Record<string, unknown>>(
 	cfg: T,
 	path: string,
-	value: any,
+	value: unknown,
 ): T {
 	const parts = path.split(".");
-	let node: any = cfg;
+	let node: Record<string, unknown> = cfg;
 	for (let i = 0; i < parts.length - 1; i++) {
 		const k = parts[i];
 		if (!node[k] || typeof node[k] !== "object") node[k] = {};
-		node = node[k];
+		node = node[k] as Record<string, unknown>;
 	}
 	node[parts[parts.length - 1]] = coerceValue(value);
 	return cfg;
 }
 
-function coerceValue(v: any) {
+function coerceValue(v: unknown): unknown {
 	if (v === "true") return true;
 	if (v === "false") return false;
-	if (v !== "" && !isNaN(Number(v))) return Number(v);
+	if (typeof v === "string" && v !== "" && !Number.isNaN(Number(v)))
+		return Number(v);
 	try {
-		return JSON.parse(v);
+		return typeof v === "string" ? JSON.parse(v) : v;
 	} catch {
 		return v;
 	}
 }
 
 function deepMerge<T>(a: T, b: Partial<T>): T {
-	if (Array.isArray(a) || Array.isArray(b)) return (b as any) ?? (a as any);
+	if (Array.isArray(a) || Array.isArray(b)) return (b ?? a) as unknown as T;
 	if (typeof a === "object" && typeof b === "object" && a && b) {
-		const out: any = { ...a };
+		const out: Record<string, unknown> = { ...(a as Record<string, unknown>) };
 		for (const [k, v] of Object.entries(b)) {
-			const ak = (a as any)[k];
-			out[k] = deepMerge(ak, v as any);
+			const ak = (a as Record<string, unknown>)[k];
+			out[k] = deepMerge(ak as unknown, v as unknown) as unknown;
 		}
-		return out;
+		return out as unknown as T;
 	}
-	return (b as any) ?? (a as any);
+	return (b ?? a) as unknown as T;
 }

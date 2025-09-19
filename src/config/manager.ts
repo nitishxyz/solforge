@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { Config, ValidationResult } from "../types/config.js";
 import { ConfigSchema } from "../types/config.js";
 
@@ -77,7 +77,7 @@ export class ConfigManager {
 	/**
 	 * Validate a configuration object
 	 */
-	validate(config: any): ValidationResult {
+	validate(config: unknown): ValidationResult {
 		const result = ConfigSchema.safeParse(config);
 
 		if (result.success) {

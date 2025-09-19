@@ -35,8 +35,8 @@ export class LiteSVMRpcServer {
 			blockTime?: number;
 			preBalances?: number[];
 			postBalances?: number[];
-			preTokenBalances?: any[];
-			postTokenBalances?: any[];
+			preTokenBalances?: unknown[];
+			postTokenBalances?: unknown[];
 		}
 	> = new Map();
 	private store: TxStore;
@@ -95,7 +95,7 @@ export class LiteSVMRpcServer {
 
 	private createSuccessResponse(
 		id: string | number,
-		result: any,
+		result: unknown,
 	): JsonRpcResponse {
 		return {
 			jsonrpc: "2.0",
@@ -108,7 +108,7 @@ export class LiteSVMRpcServer {
 		id: string | number,
 		code: number,
 		message: string,
-		data?: any,
+		data?: unknown,
 	): JsonRpcResponse {
 		return {
 			jsonrpc: "2.0",
@@ -132,7 +132,7 @@ export class LiteSVMRpcServer {
 			},
 			getFaucet: () => this.faucet,
 			getTxCount: () => this.txCount,
-			registerMint: (mint: any) => {
+			registerMint: (mint: PublicKey | string) => {
 				try {
 					const pk =
 						typeof mint === "string" ? mint : new PublicKey(mint).toBase58();
@@ -140,7 +140,7 @@ export class LiteSVMRpcServer {
 				} catch {}
 			},
 			listMints: () => Array.from(this.knownMints),
-			registerProgram: (program: any) => {
+			registerProgram: (program: PublicKey | string) => {
 				try {
 					const pk =
 						typeof program === "string"
@@ -160,19 +160,30 @@ export class LiteSVMRpcServer {
 					blockTime: meta?.blockTime,
 					preBalances: meta?.preBalances,
 					postBalances: meta?.postBalances,
-					preTokenBalances: (meta as any)?.preTokenBalances,
-					postTokenBalances: (meta as any)?.postTokenBalances,
+					preTokenBalances: (
+						meta as { preTokenBalances?: unknown[] } | undefined
+					)?.preTokenBalances,
+					postTokenBalances: (
+						meta as { postTokenBalances?: unknown[] } | undefined
+					)?.postTokenBalances,
 				});
 
 				// Persist to SQLite for durability and history queries
 				try {
-					const msg: any = tx.message as any;
-					const rawKeys: any[] = Array.isArray(msg.staticAccountKeys)
+					const msg = tx.message as unknown as {
+						staticAccountKeys?: unknown[];
+						accountKeys?: unknown[];
+						header?: unknown;
+						isAccountSigner?: (i: number) => boolean;
+						isAccountWritable?: (i: number) => boolean;
+						version?: number;
+					};
+					const rawKeys: unknown[] = Array.isArray(msg.staticAccountKeys)
 						? msg.staticAccountKeys
 						: Array.isArray(msg.accountKeys)
 							? msg.accountKeys
 							: [];
-					const keys: string[] = rawKeys.map((k: any) => {
+					const keys: string[] = rawKeys.map((k) => {
 						try {
 							return typeof k === "string" ? k : (k as PublicKey).toBase58();
 						} catch {
@@ -226,18 +237,24 @@ export class LiteSVMRpcServer {
 							err: meta?.err ?? null,
 							rawBase64,
 							preBalances: Array.isArray(meta?.preBalances)
-								? meta!.preBalances!
+								? (meta?.preBalances as number[])
 								: [],
 							postBalances: Array.isArray(meta?.postBalances)
-								? meta!.postBalances!
+								? (meta?.postBalances as number[])
 								: [],
-							logs: Array.isArray(meta?.logs) ? meta!.logs! : [],
-							preTokenBalances: Array.isArray((meta as any)?.preTokenBalances)
-								? (meta as any).preTokenBalances
-								: [],
-							postTokenBalances: Array.isArray((meta as any)?.postTokenBalances)
-								? (meta as any).postTokenBalances
-								: [],
+							logs: Array.isArray(meta?.logs) ? (meta?.logs as string[]) : [],
+							preTokenBalances: (() => {
+								const arr = (
+									meta as { preTokenBalances?: unknown[] } | undefined
+								)?.preTokenBalances;
+								return Array.isArray(arr) ? arr : [];
+							})(),
+							postTokenBalances: (() => {
+								const arr = (
+									meta as { postTokenBalances?: unknown[] } | undefined
+								)?.postTokenBalances;
+								return Array.isArray(arr) ? arr : [];
+							})(),
 							accounts,
 						})
 						.catch(() => {});
@@ -262,7 +279,7 @@ export class LiteSVMRpcServer {
 								return null;
 							}
 						})
-						.filter(Boolean) as any[];
+						.filter(Boolean) as import("../src/db/tx-store").AccountSnapshot[];
 					if (snapshots.length > 0)
 						this.store.upsertAccounts(snapshots).catch(() => {});
 				} catch {}
@@ -302,7 +319,7 @@ export class LiteSVMRpcServer {
 
 	getSignatureStatus(
 		signature: string,
-	): { slot: number; err: any | null } | null {
+	): { slot: number; err: unknown | null } | null {
 		// Prefer local record for reliability
 		const rec = this.txRecords.get(signature);
 		if (rec) {
@@ -312,10 +329,10 @@ export class LiteSVMRpcServer {
 			const sigBytes = decodeBase58(signature);
 			const tx = this.svm.getTransaction(sigBytes);
 			if (!tx) return null;
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let errVal: any = null;
+			let errVal: unknown = null;
 			try {
-				errVal = "err" in tx ? (tx as any).err() : null;
+				const raw = (tx as { err?: unknown }).err;
+				errVal = typeof raw === "function" ? (raw as () => unknown)() : raw;
 			} catch {
 				errVal = null;
 			}
@@ -350,13 +367,9 @@ export class LiteSVMRpcServer {
 			}
 
 			return result;
-		} catch (error: any) {
-			return this.createErrorResponse(
-				id,
-				-32603,
-				"Internal error",
-				error.message,
-			);
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			return this.createErrorResponse(id, -32603, "Internal error", message);
 		}
 	}
 }
@@ -406,7 +419,7 @@ export function createLiteSVMRpcServer(port: number = 8899, host?: string) {
 							try {
 								console.log(
 									"RPC batch:",
-									body.map((b: any) => b.method),
+									body.map((b: { method?: string }) => b.method),
 								);
 							} catch {}
 						}
@@ -432,7 +445,7 @@ export function createLiteSVMRpcServer(port: number = 8899, host?: string) {
 							headers: { "Content-Type": "application/json", ...corsHeaders },
 						});
 					}
-				} catch (error) {
+				} catch (_error) {
 					return new Response(
 						JSON.stringify({
 							jsonrpc: "2.0",

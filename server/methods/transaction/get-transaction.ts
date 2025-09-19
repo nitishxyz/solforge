@@ -8,14 +8,14 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 	try {
 		const rec = context.getRecordedTransaction(signature);
 		if (rec) {
-			const tx = rec.tx as any;
+			const tx = rec.tx;
 			if (encoding === "base64") {
 				const raw = Buffer.from(tx.serialize()).toString("base64");
 				// Top-level version is required by some clients
-				const isV0 =
-					typeof (tx.message as any)?.version === "number"
-						? (tx.message as any).version === 0
-						: true;
+				const isV0 = (() => {
+					const m = tx.message as unknown as { version?: number };
+					return typeof m?.version === "number" ? m.version === 0 : true;
+				})();
 				return context.createSuccessResponse(id, {
 					slot: rec.slot,
 					transaction: [raw, "base64"],
@@ -31,55 +31,86 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 							: [],
 						innerInstructions: [],
 						logMessages: rec.logs || [],
-						preTokenBalances: Array.isArray((rec as any).preTokenBalances)
-							? (rec as any).preTokenBalances
-							: [],
-						postTokenBalances: Array.isArray((rec as any).postTokenBalances)
-							? (rec as any).postTokenBalances
-							: [],
+						preTokenBalances: (() => {
+							const arr = (rec as unknown as { preTokenBalances?: unknown[] })
+								.preTokenBalances;
+							return Array.isArray(arr) ? arr : [];
+						})(),
+						postTokenBalances: (() => {
+							const arr = (rec as unknown as { postTokenBalances?: unknown[] })
+								.postTokenBalances;
+							return Array.isArray(arr) ? arr : [];
+						})(),
 						rewards: [],
 					},
 					blockTime: rec.blockTime,
 				});
 			}
 
-			const msg: any = tx.message as any;
-			const rawKeys1: any[] = Array.isArray(msg.staticAccountKeys)
+			const msg = tx.message as unknown as {
+				staticAccountKeys?: unknown[];
+				accountKeys?: unknown[];
+				compiledInstructions?: unknown[];
+				instructions?: unknown[];
+				header?: unknown;
+				recentBlockhash?: string;
+				version?: number;
+				addressTableLookups?: unknown[];
+				isAccountSigner?: (i: number) => boolean;
+				isAccountWritable?: (i: number) => boolean;
+			};
+			const rawKeys1: unknown[] = Array.isArray(msg.staticAccountKeys)
 				? msg.staticAccountKeys
 				: Array.isArray(msg.accountKeys)
 					? msg.accountKeys
 					: [];
-			const accountKeys = rawKeys1.map((k: any) => {
+			const accountKeys = rawKeys1.map((k) => {
 				try {
-					return typeof k === "string" ? k : k.toBase58();
+					return typeof k === "string"
+						? k
+						: (k as { toBase58: () => string }).toBase58();
 				} catch {
 					return String(k);
 				}
 			});
-			const compiled = Array.isArray(msg.compiledInstructions)
+			const compiled: unknown[] = Array.isArray(msg.compiledInstructions)
 				? msg.compiledInstructions
 				: Array.isArray(msg.instructions)
 					? msg.instructions
 					: [];
-			const instructions = compiled.map((ci: any) => {
+			const instructions = compiled.map((ci) => {
+				const c = ci as {
+					programIdIndex: number;
+					accountKeyIndexes?: number[];
+					accounts?: number[];
+					data: Uint8Array | number[];
+				};
 				const dataBytes: Uint8Array =
-					ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data);
+					c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
 				return {
-					programIdIndex: ci.programIdIndex,
-					accounts: Array.from(ci.accountKeyIndexes || ci.accounts || []),
+					programIdIndex: c.programIdIndex,
+					accounts: Array.from(c.accountKeyIndexes || c.accounts || []),
 					data: context.encodeBase58(dataBytes),
 				};
 			});
-			const addressTableLookups = (msg.addressTableLookups || []).map(
-				(l: any) => ({
+			const addressTableLookups = (
+				Array.isArray(msg.addressTableLookups) ? msg.addressTableLookups : []
+			).map((l) => {
+				const a = l as {
+					accountKey?: { toBase58?: () => string } | string;
+					writableIndexes?: number[];
+					readonlyIndexes?: number[];
+				};
+				return {
 					accountKey:
-						typeof l.accountKey?.toBase58 === "function"
-							? l.accountKey.toBase58()
-							: String(l.accountKey),
-					writableIndexes: Array.from(l.writableIndexes || []),
-					readonlyIndexes: Array.from(l.readonlyIndexes || []),
-				}),
-			);
+						typeof (a.accountKey as { toBase58?: unknown })?.toBase58 ===
+						"function"
+							? (a.accountKey as { toBase58: () => string }).toBase58()
+							: String(a.accountKey),
+					writableIndexes: Array.from(a.writableIndexes || []),
+					readonlyIndexes: Array.from(a.readonlyIndexes || []),
+				};
+			});
 			const header = msg.header || {
 				numRequiredSignatures: tx.signatures.length,
 				numReadonlySignedAccounts: 0,
@@ -88,7 +119,7 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 			const recentBlockhash = msg.recentBlockhash || "";
 
 			const isV0 = typeof msg.version === "number" ? msg.version === 0 : true;
-			const result: any = {
+			const result = {
 				slot: rec.slot,
 				transaction: {
 					signatures: [signature],
@@ -110,12 +141,16 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 					postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
 					innerInstructions: [],
 					logMessages: rec.logs || [],
-					preTokenBalances: Array.isArray((rec as any).preTokenBalances)
-						? (rec as any).preTokenBalances
-						: [],
-					postTokenBalances: Array.isArray((rec as any).postTokenBalances)
-						? (rec as any).postTokenBalances
-						: [],
+					preTokenBalances: (() => {
+						const arr = (rec as unknown as { preTokenBalances?: unknown[] })
+							.preTokenBalances;
+						return Array.isArray(arr) ? arr : [];
+					})(),
+					postTokenBalances: (() => {
+						const arr = (rec as unknown as { postTokenBalances?: unknown[] })
+							.postTokenBalances;
+						return Array.isArray(arr) ? arr : [];
+					})(),
 					rewards: [],
 				},
 				blockTime: rec.blockTime,
@@ -134,12 +169,18 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 							? !!msg.isAccountWritable(i)
 							: i < (header?.numRequiredSignatures ?? 0),
 				}));
-				const parsedInstructions = compiled.map((ci: any) => {
-					const programId = accountKeys[ci.programIdIndex];
-					let parsed: any;
+				const parsedInstructions = compiled.map((ci) => {
+					const c = ci as {
+						programIdIndex: number;
+						accountKeyIndexes?: number[];
+						accounts?: number[];
+						data: Uint8Array | number[];
+					};
+					const programId = accountKeys[c.programIdIndex];
+					let parsed: unknown;
 					try {
 						const data: Uint8Array =
-							ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data);
+							c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
 						if (programId === SYSTEM_PROGRAM_ID && data.length >= 12) {
 							const dv = new DataView(
 								data.buffer,
@@ -152,8 +193,9 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 								(ci.accountKeyIndexes?.length ?? 0) >= 2
 							) {
 								const lamports = Number(dv.getBigUint64(4, true));
-								const source = accountKeys[ci.accountKeyIndexes[0]];
-								const destination = accountKeys[ci.accountKeyIndexes[1]];
+								const source = accountKeys[c.accountKeyIndexes?.[0] as number];
+								const destination =
+									accountKeys[c.accountKeyIndexes?.[1] as number];
 								parsed = {
 									type: "transfer",
 									info: { source, destination, lamports },
@@ -164,16 +206,19 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 					if (parsed) return { program: "system", programId, parsed };
 					return {
 						programId,
-						accounts: (ci.accountKeyIndexes || []).map(
+						accounts: (c.accountKeyIndexes || []).map(
 							(ix: number) => accountKeys[ix],
 						),
 						data: context.encodeBase58(
-							ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data),
+							c.data instanceof Uint8Array ? c.data : Buffer.from(c.data),
 						),
 					};
 				});
-				result.transaction.message.accountKeys = accountKeysParsed;
-				result.transaction.message.instructions = parsedInstructions;
+				(result.transaction.message as { accountKeys: unknown[] }).accountKeys =
+					accountKeysParsed;
+				(
+					result.transaction.message as { instructions: unknown[] }
+				).instructions = parsedInstructions as unknown[];
 			}
 
 			return context.createSuccessResponse(id, result);
@@ -213,15 +258,27 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 					// Build jsonParsed similar to in-memory path
 					const raw = Buffer.from(row.rawBase64, "base64");
 					const tx = VersionedTransaction.deserialize(raw);
-					const msg: any = tx.message as any;
-					const rawKeys2: any[] = Array.isArray(msg.staticAccountKeys)
+					const msg = tx.message as unknown as {
+						staticAccountKeys?: unknown[];
+						accountKeys?: unknown[];
+						compiledInstructions?: unknown[];
+						instructions?: unknown[];
+						header?: unknown;
+						recentBlockhash?: string;
+						addressTableLookups?: unknown[];
+						isAccountSigner?: (i: number) => boolean;
+						isAccountWritable?: (i: number) => boolean;
+					};
+					const rawKeys2: unknown[] = Array.isArray(msg.staticAccountKeys)
 						? msg.staticAccountKeys
 						: Array.isArray(msg.accountKeys)
 							? msg.accountKeys
 							: [];
-					const accountKeys = rawKeys2.map((k: any) => {
+					const accountKeys = rawKeys2.map((k) => {
 						try {
-							return typeof k === "string" ? k : k.toBase58();
+							return typeof k === "string"
+								? k
+								: (k as { toBase58: () => string }).toBase58();
 						} catch {
 							return String(k);
 						}
@@ -231,17 +288,23 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 						numReadonlySignedAccounts: 0,
 						numReadonlyUnsignedAccounts: 0,
 					};
-					const compiled = Array.isArray(msg.compiledInstructions)
+					const compiled: unknown[] = Array.isArray(msg.compiledInstructions)
 						? msg.compiledInstructions
 						: Array.isArray(msg.instructions)
 							? msg.instructions
 							: [];
-					const parsedInstructions = compiled.map((ci: any) => {
-						const programId = accountKeys[ci.programIdIndex];
-						let parsed: any;
+					const parsedInstructions = compiled.map((ci) => {
+						const c = ci as {
+							programIdIndex: number;
+							accountKeyIndexes?: number[];
+							accounts?: number[];
+							data: Uint8Array | number[];
+						};
+						const programId = accountKeys[c.programIdIndex];
+						let parsed: unknown;
 						try {
 							const data: Uint8Array =
-								ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data);
+								c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
 							// Minimal system transfer parser
 							if (
 								programId === "11111111111111111111111111111111" &&
@@ -258,8 +321,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 									(ci.accountKeyIndexes?.length ?? 0) >= 2
 								) {
 									const lamports = Number(dv.getBigUint64(4, true));
-									const source = accountKeys[ci.accountKeyIndexes[0]];
-									const destination = accountKeys[ci.accountKeyIndexes[1]];
+									const source = accountKeys[c.accountKeyIndexes?.[0]];
+									const destination = accountKeys[c.accountKeyIndexes?.[1]];
 									parsed = {
 										type: "transfer",
 										info: { source, destination, lamports },
@@ -270,11 +333,11 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 						if (parsed) return { program: "system", programId, parsed };
 						return {
 							programId,
-							accounts: (ci.accountKeyIndexes || []).map(
+							accounts: (c.accountKeyIndexes || []).map(
 								(ix: number) => accountKeys[ix],
 							),
 							data: context.encodeBase58(
-								ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data),
+								c.data instanceof Uint8Array ? c.data : Buffer.from(c.data),
 							),
 						};
 					});
@@ -291,7 +354,7 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 									: i < (header?.numRequiredSignatures ?? 0),
 						}),
 					);
-					const result: any = {
+					const result = {
 						slot: Number(row.slot),
 						transaction: {
 							signatures: [signature],
@@ -323,15 +386,25 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 				} else {
 					const raw = Buffer.from(row.rawBase64, "base64");
 					const tx = VersionedTransaction.deserialize(raw);
-					const msg: any = tx.message as any;
-					const rawKeys3: any[] = Array.isArray(msg.staticAccountKeys)
+					const msg = tx.message as unknown as {
+						staticAccountKeys?: unknown[];
+						accountKeys?: unknown[];
+						compiledInstructions?: unknown[];
+						instructions?: unknown[];
+						header?: unknown;
+						recentBlockhash?: string;
+						addressTableLookups?: unknown[];
+					};
+					const rawKeys3: unknown[] = Array.isArray(msg.staticAccountKeys)
 						? msg.staticAccountKeys
 						: Array.isArray(msg.accountKeys)
 							? msg.accountKeys
 							: [];
-					const accountKeys = rawKeys3.map((k: any) => {
+					const accountKeys = rawKeys3.map((k) => {
 						try {
-							return typeof k === "string" ? k : k.toBase58();
+							return typeof k === "string"
+								? k
+								: (k as { toBase58: () => string }).toBase58();
 						} catch {
 							return String(k);
 						}
@@ -341,19 +414,27 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 						numReadonlySignedAccounts: 0,
 						numReadonlyUnsignedAccounts: 0,
 					};
-					const compiled = Array.isArray(msg.compiledInstructions)
+					const compiled: unknown[] = Array.isArray(msg.compiledInstructions)
 						? msg.compiledInstructions
 						: Array.isArray(msg.instructions)
 							? msg.instructions
 							: [];
-					const instructions = compiled.map((ci: any) => ({
-						programIdIndex: ci.programIdIndex,
-						accounts: Array.from(ci.accountKeyIndexes || ci.accounts || []),
-						data: context.encodeBase58(
-							ci.data instanceof Uint8Array ? ci.data : Buffer.from(ci.data),
-						),
-					}));
-					const result: any = {
+					const instructions = compiled.map((ci) => {
+						const c = ci as {
+							programIdIndex: number;
+							accountKeyIndexes?: number[];
+							accounts?: number[];
+							data: Uint8Array | number[];
+						};
+						return {
+							programIdIndex: c.programIdIndex,
+							accounts: Array.from(c.accountKeyIndexes || c.accounts || []),
+							data: context.encodeBase58(
+								c.data instanceof Uint8Array ? c.data : Buffer.from(c.data),
+							),
+						};
+					});
+					const result = {
 						slot: Number(row.slot),
 						transaction: {
 							signatures: [signature],
@@ -388,7 +469,16 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 
 		// Fallback to LiteSVM history when no local record exists
 		const sigBytes = context.decodeBase58(signature);
-		const txh = (context.svm as any).getTransaction(sigBytes);
+		const getTx = (
+			context.svm as unknown as {
+				getTransaction?: (
+					sig: Uint8Array,
+				) =>
+					| { logs: () => string[]; err: () => unknown }
+					| { meta: () => { logs: () => string[] }; err: () => unknown };
+			}
+		).getTransaction;
+		const txh = typeof getTx === "function" ? getTx(sigBytes) : undefined;
 		if (!txh) return context.createSuccessResponse(id, null);
 
 		const isError = "err" in txh;
@@ -417,12 +507,8 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 			},
 			blockTime: Math.floor(Date.now() / 1000),
 		});
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32602,
-			"Invalid params",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

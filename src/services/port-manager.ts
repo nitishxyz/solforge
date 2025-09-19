@@ -7,7 +7,6 @@ export interface PortAllocation {
 
 export class PortManager {
 	private readonly defaultRpcPort = 8899;
-	private readonly defaultFaucetPort = 9900;
 	private readonly portRangeStart = 8000;
 	private readonly portRangeEnd = 9999;
 
@@ -147,19 +146,17 @@ export class PortManager {
 	 */
 	private async checkPortActuallyFree(port: number): Promise<boolean> {
 		return new Promise((resolve) => {
-			const net = require("net");
+			const net = require("node:net");
 			const server = net.createServer();
 
-			server.listen(port, (err: any) => {
-				if (err) {
-					resolve(false);
-				} else {
-					server.once("close", () => resolve(true));
-					server.close();
-				}
+			server.once("listening", () => {
+				server.once("close", () => resolve(true));
+				server.close();
 			});
 
-			server.on("error", () => resolve(false));
+			server.once("error", () => resolve(false));
+
+			server.listen(port);
 		});
 	}
 

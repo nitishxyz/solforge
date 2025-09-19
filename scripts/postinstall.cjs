@@ -4,9 +4,9 @@
   - Skips if SOLFORGE_SKIP_DOWNLOAD=true
   - Falls back silently on errors (CLI will still work via Bun if installed)
 */
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
+const fs = require("node:fs");
+const path = require("node:path");
+const https = require("node:https");
 
 function log(msg) {
 	console.log(`[solforge] ${msg}`);

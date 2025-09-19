@@ -1,24 +1,23 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
-// Load version for --version in both bun script and compiled binary
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import pkg from "../../package.json" assert { type: "json" };
+// CLI version string; keep in sync with package.json if possible
+const VERSION = "0.2.4";
 
 // Robust arg parsing for both bun script and compiled binary
 const known = new Set([
-  "help",
-  "-h",
-  "--help",
-  "version",
-  "-v",
-  "--version",
-  "rpc",
-  "start",
-  "config",
-  "airdrop",
-  "mint",
-  "token",
-  "program",
+	"help",
+	"-h",
+	"--help",
+	"version",
+	"-v",
+	"--version",
+	"rpc",
+	"start",
+	"config",
+	"airdrop",
+	"mint",
+	"token",
+	"program",
 ]);
 const raw = Bun.argv.slice(1);
 const firstIdx = raw.findIndex((a) => known.has(String(a)));
@@ -27,22 +26,22 @@ const argv = firstIdx >= 0 ? raw.slice(firstIdx) : [];
 async function main() {
 	const [cmd, sub, ...rest] = argv;
 
-  if (!cmd) {
-    const { runSolforge } = await import("./run-solforge");
-    // Pass through any flags provided when no explicit command was given
-    await runSolforge(raw);
-    return;
-  }
+	if (!cmd) {
+		const { runSolforge } = await import("./run-solforge");
+		// Pass through any flags provided when no explicit command was given
+		await runSolforge(raw);
+		return;
+	}
 
-  if (cmd === "help" || cmd === "-h" || cmd === "--help") {
-    printHelp();
-    return;
-  }
+	if (cmd === "help" || cmd === "-h" || cmd === "--help") {
+		printHelp();
+		return;
+	}
 
-  if (cmd === "version" || cmd === "-v" || cmd === "--version") {
-    printVersion();
-    return;
-  }
+	if (cmd === "version" || cmd === "-v" || cmd === "--version") {
+		printVersion();
+		return;
+	}
 
 	// Alias: solforge start -> solforge rpc start
 	if (cmd === "start") {
@@ -117,7 +116,7 @@ async function main() {
 }
 
 function printHelp() {
-  console.log(`
+	console.log(`
 solforge <command>
 
 Commands:
@@ -142,14 +141,12 @@ Options:
 }
 
 async function unknownCommand(parts: (string | undefined)[]) {
-  p.log.error(`Unknown command: ${parts.filter(Boolean).join(" ")}`);
-  printHelp();
+	p.log.error(`Unknown command: ${parts.filter(Boolean).join(" ")}`);
+	printHelp();
 }
 
 function printVersion() {
-	// Prefer package.json version if available
-	const v = (pkg as any)?.version ?? "";
-	console.log(String(v));
+	console.log(String(VERSION));
 }
 
 main();

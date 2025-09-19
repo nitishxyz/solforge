@@ -45,12 +45,13 @@ export const simulateTransaction: RpcMethodHandler = (id, params, context) => {
 					: null,
 			},
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		return context.createErrorResponse(
 			id,
 			-32003,
 			"Simulation failed",
-			error.message,
+			message,
 		);
 	}
 };

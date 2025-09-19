@@ -46,12 +46,13 @@ export const solforgeGetStatus: RpcMethodHandler = async (
 				...formatLamports(faucetLamports),
 			},
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		return context.createErrorResponse(
 			id,
 			-32603,
 			"Status unavailable",
-			error?.message || String(error),
+			message,
 		);
 	}
 };
@@ -90,12 +91,13 @@ export const solforgeListPrograms: RpcMethodHandler = async (
 			.filter(Boolean);
 
 		return context.createSuccessResponse(id, detailed);
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		return context.createErrorResponse(
 			id,
 			-32603,
 			"List programs failed",
-			error?.message || String(error),
+			message,
 		);
 	}
 };
@@ -144,12 +146,13 @@ export const solforgeListTokensDetailed: RpcMethodHandler = async (
 			.filter(Boolean);
 
 		return context.createSuccessResponse(id, detailed);
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		return context.createErrorResponse(
 			id,
 			-32603,
 			"List tokens failed",
-			error?.message || String(error),
+			message,
 		);
 	}
 };

@@ -1,6 +1,4 @@
-import { type ChildProcess, spawn } from "child_process";
-import { existsSync } from "fs";
-import { join } from "path";
+import { type ChildProcess, spawn } from "node:child_process";
 import type {
 	LocalnetConfig,
 	OperationResult,
@@ -251,7 +249,7 @@ export class ValidatorService {
 				if (response.ok) {
 					return; // Validator is ready
 				}
-			} catch (error) {
+			} catch (_error) {
 				// Continue waiting
 			}
 

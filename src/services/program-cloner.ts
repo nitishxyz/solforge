@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import chalk from "chalk";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ProgramConfig } from "../types/config.js";
 import { runCommand } from "../utils/shell.js";
 
@@ -276,7 +276,7 @@ export class ProgramCloner {
 			const programAccount = await connection.getAccountInfo(
 				new PublicKey(programId),
 			);
-			return programAccount !== null && programAccount.executable;
+			return programAccount?.executable;
 		} catch {
 			return false;
 		}
@@ -310,7 +310,7 @@ export class ProgramCloner {
 				owner: programAccount.owner.toBase58(),
 				size: programAccount.data.length,
 			};
-		} catch (error) {
+		} catch (_error) {
 			return { exists: false };
 		}
 	}

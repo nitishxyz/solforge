@@ -23,7 +23,7 @@ export const getTokenAccountsByDelegate: RpcMethodHandler = async (
 			requestedProgramId === token2022Id ? token2022Id : classicId;
 		const rows =
 			(await context.store?.getAccountsByOwner(programFilter, 50_000)) || [];
-		const out: any[] = [];
+		const out: unknown[] = [];
 		for (const r of rows) {
 			try {
 				const acc = context.svm.getAccount(new PublicKey(r.address));
@@ -75,7 +75,8 @@ export const getTokenAccountsByDelegate: RpcMethodHandler = async (
 			context: { slot: Number(context.slot) },
 			value: out,
 		});
-	} catch (e: any) {
-		return context.createErrorResponse(id, -32602, "Invalid params", e.message);
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : String(e);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

@@ -186,7 +186,7 @@ async function waitForProcessShutdown(
 			process.kill(pid, 0);
 			// If no error thrown, process is still running
 			await new Promise((resolve) => setTimeout(resolve, 500));
-		} catch (error) {
+		} catch (_error) {
 			// Process is gone
 			return { success: true };
 		}

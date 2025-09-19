@@ -8,7 +8,7 @@ import { parseFlags } from "../utils/args";
 //   solforge token clone <mint> --to <owner> --ui-amount <num> --decimals <d>
 export async function tokenCloneCommand(args: string[]) {
 	const { flags, rest } = parseFlags(args);
-	const mint = ((rest[0] as string) || (flags["mint"] as string) || "").trim();
+	const mint = ((rest[0] as string) || (flags.mint as string) || "").trim();
 	if (!mint) {
 		p.log.error(
 			"Usage: solforge token clone <mint> [--amount <baseUnits> | --ui-amount <num>] [--endpoint URL]",
@@ -16,10 +16,10 @@ export async function tokenCloneCommand(args: string[]) {
 		return;
 	}
 
-	const owner = flags["to"] as string | undefined; // optional; defaults to faucet on server
-	const configPath = flags["config"] as string | undefined;
+	const _owner = flags.to as string | undefined; // optional; defaults to faucet on server
+	const configPath = flags.config as string | undefined;
 	const cfg = await readConfig(configPath);
-	const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
+	const endpoint = (flags.endpoint as string) || cfg.clone.endpoint;
 	const url = `http://localhost:${cfg.server.rpcPort}`;
 	const s = p.spinner();
 	s.start("Cloning mint into LiteSVM...");
@@ -75,7 +75,7 @@ export async function tokenCloneCommand(args: string[]) {
 				),
 			);
 			return;
-		} catch (adoptErr: any) {
+		} catch (adoptErr: unknown) {
 			p.log.warn(
 				`Adopt authority failed: ${adoptErr?.message || String(adoptErr)}`,
 			);
@@ -85,7 +85,6 @@ export async function tokenCloneCommand(args: string[]) {
 			);
 			return;
 		}
-		return;
 	} catch (e) {
 		s.stop("Clone failed");
 		p.log.error(String(e));

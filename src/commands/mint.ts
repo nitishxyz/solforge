@@ -1,9 +1,8 @@
 import { input, select } from "@inquirer/prompts";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import chalk from "chalk";
 import { Command } from "commander";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { existsSync, readFileSync } from "node:fs";
 import type { TokenConfig } from "../types/config.js";
 import { runCommand } from "../utils/shell";
 import {
@@ -115,7 +114,7 @@ export const mintCommand = new Command()
 			let amount: string;
 			if (options.amount) {
 				const num = parseFloat(options.amount);
-				if (isNaN(num) || num <= 0) {
+				if (Number.isNaN(num) || num <= 0) {
 					console.error(chalk.red("❌ Invalid amount"));
 					process.exit(1);
 				}
@@ -126,7 +125,7 @@ export const mintCommand = new Command()
 					message: "Enter amount to mint:",
 					validate: (value: string) => {
 						const num = parseFloat(value);
-						if (isNaN(num) || num <= 0) {
+						if (Number.isNaN(num) || num <= 0) {
 							return "Please enter a valid positive number";
 						}
 						return true;
@@ -219,7 +218,7 @@ export async function mintTokenToWallet(
 					break;
 				}
 			}
-		} catch (error) {
+		} catch (_error) {
 			// No existing accounts found or parsing error, will create new account
 		}
 	}

@@ -5,9 +5,9 @@ import { parseFlags } from "../utils/args";
 
 export async function programLoadCommand(args: string[]) {
 	const { flags, rest } = parseFlags(args);
-	const programId = (rest[0] as string) || (flags["program"] as string);
-	const fromFile = flags["file"] as string | undefined;
-	const endpoint = flags["endpoint"] as string | undefined;
+	const programId = (rest[0] as string) || (flags.program as string);
+	const fromFile = flags.file as string | undefined;
+	const endpoint = flags.endpoint as string | undefined;
 	if (!programId) {
 		p.log.error(
 			"Usage: solforge program load <programId> [--file PATH | --endpoint URL]",

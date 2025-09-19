@@ -27,10 +27,10 @@ if (!PERSIST && DB_PATH !== ":memory:") {
 		if (existsSync(DB_PATH)) unlinkSync(DB_PATH);
 	} catch {}
 	try {
-		if (existsSync(DB_PATH + "-wal")) unlinkSync(DB_PATH + "-wal");
+		if (existsSync(`${DB_PATH}-wal`)) unlinkSync(`${DB_PATH}-wal`);
 	} catch {}
 	try {
-		if (existsSync(DB_PATH + "-shm")) unlinkSync(DB_PATH + "-shm");
+		if (existsSync(`${DB_PATH}-shm`)) unlinkSync(`${DB_PATH}-shm`);
 	} catch {}
 }
 

@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { existsSync } from "fs";
+import { existsSync } from "node:fs";
 import inquirer from "inquirer";
 import { configManager } from "../config/manager.js";
 import { processRegistry } from "../services/process-registry.js";

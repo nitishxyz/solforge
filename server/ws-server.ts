@@ -14,7 +14,11 @@ export function createLiteSVMWebSocketServer(
 	const sockets = new Set<WebSocket>();
 	const pendingChecks = new Map<string, number>();
 
-	const sendSignatureNotification = (sig: string, slot: number, err: any) => {
+	const sendSignatureNotification = (
+		sig: string,
+		slot: number,
+		err: unknown,
+	) => {
 		const payload = {
 			jsonrpc: "2.0",
 			method: "signatureNotification",
@@ -25,14 +29,14 @@ export function createLiteSVMWebSocketServer(
 		for (const [id, sub] of subs.entries()) {
 			if (sub.type === "signature" && sub.signature === sig) {
 				try {
-					sockets.forEach((s) =>
+					for (const s of sockets) {
 						s.send(
 							JSON.stringify({
 								...payload,
 								params: { ...payload.params, subscription: id },
 							}),
-						),
-					);
+						);
+					}
 				} catch {}
 				subs.delete(id);
 			}
@@ -70,7 +74,7 @@ export function createLiteSVMWebSocketServer(
 		port,
 		hostname: host || process.env.RPC_HOST || "127.0.0.1",
 		fetch(req, srv) {
-			if (srv.upgrade(req)) return undefined as any;
+			if (srv.upgrade(req)) return undefined as unknown as Response;
 			return new Response("Not a websocket", { status: 400 });
 		},
 		websocket: {
@@ -91,7 +95,7 @@ export function createLiteSVMWebSocketServer(
 						id,
 						method,
 						params = [],
-					} = msg as { id: number; method: string; params?: any[] };
+					} = msg as { id: number; method: string; params?: unknown[] };
 					if (method === "signatureSubscribe") {
 						const [signature] = params;
 						const subId = nextSubId++;
@@ -147,7 +151,7 @@ export function createLiteSVMWebSocketServer(
 							error: { code: -32601, message: `Method not found: ${method}` },
 						}),
 					);
-				} catch (e) {
+				} catch (_e) {
 					try {
 						ws.send(
 							JSON.stringify({

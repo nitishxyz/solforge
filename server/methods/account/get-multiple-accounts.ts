@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
+import type { AccountSnapshot } from "../../../src/db/tx-store";
 
 /**
  * Implements the getMultipleAccounts RPC method
@@ -54,7 +55,7 @@ export const getMultipleAccounts: RpcMethodHandler = async (
 
 	// Opportunistic index update
 	try {
-		const snaps: any[] = [];
+		const snaps: AccountSnapshot[] = [];
 		for (const pubkeyStr of pubkeys) {
 			try {
 				const pubkey = new PublicKey(pubkeyStr);

@@ -72,7 +72,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 	if (!headers.has("content-type") && init.body)
 		headers.set("content-type", "application/json");
 	const response = await fetch(path, { ...init, headers });
-	let payload: any = null;
+	let payload: unknown = null;
 	const text = await response.text();
 	if (text) {
 		try {

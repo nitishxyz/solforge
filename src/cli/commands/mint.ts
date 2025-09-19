@@ -7,9 +7,9 @@ import { parseFlags } from "../utils/args";
 // Usage: solforge mint --mint <mint> --to <owner> --amount <amount>
 export async function mintCommand(args: string[]) {
 	const { flags } = parseFlags(args);
-	let mint = flags["mint"] as string | undefined;
-	let receiver = flags["to"] as string | undefined; // required: receiver address (ATA owner)
-	let amountBase = flags["amount"] as string | undefined; // optional direct base-units
+	let mint = flags.mint as string | undefined;
+	let receiver = flags.to as string | undefined; // required: receiver address (ATA owner)
+	let amountBase = flags.amount as string | undefined; // optional direct base-units
 	let uiAmount = flags["ui-amount"] as string | undefined; // preferred UI units
 
 	const cfg = await readConfig();

@@ -90,7 +90,7 @@ export async function statusCommand(): Promise<void> {
 		console.log(`  📝 Project: ${config.name}`);
 		console.log(`  🪙 Tokens: ${config.tokens.length}`);
 		console.log(`  📦 Programs: ${config.programs.length}`);
-	} catch (error) {
+	} catch (_error) {
 		console.log(`  ❌ No valid configuration found`);
 		console.log(`  💡 Run 'solforge init' to create one`);
 	}

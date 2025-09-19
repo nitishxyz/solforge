@@ -8,13 +8,13 @@ import { parseFlags } from "../utils/args";
 //   solforge token create --decimals <d> --owner <pubkey> [--mint <pubkey>] [--amount <baseUnits> | --ui-amount <num>]
 export async function tokenCreateCommand(args: string[]) {
 	const { flags } = parseFlags(args);
-	const decimals = flags["decimals"] ? Number(flags["decimals"]) : NaN;
-	const owner = flags["owner"] as string | undefined;
-	const mint = flags["mint"] as string | undefined;
-	const amountBase = flags["amount"] as string | undefined;
+	const decimals = flags.decimals ? Number(flags.decimals) : NaN;
+	const owner = flags.owner as string | undefined;
+	const mint = flags.mint as string | undefined;
+	const amountBase = flags.amount as string | undefined;
 	const uiAmount = flags["ui-amount"] as string | undefined;
 
-	if (!isFinite(decimals)) {
+	if (!Number.isFinite(decimals)) {
 		p.log.error("--decimals is required (0-18)");
 		return;
 	}

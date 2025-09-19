@@ -86,11 +86,11 @@ export interface ValidatorState {
 }
 
 // Operation result types
-export interface OperationResult<T = any> {
+export interface OperationResult<T = unknown> {
 	success: boolean;
 	data?: T;
 	error?: string;
-	details?: any;
+	details?: unknown;
 }
 
 export interface CloneResult {

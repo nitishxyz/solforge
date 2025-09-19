@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import {
 	type ApiConfig,
 	type ApiStatus,
@@ -40,8 +40,9 @@ export function App() {
 			const cfg = await fetchConfig();
 			setConfig(cfg);
 			setBannerError(null);
-		} catch (error: any) {
-			setBannerError(error?.message ?? String(error));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			setBannerError(message);
 		}
 	}, []);
 
@@ -50,8 +51,9 @@ export function App() {
 		try {
 			const data = await fetchStatus();
 			setStatus(data);
-		} catch (error: any) {
-			setBannerError(error?.message ?? String(error));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			setBannerError(message);
 		} finally {
 			setLoadingStatus(false);
 		}
@@ -62,8 +64,9 @@ export function App() {
 		try {
 			const data = await fetchPrograms();
 			setPrograms(data);
-		} catch (error: any) {
-			setBannerError(error?.message ?? String(error));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			setBannerError(message);
 		} finally {
 			setLoadingPrograms(false);
 		}
@@ -74,8 +77,9 @@ export function App() {
 		try {
 			const data = await fetchTokens();
 			setTokens(data);
-		} catch (error: any) {
-			setBannerError(error?.message ?? String(error));
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			setBannerError(message);
 		} finally {
 			setLoadingTokens(false);
 		}
@@ -141,9 +145,20 @@ export function App() {
 		[loadTokens],
 	);
 
-	const scrollToSection = (sectionId: string) => {
+	type SectionKey = "status" | "actions" | "programs" | "tokens";
+	const uid = useId();
+	const sectionIds: Record<SectionKey, string> = {
+		status: `${uid}-status`,
+		actions: `${uid}-actions`,
+		programs: `${uid}-programs`,
+		tokens: `${uid}-tokens`,
+	};
+
+	const scrollToSection = (sectionId: SectionKey) => {
 		setActiveSection(sectionId);
-		document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+		document
+			.getElementById(sectionIds[sectionId])
+			?.scrollIntoView({ behavior: "smooth" });
 		setSidebarOpen(false);
 	};
 
@@ -151,6 +166,7 @@ export function App() {
 		<div className="min-h-screen relative">
 			{/* Mobile Menu Button */}
 			<button
+				type="button"
 				onClick={() => setSidebarOpen(!sidebarOpen)}
 				className="lg:hidden fixed top-4 left-4 z-50 btn-icon bg-gradient-to-br from-purple-600 to-violet-600 border-purple-500/30"
 				aria-label="Menu"
@@ -183,6 +199,7 @@ export function App() {
 					{/* Navigation Items */}
 					<nav className="space-y-2">
 						<button
+							type="button"
 							onClick={() => scrollToSection("status")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
 								activeSection === "status"
@@ -194,6 +211,7 @@ export function App() {
 							<span className="font-medium">Network Status</span>
 						</button>
 						<button
+							type="button"
 							onClick={() => scrollToSection("actions")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
 								activeSection === "actions"
@@ -205,6 +223,7 @@ export function App() {
 							<span className="font-medium">Quick Actions</span>
 						</button>
 						<button
+							type="button"
 							onClick={() => scrollToSection("programs")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
 								activeSection === "programs"
@@ -216,6 +235,7 @@ export function App() {
 							<span className="font-medium">Programs</span>
 						</button>
 						<button
+							type="button"
 							onClick={() => scrollToSection("tokens")}
 							className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
 								activeSection === "tokens"
@@ -250,9 +270,16 @@ export function App() {
 
 			{/* Overlay for mobile */}
 			{sidebarOpen && (
-				<div
+				<button
+					type="button"
 					className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+					aria-label="Close sidebar overlay"
 					onClick={() => setSidebarOpen(false)}
+					onKeyDown={(e) => {
+						if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+							setSidebarOpen(false);
+						}
+					}}
 				/>
 			)}
 
@@ -270,7 +297,11 @@ export function App() {
 									Manage your local Solana development environment
 								</p>
 							</div>
-							<button onClick={loadStatus} className="btn-secondary">
+							<button
+								type="button"
+								onClick={loadStatus}
+								className="btn-secondary"
+							>
 								<i
 									className={`fas fa-sync-alt ${loadingStatus ? "animate-spin" : ""}`}
 								></i>
@@ -286,6 +317,7 @@ export function App() {
 									<p className="text-sm text-red-300">{bannerError}</p>
 								</div>
 								<button
+									type="button"
 									onClick={() => setBannerError(null)}
 									className="text-red-400 hover:text-red-300"
 									aria-label="Close error"
@@ -309,7 +341,7 @@ export function App() {
 					</div>
 
 					{/* Status Panel */}
-					<div id="status" className="animate-fadeIn scroll-mt-24">
+					<div id={sectionIds.status} className="animate-fadeIn scroll-mt-24">
 						<StatusPanel
 							status={status}
 							loading={loadingStatus}
@@ -319,7 +351,7 @@ export function App() {
 
 					{/* Quick Actions - Optional */}
 					<div
-						id="actions"
+						id={sectionIds.actions}
 						className="glass-panel p-6 animate-fadeIn scroll-mt-24"
 						style={{ animationDelay: "0.1s" }}
 					>
@@ -333,7 +365,7 @@ export function App() {
 					{/* Programs and Tokens Stacked */}
 					<div className="space-y-6">
 						<div
-							id="programs"
+							id={sectionIds.programs}
 							className="animate-fadeIn scroll-mt-24"
 							style={{ animationDelay: "0.2s" }}
 						>
@@ -345,7 +377,7 @@ export function App() {
 							/>
 						</div>
 						<div
-							id="tokens"
+							id={sectionIds.tokens}
 							className="animate-fadeIn scroll-mt-24"
 							style={{ animationDelay: "0.3s" }}
 						>

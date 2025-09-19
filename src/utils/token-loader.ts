@@ -1,6 +1,6 @@
 import { Keypair } from "@solana/web3.js";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { TokenConfig } from "../types/config.js";
 
 export interface ClonedToken {

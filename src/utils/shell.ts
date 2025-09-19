@@ -56,7 +56,7 @@ export async function runCommand(
 		if (jsonOutput && success && stdout.trim()) {
 			try {
 				parsedOutput = JSON.parse(stdout);
-			} catch (e) {
+			} catch (_e) {
 				// If JSON parsing fails, keep original stdout
 				console.warn(
 					chalk.yellow("Warning: Expected JSON output but got invalid JSON"),

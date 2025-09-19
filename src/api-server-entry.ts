@@ -33,13 +33,13 @@ async function main() {
 			process.exit(1);
 		}
 
-		const port = parseInt(args[portIndex + 1]!);
+		const port = parseInt(String(args[portIndex + 1]), 10);
 		const host =
 			hostIndex !== -1 && args[hostIndex + 1] ? args[hostIndex + 1] : undefined;
-		const configPath = args[configIndex + 1]!;
-		const rpcUrl = args[rpcIndex + 1]!;
-		const faucetUrl = args[faucetIndex + 1]!;
-		const workDir = args[workDirIndex + 1]!;
+		const configPath = String(args[configIndex + 1]);
+		const rpcUrl = String(args[rpcIndex + 1]);
+		const faucetUrl = String(args[faucetIndex + 1]);
+		const workDir = String(args[workDirIndex + 1]);
 
 		// Load configuration
 		await configManager.load(configPath);

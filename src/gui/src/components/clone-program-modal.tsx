@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useId, useState } from "react";
 import { Modal } from "./modal";
 
 interface Props {
@@ -13,6 +13,9 @@ interface Props {
 }
 
 export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
+	const programIdId = useId();
+	const endpointId = useId();
+	const accountLimitId = useId();
 	const [programId, setProgramId] = useState("");
 	const [endpoint, setEndpoint] = useState("");
 	const [withAccounts, setWithAccounts] = useState(true);
@@ -37,8 +40,12 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 			setProgramId("");
 			setEndpoint("");
 			setAccountsLimit("100");
-		} catch (err: any) {
-			setError(err?.message ?? String(err));
+		} catch (err: unknown) {
+			const message =
+				err && typeof err === "object" && "message" in err
+					? String((err as { message?: unknown }).message)
+					: String(err);
+			setError(message);
 		} finally {
 			setPending(false);
 		}
@@ -92,11 +99,15 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 		>
 			<div className="space-y-5">
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={programIdId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						Program ID *
 					</label>
 					<div className="relative">
 						<input
+							id={programIdId}
 							value={programId}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setProgramId(event.target.value)
@@ -109,11 +120,15 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 				</div>
 
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={endpointId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						RPC Endpoint (Optional)
 					</label>
 					<div className="relative">
 						<input
+							id={endpointId}
 							value={endpoint}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setEndpoint(event.target.value)
@@ -147,11 +162,15 @@ export function CloneProgramModal({ isOpen, onClose, onSubmit }: Props) {
 
 					{withAccounts && (
 						<div className="ml-8 space-y-2 pt-2 border-t border-white/5">
-							<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+							<label
+								htmlFor={accountLimitId}
+								className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+							>
 								Account Limit
 							</label>
 							<div className="relative">
 								<input
+									id={accountLimitId}
 									value={accountsLimit}
 									onChange={(event: ChangeEvent<HTMLInputElement>) =>
 										setAccountsLimit(event.target.value)

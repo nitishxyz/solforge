@@ -2,20 +2,33 @@
 
 // Suppress bigint-buffer warning
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
-process.stderr.write = (chunk: any, encoding?: any, callback?: any) => {
+process.stderr.write = ((
+	chunk: unknown,
+	encoding?: unknown,
+	callback?: unknown,
+) => {
 	if (
 		typeof chunk === "string" &&
 		chunk.includes("bigint: Failed to load bindings")
 	) {
 		return true; // Suppress this specific warning
 	}
-	return originalStderrWrite(chunk, encoding, callback);
-};
+	const writer = originalStderrWrite as unknown as (
+		chunk: string | Uint8Array,
+		encoding?: BufferEncoding,
+		callback?: ((err?: Error) => void) | undefined,
+	) => boolean;
+	return writer(
+		chunk as string | Uint8Array,
+		encoding as BufferEncoding | undefined,
+		callback as ((err?: Error) => void) | undefined,
+	);
+}) as typeof process.stderr.write;
 
 import chalk from "chalk";
 import { Command } from "commander";
-import { existsSync } from "fs";
-import { resolve } from "path";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import packageJson from "../package.json" with { type: "json" };
 import { addProgramCommand } from "./commands/add-program.js";
 import { initCommand } from "./commands/init.js";
@@ -123,7 +136,7 @@ program
 			const config = configManager.getConfig();
 
 			const apiServer = new APIServer({
-				port: parseInt(options.port),
+				port: parseInt(options.port, 10),
 				host: options.host,
 				validatorRpcUrl: options.rpcUrl,
 				validatorFaucetUrl: options.faucetUrl,

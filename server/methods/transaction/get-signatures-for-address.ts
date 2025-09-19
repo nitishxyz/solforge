@@ -31,15 +31,11 @@ export const getSignaturesForAddress: RpcMethodHandler = async (
 			// Graceful fallback: return empty list instead of error
 			return context.createSuccessResponse(id, []);
 		}
-	} catch (error: any) {
+	} catch (error: unknown) {
 		try {
 			console.error("[rpc] getSignaturesForAddress error", error);
 		} catch {}
-		return context.createErrorResponse(
-			id,
-			-32603,
-			"Internal error",
-			error.message,
-		);
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32603, "Internal error", message);
 	}
 };
