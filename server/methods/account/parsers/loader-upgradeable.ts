@@ -12,7 +12,20 @@ export function parseUpgradeableLoader(
 	const bytes = data;
 	const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const space = bytes.length;
-	let parsed: any = null;
+	type UpgradeableParsed =
+		| { type: "program"; info: { programData: string } }
+		| {
+				type: "programData";
+				info: {
+					slot: number;
+					upgradeAuthority: string | null;
+					authority: string | null;
+					data: [string, "base64"];
+				};
+		  }
+		| { type: "buffer"; info: { authority: string | null } }
+		| null;
+	let parsed: UpgradeableParsed = null;
 	try {
 		if (bytes.length >= 4) {
 			const tag = dv.getUint32(0, true);

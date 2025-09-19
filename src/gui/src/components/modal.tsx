@@ -40,9 +40,14 @@ export function Modal({
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
 			{/* Backdrop */}
-			<div
+			<button
+				type="button"
 				className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+				aria-label="Close modal"
 				onClick={onClose}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") onClose();
+				}}
 			/>
 
 			{/* Modal */}

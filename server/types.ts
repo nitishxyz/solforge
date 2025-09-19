@@ -6,17 +6,17 @@ export interface JsonRpcRequest {
 	jsonrpc: "2.0";
 	id: string | number;
 	method: string;
-	params?: any;
+	params?: unknown;
 }
 
 export interface JsonRpcResponse {
 	jsonrpc: "2.0";
 	id: string | number;
-	result?: any;
+	result?: unknown;
 	error?: {
 		code: number;
 		message: string;
-		data?: any;
+		data?: unknown;
 	};
 }
 
@@ -27,12 +27,15 @@ export interface RpcMethodContext {
 	store?: TxStore;
 	encodeBase58: (bytes: Uint8Array) => string;
 	decodeBase58: (str: string) => Uint8Array;
-	createSuccessResponse: (id: string | number, result: any) => JsonRpcResponse;
+	createSuccessResponse: (
+		id: string | number,
+		result: unknown,
+	) => JsonRpcResponse;
 	createErrorResponse: (
 		id: string | number,
 		code: number,
 		message: string,
-		data?: any,
+		data?: unknown,
 	) => JsonRpcResponse;
 	notifySignature: (signature: string) => void;
 	getFaucet: () => Keypair;
@@ -69,6 +72,6 @@ export interface RpcMethodContext {
 
 export type RpcMethodHandler = (
 	id: string | number,
-	params: any,
+	params: unknown[] | undefined,
 	context: RpcMethodContext,
 ) => JsonRpcResponse | Promise<JsonRpcResponse>;

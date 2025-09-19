@@ -11,7 +11,7 @@ export async function configCommand(sub: string | undefined, args: string[]) {
 	switch (sub) {
 		case "init": {
 			const { flags } = parseFlags(args);
-			const force = !!flags["force"];
+			const force = !!flags.force;
 			await writeDefaultConfig({ force });
 			p.log.success("Wrote sf.config.json");
 			return;
@@ -28,7 +28,7 @@ export async function configCommand(sub: string | undefined, args: string[]) {
 			const updated = setConfigValue(cfg, key, value);
 			await Bun.write(
 				"sf.config.json",
-				JSON.stringify(updated, null, 2) + "\n",
+				`${JSON.stringify(updated, null, 2)}\n`,
 			);
 			p.log.success(`Updated ${key}`);
 			return;

@@ -6,7 +6,7 @@ import { parseSystemAccount } from "./system";
 
 export type ParsedAccountData = {
 	program: string;
-	parsed: any; // match Solana RPC jsonParsed payloads
+	parsed: unknown; // match Solana RPC jsonParsed payloads
 	space: number;
 } | null;
 
@@ -32,7 +32,7 @@ export function parseAccountJson(
 	const dataBytes =
 		account.data instanceof Uint8Array
 			? account.data
-			: Buffer.from(account.data as any);
+			: Buffer.from(account.data as ReadonlyArray<number>);
 	const space = dataBytes.length;
 
 	// 1) System program

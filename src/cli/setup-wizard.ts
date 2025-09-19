@@ -170,9 +170,10 @@ async function resolveTokens(selections: string[], existing: string[] = []) {
 	const set = new Set(existing);
 	for (const selection of selections) {
 		if (selection === "__custom__") {
-			(await collectCustomEntries("token mint address")).forEach((value) =>
-				set.add(value),
-			);
+			{
+				const values = await collectCustomEntries("token mint address");
+				for (const value of values) set.add(value);
+			}
 			continue;
 		}
 		const preset = TOKEN_PRESETS.find((token) => token.value === selection);
@@ -193,9 +194,10 @@ async function resolvePrograms(selections: string[], existing: string[] = []) {
 	const set = new Set(existing);
 	for (const selection of selections) {
 		if (selection === "__custom__") {
-			(await collectCustomEntries("program id")).forEach((value) =>
-				set.add(value),
-			);
+			{
+				const values = await collectCustomEntries("program id");
+				for (const value of values) set.add(value);
+			}
 			continue;
 		}
 		const preset = PROGRAM_PRESETS.find(

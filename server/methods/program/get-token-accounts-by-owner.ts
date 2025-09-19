@@ -30,7 +30,7 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 			: [classicId, token2022Id];
 
 		// Query DB for accounts owned by both SPL Token programs (classic + 2022)
-		const rows: Array<{ address: string; lastSlot: number } & any> = [];
+		const rows: Array<{ address: string; lastSlot: number }> = [];
 		for (const programId of programIds) {
 			try {
 				const found =
@@ -43,7 +43,7 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 			}
 		}
 
-		const out: any[] = [];
+		const out: unknown[] = [];
 		const seen = new Set<string>();
 		for (const r of rows) {
 			if (seen.has(r.address)) continue;
@@ -55,11 +55,12 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 				let ownerPk: PublicKey;
 				try {
 					// acc.owner may already be a PublicKey in LiteSVM
-					const anyOwner: any = (acc as any).owner;
+					const rawOwner = (acc as { owner?: unknown }).owner;
 					ownerPk =
-						typeof anyOwner?.toBase58 === "function"
-							? (anyOwner as PublicKey)
-							: new PublicKey(anyOwner);
+						rawOwner &&
+						typeof (rawOwner as { toBase58?: unknown }).toBase58 === "function"
+							? (rawOwner as PublicKey)
+							: new PublicKey(String(rawOwner));
 				} catch {
 					ownerPk = TOKEN_PROGRAM_ID; // fallback avoids throw; unpackAccount will fail if wrong and be skipped
 				}
@@ -80,9 +81,14 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 					try {
 						const mintAcc = context.svm.getAccount(dec.mint);
 						const mintOwnerPk = mintAcc
-							? typeof (mintAcc as any).owner?.toBase58 === "function"
-								? (mintAcc as any).owner
-								: new PublicKey(mintAcc.owner)
+							? ((): PublicKey => {
+									const ro = (mintAcc as { owner?: unknown }).owner;
+									return ro &&
+										typeof (ro as { toBase58?: unknown }).toBase58 ===
+											"function"
+										? (ro as PublicKey)
+										: new PublicKey(String(ro));
+								})()
 							: programPk;
 						const info = mintAcc
 							? unpackMint(
@@ -122,7 +128,12 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 						uiAmountString: (delegatedUiAmount ?? 0).toString(),
 					};
 					// rentExemptReserve only for native (wrapped SOL) accounts; value in lamports (9 decimals)
-					let rentExemptReserve = null as any;
+					let rentExemptReserve: {
+						amount: string;
+						decimals: number;
+						uiAmount: number | null;
+						uiAmountString: string;
+					} | null = null;
 					if (dec.isNative) {
 						const lamports = BigInt(
 							dec.rentExemptReserve?.toString?.() ??
@@ -196,9 +207,13 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 					const mintPk = new PublicKey(m);
 					const mintAcc = context.svm.getAccount(mintPk);
 					const mintOwnerPk = mintAcc
-						? typeof (mintAcc as any).owner?.toBase58 === "function"
-							? (mintAcc as any).owner
-							: new PublicKey(mintAcc.owner)
+						? ((): PublicKey => {
+								const ro = (mintAcc as { owner?: unknown }).owner;
+								return ro &&
+									typeof (ro as { toBase58?: unknown }).toBase58 === "function"
+									? (ro as PublicKey)
+									: new PublicKey(String(ro));
+							})()
 						: TOKEN_PROGRAM_ID;
 					// Determine which token program this mint belongs to
 					const programForMint = mintOwnerPk.equals(TOKEN_2022_PROGRAM_ID)
@@ -221,12 +236,12 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 					const acc = context.svm.getAccount(ata);
 					if (!acc || (acc.data?.length ?? 0) < ACCOUNT_SIZE) continue;
 					if (seen.has(ata.toBase58())) continue;
-					let ownerPk: PublicKey;
-					const anyOwner: any = (acc as any).owner;
-					ownerPk =
-						typeof anyOwner?.toBase58 === "function"
-							? (anyOwner as PublicKey)
-							: new PublicKey(anyOwner);
+					const rawOwner = (acc as { owner?: unknown }).owner;
+					const ownerPk: PublicKey =
+						rawOwner &&
+						typeof (rawOwner as { toBase58?: unknown }).toBase58 === "function"
+							? (rawOwner as PublicKey)
+							: new PublicKey(String(rawOwner));
 					const programPk = ownerPk.equals(TOKEN_2022_PROGRAM_ID)
 						? TOKEN_2022_PROGRAM_ID
 						: TOKEN_PROGRAM_ID;
@@ -249,9 +264,14 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 					try {
 						const mintAcc = context.svm.getAccount(dec.mint);
 						const mintOwnerPk = mintAcc
-							? typeof (mintAcc as any).owner?.toBase58 === "function"
-								? (mintAcc as any).owner
-								: new PublicKey(mintAcc.owner)
+							? ((): PublicKey => {
+									const ro = (mintAcc as { owner?: unknown }).owner;
+									return ro &&
+										typeof (ro as { toBase58?: unknown }).toBase58 ===
+											"function"
+										? (ro as PublicKey)
+										: new PublicKey(String(ro));
+								})()
 							: programPk;
 						const info = mintAcc
 							? unpackMint(
@@ -326,9 +346,14 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 						const ownerPk = new PublicKey(ownerStr);
 						const mintAcc = context.svm.getAccount(mintPk);
 						const mintOwnerPk = mintAcc
-							? typeof (mintAcc as any).owner?.toBase58 === "function"
-								? (mintAcc as any).owner
-								: new PublicKey(mintAcc.owner)
+							? ((): PublicKey => {
+									const ro = (mintAcc as { owner?: unknown }).owner;
+									return ro &&
+										typeof (ro as { toBase58?: unknown }).toBase58 ===
+											"function"
+										? (ro as PublicKey)
+										: new PublicKey(String(ro));
+								})()
 							: TOKEN_PROGRAM_ID;
 						const programForMint = mintOwnerPk.equals(TOKEN_2022_PROGRAM_ID)
 							? TOKEN_2022_PROGRAM_ID
@@ -364,7 +389,7 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 						(v) => typeof v === "number" && v >= 0,
 					),
 				);
-				const filtered: any[] = [];
+				const filtered: unknown[] = [];
 				for (let i = 0; i < out.length; i++) {
 					const e = out[i];
 					const info = e.account?.data?.parsed?.info;
@@ -381,15 +406,11 @@ export const getTokenAccountsByOwner: RpcMethodHandler = async (
 			context: { slot: Number(context.slot) },
 			value: out,
 		});
-	} catch (e: any) {
+	} catch (e: unknown) {
 		try {
 			console.error("[rpc] getTokenAccountsByOwner error", e);
 		} catch {}
-		return context.createErrorResponse(
-			id,
-			-32603,
-			"Internal error",
-			e?.message || String(e),
-		);
+		const message = e instanceof Error ? e.message : String(e);
+		return context.createErrorResponse(id, -32603, "Internal error", message);
 	}
 };

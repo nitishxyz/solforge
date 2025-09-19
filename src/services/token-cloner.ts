@@ -1,7 +1,7 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import chalk from "chalk";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { TokenConfig } from "../types/config.js";
 import { runCommand } from "../utils/shell.js";
 
@@ -614,7 +614,7 @@ export class TokenCloner {
 						);
 					}
 				}
-			} catch (error) {
+			} catch (_error) {
 				if (debug) {
 					console.log(
 						chalk.gray(`  ℹ️  No existing accounts found or parsing error`),
@@ -749,7 +749,7 @@ export class TokenCloner {
 						break;
 					}
 				}
-			} catch (error) {
+			} catch (_error) {
 				// No existing accounts found or parsing error, will create new account
 			}
 		}

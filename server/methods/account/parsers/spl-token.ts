@@ -51,10 +51,17 @@ export function parseSplTokenAccountOrMint(
 			try {
 				const mintAcc = context.svm.getAccount(dec.mint);
 				if (mintAcc) {
-					const mintOwner =
-						typeof (mintAcc as any).owner?.toBase58 === "function"
-							? ((mintAcc as any).owner as PublicKey)
-							: new PublicKey(mintAcc.owner);
+					const rawOwner = (mintAcc as { owner?: unknown }).owner;
+					const mintOwner = ((): PublicKey => {
+						if (
+							rawOwner &&
+							typeof (rawOwner as { toBase58?: unknown }).toBase58 ===
+								"function"
+						) {
+							return rawOwner as PublicKey;
+						}
+						return new PublicKey(String(rawOwner));
+					})();
 					const mintProg = mintOwner.equals(TOKEN_2022_PROGRAM_ID)
 						? TOKEN_2022_PROGRAM_ID
 						: TOKEN_PROGRAM_ID;
@@ -176,18 +183,18 @@ function buildAccountExtensions(account: {
 
 function buildMintExtensions(mint: {
 	tlvData: Buffer;
-}): Array<Record<string, any>> | undefined {
+}): Array<Record<string, unknown>> | undefined {
 	if (!mint.tlvData || mint.tlvData.length === 0) return undefined;
 	const types = getExtensionTypes(mint.tlvData);
 	if (!types.length) return undefined;
-	const out: Array<Record<string, any>> = [];
+	const out: Array<Record<string, unknown>> = [];
 	for (const ext of types) {
-		const entry: Record<string, any> = {
+		const entry: Record<string, unknown> = {
 			type: ExtensionType[ext] ?? String(ext),
 		};
 		try {
 			if (ext === ExtensionType.MetadataPointer) {
-				const state = getMetadataPointerState(mint as any);
+				const state = getMetadataPointerState(mint as { tlvData: Buffer });
 				if (state) {
 					entry.info = {
 						authority: state.authority ? state.authority.toBase58() : null,
@@ -222,9 +229,21 @@ function buildMintExtensions(mint: {
 	return out.length ? out : undefined;
 }
 
-function toAccountInfo(raw: any, owner: PublicKey): AccountInfo<Buffer> {
+function toAccountInfo(
+	raw: {
+		data?: Buffer | Uint8Array | number[];
+		lamports?: number | bigint;
+		executable?: boolean;
+		rentEpoch?: number | bigint;
+	},
+	owner: PublicKey,
+): AccountInfo<Buffer> {
 	const data =
-		raw.data instanceof Buffer ? raw.data : Buffer.from(raw.data ?? []);
+		raw.data instanceof Buffer
+			? raw.data
+			: raw.data instanceof Uint8Array
+				? Buffer.from(raw.data)
+				: Buffer.from((raw.data ?? []) as number[]);
 	return {
 		data,
 		executable: !!raw.executable,

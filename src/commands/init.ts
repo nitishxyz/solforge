@@ -1,7 +1,7 @@
 import chalk from "chalk";
-import { existsSync, writeFileSync } from "fs";
+import { existsSync, writeFileSync } from "node:fs";
 import inquirer from "inquirer";
-import { resolve } from "path";
+import { resolve } from "node:path";
 import type { Config } from "../types/config.js";
 
 const defaultConfig: Config = {

@@ -4,8 +4,8 @@ import { parseFlags } from "../utils/args";
 
 export async function airdropCommand(args: string[]) {
 	const { flags } = parseFlags(args);
-	const to = String(flags["to"] || "");
-	const sol = Number(flags["sol"] || 0);
+	const to = String(flags.to || "");
+	const sol = Number(flags.sol || 0);
 	const cfg = await readConfig();
 	const url = `http://localhost:${cfg.server.rpcPort}`;
 	if (!to || !sol) {

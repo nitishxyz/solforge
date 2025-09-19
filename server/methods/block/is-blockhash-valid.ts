@@ -12,12 +12,8 @@ export const isBlockhashValid: RpcMethodHandler = (id, params, context) => {
 			context: { slot: Number(context.slot) },
 			value: isValid,
 		});
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32602,
-			"Invalid params",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

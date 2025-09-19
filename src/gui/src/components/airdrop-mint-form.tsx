@@ -1,14 +1,20 @@
-import { type ChangeEvent, type FormEvent, useMemo, useState } from "react";
+import {
+	type ChangeEvent,
+	type FormEvent,
+	useId,
+	useMemo,
+	useState,
+} from "react";
 import type { TokenSummary } from "../api";
 
 interface Props {
 	tokens: TokenSummary[];
-	onAirdrop: (address: string, lamports: string) => Promise<string | void>;
+	onAirdrop: (address: string, lamports: string) => Promise<string | undefined>;
 	onMint: (
 		mint: string,
 		owner: string,
 		amountRaw: string,
-	) => Promise<string | void>;
+	) => Promise<string | undefined>;
 }
 
 const SOL_OPTION = {
@@ -53,6 +59,11 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 	const [error, setError] = useState<string | null>(null);
 	const [message, setMessage] = useState<string | null>(null);
 
+	const uid = useId();
+	const recipientId = `${uid}-recipient`;
+	const assetId = `${uid}-asset`;
+	const amountId = `${uid}-amount`;
+
 	const options = useMemo(() => {
 		const tokenOpts = tokens.map((token) => ({
 			value: token.mint,
@@ -87,8 +98,9 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 		try {
 			const note = await submit();
 			setMessage(note);
-		} catch (err: any) {
-			setError(err?.message ?? String(err));
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			setError(message);
 		} finally {
 			setPending(false);
 		}
@@ -116,11 +128,15 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 
 			<div className="grid gap-4 lg:grid-cols-3">
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={recipientId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						Recipient Address
 					</label>
 					<div className="relative">
 						<input
+							id={recipientId}
 							value={recipient}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setRecipient(event.target.value)
@@ -133,11 +149,15 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 				</div>
 
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={assetId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						Asset
 					</label>
 					<div className="relative">
 						<select
+							id={assetId}
 							value={asset}
 							onChange={(event: ChangeEvent<HTMLSelectElement>) =>
 								setAsset(event.target.value)
@@ -155,11 +175,15 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 				</div>
 
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={amountId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						Amount
 					</label>
 					<div className="relative">
 						<input
+							id={amountId}
 							value={amount}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setAmount(event.target.value)

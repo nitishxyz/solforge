@@ -16,14 +16,17 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 		const tx = VersionedTransaction.deserialize(txData);
 
 		// Snapshot pre balances
-		const msg: any = tx.message as any;
-		const rawKeys: any[] = Array.isArray(msg.staticAccountKeys)
+		const msg = tx.message as unknown as {
+			staticAccountKeys?: unknown[];
+			accountKeys?: unknown[];
+		};
+		const rawKeys: unknown[] = Array.isArray(msg.staticAccountKeys)
 			? msg.staticAccountKeys
 			: Array.isArray(msg.accountKeys)
 				? msg.accountKeys
 				: [];
 		const staticKeys = rawKeys
-			.map((k: any) => {
+			.map((k) => {
 				try {
 					return typeof k === "string" ? new PublicKey(k) : (k as PublicKey);
 				} catch {
@@ -40,8 +43,11 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 		});
 
 		// Collect SPL token accounts from instructions for pre/post token balance snapshots
-		const msgAny: any = msg;
-		const compiled = Array.isArray(msgAny.compiledInstructions)
+		const msgAny = msg as unknown as {
+			compiledInstructions?: unknown[];
+			instructions?: unknown[];
+		};
+		const compiled: unknown[] = Array.isArray(msgAny.compiledInstructions)
 			? msgAny.compiledInstructions
 			: Array.isArray(msgAny.instructions)
 				? msgAny.instructions
@@ -67,7 +73,7 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 			} catch {}
 		}
 		// Pre token balances
-		const preTokenBalances: any[] = [];
+		const preTokenBalances: unknown[] = [];
 		const ataToInfo = new Map<
 			string,
 			{
@@ -127,8 +133,9 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 		const result = context.svm.sendTransaction(tx);
 
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const maybeErr = (result as any).err?.();
+			const rawErr = (result as { err?: unknown }).err;
+			const maybeErr =
+				typeof rawErr === "function" ? (rawErr as () => unknown)() : rawErr;
 			if (maybeErr) {
 				return context.createErrorResponse(
 					id,
@@ -152,7 +159,7 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 			}
 		});
 		// Post token balances
-		const postTokenBalances: any[] = [];
+		const postTokenBalances: unknown[] = [];
 		for (const addr of tokenAccountSet) {
 			try {
 				const pk = new PublicKey(addr);
@@ -204,11 +211,16 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 		}
 		let logs: string[] = [];
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const anyRes: any = result;
-			if (typeof anyRes?.logs === "function") logs = anyRes.logs();
-			else if (typeof anyRes?.meta === "function")
-				logs = anyRes.meta()?.logs?.() ?? [];
+			const sr = result as {
+				logs?: () => string[];
+				meta?: () => { logs?: () => string[] } | undefined;
+			};
+			if (typeof sr?.logs === "function") logs = sr.logs();
+			else if (typeof sr?.meta === "function") {
+				const m = sr.meta();
+				const lg = m?.logs;
+				if (typeof lg === "function") logs = lg();
+			}
 		} catch {}
 		context.recordTransaction(signature, tx, {
 			logs,
@@ -221,12 +233,13 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 		});
 
 		return context.createSuccessResponse(id, signature);
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		return context.createErrorResponse(
 			id,
 			-32003,
 			"Transaction failed",
-			error.message,
+			message,
 		);
 	}
 };

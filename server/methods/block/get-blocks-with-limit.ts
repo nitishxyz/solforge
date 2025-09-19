@@ -12,12 +12,8 @@ export const getBlocksWithLimit: RpcMethodHandler = (id, params, context) => {
 		const blocks: number[] = [];
 		for (let s = start; s <= end; s++) blocks.push(s);
 		return context.createSuccessResponse(id, blocks);
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32602,
-			"Invalid params",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

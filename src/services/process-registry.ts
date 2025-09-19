@@ -1,7 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { homedir } from "os";
-import { join } from "path";
-import type { Config } from "../types/config.js";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 export interface RunningValidator {
 	id: string;
@@ -143,7 +142,7 @@ export class ProcessRegistry {
 		// Ensure directory exists
 		const dir = join(homedir(), ".solforge");
 		if (!existsSync(dir)) {
-			require("fs").mkdirSync(dir, { recursive: true });
+			require("node:fs").mkdirSync(dir, { recursive: true });
 		}
 
 		writeFileSync(this.registryPath, JSON.stringify(validators, null, 2));

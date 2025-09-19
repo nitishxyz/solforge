@@ -1,12 +1,11 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import chalk from "chalk";
-import { ChildProcess, spawn } from "child_process";
 import cors from "cors";
 import express from "express";
-import { existsSync, readFileSync } from "fs";
-import type { Server } from "http";
-import { join } from "path";
+import { existsSync } from "node:fs";
+import type { Server } from "node:http";
+import { join } from "node:path";
 import { mintTokenToWallet as mintTokenToWalletShared } from "../commands/mint.js";
 import type { Config } from "../types/config.js";
 import { runCommand } from "../utils/shell.js";
@@ -31,8 +30,6 @@ export class APIServer {
 	private app: express.Application;
 	private server: Server | null = null;
 	private config: APIServerConfig;
-	private tokenCloner: TokenCloner;
-	private programCloner: ProgramCloner;
 	private connection: Connection;
 
 	constructor(config: APIServerConfig) {
@@ -51,7 +48,7 @@ export class APIServer {
 		this.app.use(express.json());
 
 		// Request logging
-		this.app.use((req, res, next) => {
+		this.app.use((req, _res, next) => {
 			console.log(chalk.gray(`🌐 API: ${req.method} ${req.path}`));
 			next();
 		});
@@ -61,12 +58,12 @@ export class APIServer {
 		const router = express.Router();
 
 		// Health check
-		router.get("/health", (req, res) => {
+		router.get("/health", (_req, res) => {
 			res.json({ status: "ok", timestamp: new Date().toISOString() });
 		});
 
 		// Get validator info
-		router.get("/validator/info", async (req, res) => {
+		router.get("/validator/info", async (_req, res) => {
 			try {
 				const version = await this.connection.getVersion();
 				const blockHeight = await this.connection.getBlockHeight();
@@ -88,7 +85,7 @@ export class APIServer {
 		});
 
 		// Get all cloned tokens
-		router.get("/tokens", async (req, res) => {
+		router.get("/tokens", async (_req, res) => {
 			try {
 				const clonedTokens = await this.getClonedTokens();
 				res.json({
@@ -110,7 +107,7 @@ export class APIServer {
 		});
 
 		// Get all cloned programs
-		router.get("/programs", async (req, res) => {
+		router.get("/programs", async (_req, res) => {
 			try {
 				const clonedPrograms = await this.getClonedPrograms();
 				res.json({
@@ -233,7 +230,10 @@ export class APIServer {
 		// Get recent transactions
 		router.get("/transactions/recent", async (req, res) => {
 			try {
-				const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+				const limit = Math.min(
+					parseInt(req.query.limit as string, 10) || 10,
+					100,
+				);
 				const signatures = await this.connection.getSignaturesForAddress(
 					new PublicKey("11111111111111111111111111111111"), // System program
 					{ limit },
@@ -254,7 +254,7 @@ export class APIServer {
 		this.app.use("/api", router);
 
 		// 404 handler
-		this.app.use("*", (req, res) => {
+		this.app.use("*", (_req, res) => {
 			res.status(404).json({ error: "Endpoint not found" });
 		});
 	}
@@ -296,7 +296,13 @@ export class APIServer {
 		mintAddress: string,
 		walletAddress: string,
 		amount: number,
-	): Promise<any> {
+	): Promise<{
+		success: true;
+		symbol: string;
+		amount: number;
+		walletAddress: string;
+		mintAddress: string;
+	}> {
 		const clonedTokens = await this.getClonedTokens();
 		const token = findTokenByMint(clonedTokens, mintAddress);
 
@@ -321,7 +327,18 @@ export class APIServer {
 		};
 	}
 
-	private async getWalletBalances(walletAddress: string): Promise<any> {
+	private async getWalletBalances(walletAddress: string): Promise<{
+		walletAddress: string;
+		solBalance: { lamports: number; sol: number };
+		tokenBalances: Array<{
+			mint: string;
+			symbol: string;
+			balance: string;
+			decimals: number;
+			uiAmount: number | null;
+		}>;
+		timestamp: string;
+	}> {
 		try {
 			const publicKey = new PublicKey(walletAddress);
 
@@ -371,7 +388,7 @@ export class APIServer {
 							}
 						}
 					}
-				} catch (error) {}
+				} catch (_error) {}
 			}
 
 			return {
@@ -395,7 +412,12 @@ export class APIServer {
 	private async airdropSol(
 		walletAddress: string,
 		amount: number,
-	): Promise<any> {
+	): Promise<{
+		success: true;
+		amount: number;
+		walletAddress: string;
+		signature: string;
+	}> {
 		const result = await runCommand(
 			"solana",
 			[
@@ -477,6 +499,6 @@ export class APIServer {
 	}
 
 	isRunning(): boolean {
-		return this.server !== null && this.server.listening;
+		return this.server?.listening;
 	}
 }

@@ -74,7 +74,8 @@ export const getTokenLargestAccounts: RpcMethodHandler = async (
 			context: { slot: Number(context.slot) },
 			value: top,
 		});
-	} catch (e: any) {
-		return context.createErrorResponse(id, -32602, "Invalid params", e.message);
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : String(e);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

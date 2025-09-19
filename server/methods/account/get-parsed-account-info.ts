@@ -10,12 +10,8 @@ export const getParsedAccountInfo: RpcMethodHandler = async (
 	const cfg = { ...(config || {}), encoding: "jsonParsed" };
 	try {
 		return await getAccountInfo(id, [pubkey, cfg], context);
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32603,
-			"Internal error",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32603, "Internal error", message);
 	}
 };

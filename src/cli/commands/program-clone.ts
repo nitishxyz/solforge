@@ -6,12 +6,12 @@ export async function programCloneCommand(args: string[]) {
 	const { flags, rest } = parseFlags(args);
 	const programId = (
 		(rest[0] as string) ||
-		(flags["program"] as string) ||
+		(flags.program as string) ||
 		""
 	).trim();
-	const configPath = flags["config"] as string | undefined;
+	const configPath = flags.config as string | undefined;
 	const cfg = await readConfig(configPath);
-	const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
+	const endpoint = (flags.endpoint as string) || cfg.clone.endpoint;
 	const withAccounts = !!flags["with-accounts"];
 	const accountsLimit = flags["accounts-limit"]
 		? Number(flags["accounts-limit"])
@@ -56,16 +56,14 @@ export async function programAccountsCloneCommand(args: string[]) {
 	const { flags, rest } = parseFlags(args);
 	const programId = (
 		(rest[0] as string) ||
-		(flags["program"] as string) ||
+		(flags.program as string) ||
 		""
 	).trim();
-	const configPath = flags["config"] as string | undefined;
+	const configPath = flags.config as string | undefined;
 	const cfg = await readConfig(configPath);
-	const endpoint = (flags["endpoint"] as string) || cfg.clone.endpoint;
-	const limit = flags["limit"] ? Number(flags["limit"]) : undefined;
-	const filters = flags["filters"]
-		? safeJson(flags["filters"] as string)
-		: undefined;
+	const endpoint = (flags.endpoint as string) || cfg.clone.endpoint;
+	const limit = flags.limit ? Number(flags.limit) : undefined;
+	const filters = flags.filters ? safeJson(flags.filters as string) : undefined;
 	if (!programId) {
 		p.log.error(
 			"Usage: solforge program accounts clone <programId> [--endpoint URL] [--limit N] [--filters JSON]",
@@ -97,7 +95,7 @@ export async function programAccountsCloneCommand(args: string[]) {
 	}
 }
 
-function safeJson(s: string): any {
+function safeJson(s: string): unknown {
 	try {
 		return JSON.parse(s);
 	} catch {

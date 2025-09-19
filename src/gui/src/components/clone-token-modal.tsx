@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useId, useState } from "react";
 import { Modal } from "./modal";
 
 interface Props {
@@ -14,6 +14,9 @@ interface Props {
 }
 
 export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
+	const mintId = useId();
+	const endpointId = useId();
+	const holdersId = useId();
 	const [mint, setMint] = useState("");
 	const [endpoint, setEndpoint] = useState("");
 	// Default OFF to avoid hitting public RPC rate limits by cloning holders.
@@ -42,8 +45,12 @@ export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
 			setEndpoint("");
 			setHolders("20");
 			setAllAccounts(false);
-		} catch (err: any) {
-			setError(err?.message ?? String(err));
+		} catch (err: unknown) {
+			const message =
+				err && typeof err === "object" && "message" in err
+					? String((err as { message?: unknown }).message)
+					: String(err);
+			setError(message);
 		} finally {
 			setPending(false);
 		}
@@ -97,11 +104,15 @@ export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
 		>
 			<div className="space-y-5">
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={mintId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						Mint Address *
 					</label>
 					<div className="relative">
 						<input
+							id={mintId}
 							value={mint}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setMint(event.target.value)
@@ -114,11 +125,15 @@ export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
 				</div>
 
 				<div className="space-y-2">
-					<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+					<label
+						htmlFor={endpointId}
+						className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+					>
 						RPC Endpoint (Optional)
 					</label>
 					<div className="relative">
 						<input
+							id={endpointId}
 							value={endpoint}
 							onChange={(event: ChangeEvent<HTMLInputElement>) =>
 								setEndpoint(event.target.value)
@@ -173,11 +188,15 @@ export function CloneTokenModal({ isOpen, onClose, onSubmit }: Props) {
 
 							{!allAccounts && (
 								<div className="space-y-2">
-									<label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+									<label
+										htmlFor={holdersId}
+										className="block text-xs font-semibold text-gray-400 uppercase tracking-wider"
+									>
 										Top Holders Limit
 									</label>
 									<div className="relative">
 										<input
+											id={holdersId}
 											value={holders}
 											onChange={(event: ChangeEvent<HTMLInputElement>) =>
 												setHolders(event.target.value)

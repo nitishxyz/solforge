@@ -12,7 +12,7 @@ export function encodeBase58(bytes: Uint8Array): string {
 		encoded = ALPHABET[Number(remainder)] + encoded;
 	}
 	for (let i = 0; i < bytes.length && bytes[i] === 0; i++)
-		encoded = "1" + encoded;
+		encoded = `1${encoded}`;
 	return encoded || "1";
 }
 

@@ -21,7 +21,11 @@ export const getProgramAccounts: RpcMethodHandler = async (
 		const dataSlice = cfg?.dataSlice as
 			| { offset: number; length: number }
 			| undefined;
-		const filters = (cfg?.filters || []) as Array<any>;
+		type GpaFilter = {
+			dataSize?: number;
+			memcmp?: { offset?: number; bytes?: string };
+		};
+		const filters: GpaFilter[] = (cfg?.filters as unknown as GpaFilter[]) || [];
 		const limit = Math.max(1, Math.min(Number(cfg?.limit ?? 10000), 50000));
 
 		let rows: Array<{ address: string }> = [];
@@ -29,7 +33,7 @@ export const getProgramAccounts: RpcMethodHandler = async (
 			rows = (await context.store?.getAccountsByOwner(programStr, limit)) || [];
 		} catch {}
 
-		const out: any[] = [];
+		const out: unknown[] = [];
 		for (const r of rows) {
 			try {
 				const pk = new PublicKey(r.address);
@@ -210,12 +214,8 @@ export const getProgramAccounts: RpcMethodHandler = async (
 		}
 
 		return context.createSuccessResponse(id, out);
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32602,
-			"Invalid params",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

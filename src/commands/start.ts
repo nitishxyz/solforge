@@ -1,8 +1,8 @@
 import chalk from "chalk";
-import { spawn } from "child_process";
-import { existsSync, readFileSync } from "fs";
+import { spawn } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import ora from "ora";
-import { join } from "path";
+import { join } from "node:path";
 import { configManager } from "../config/manager.js";
 import { portManager } from "../services/port-manager.js";
 import type { RunningValidator } from "../services/process-registry.js";
@@ -392,7 +392,7 @@ export async function startCommand(
 						if (pidResult.success && pidResult.stdout.trim()) {
 							const pidLine = pidResult.stdout.trim().split("\n")[0];
 							if (pidLine) {
-								apiServerPid = parseInt(pidLine);
+								apiServerPid = parseInt(pidLine, 10);
 							}
 						}
 					} else {
@@ -434,7 +434,7 @@ export async function startCommand(
 		const runningValidator: RunningValidator = {
 			id: validatorId,
 			name: config.name,
-			pid: validatorProcess.pid!,
+			pid: validatorProcess.pid,
 			rpcPort: config.localnet.port,
 			faucetPort: config.localnet.faucetPort,
 			rpcUrl: `http://127.0.0.1:${config.localnet.port}`,
@@ -558,7 +558,7 @@ export async function startCommand(
 			console.log(chalk.yellow("\n📦 Cloned programs:"));
 			config.programs.forEach((program) => {
 				const name =
-					program.name || program.mainnetProgramId.slice(0, 8) + "...";
+					program.name || `${program.mainnetProgramId.slice(0, 8)}...`;
 				console.log(chalk.gray(`  - ${name}: ${program.mainnetProgramId}`));
 			});
 		}
@@ -778,8 +778,9 @@ async function waitForValidatorReady(
 /**
  * Airdrop SOL to the mint authority for fee payments
  */
+
 async function airdropSolToMintAuthority(
-	clonedToken: any,
+	clonedToken: ClonedToken,
 	rpcUrl: string,
 	debug: boolean = false,
 ): Promise<void> {
@@ -813,7 +814,7 @@ async function airdropSolToMintAuthority(
  */
 async function checkExistingClonedTokens(
 	tokens: TokenConfig[],
-	tokenCloner: TokenCloner,
+	_tokenCloner: TokenCloner,
 ): Promise<{ existingTokens: ClonedToken[]; tokensToClone: TokenConfig[] }> {
 	const existingTokens: ClonedToken[] = [];
 	const tokensToClone: TokenConfig[] = [];
@@ -851,7 +852,7 @@ async function checkExistingClonedTokens(
 				// Old format: file contains {publicKey, secretKey}
 				sharedMintAuthority = fileContent;
 			}
-		} catch (error) {
+		} catch (_error) {
 			// If we can't read the shared mint authority, treat all tokens as needing to be cloned
 			sharedMintAuthority = null;
 		}

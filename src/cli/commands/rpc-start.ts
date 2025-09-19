@@ -5,13 +5,11 @@ import { parseFlags } from "../utils/args";
 
 export async function rpcStartCommand(args: string[]) {
 	const { flags } = parseFlags(args);
-	const cfg = await readConfig(flags["config"] as string | undefined);
-	const rpcPort = Number(flags["port"] ?? cfg.server.rpcPort ?? 8899);
+	const cfg = await readConfig(flags.config as string | undefined);
+	const rpcPort = Number(flags.port ?? cfg.server.rpcPort ?? 8899);
 	const wsPort = Number(flags["ws-port"] ?? cfg.server.wsPort ?? rpcPort + 1);
 	const host =
-		flags["network"] === true
-			? "0.0.0.0"
-			: (flags["host"] as string) || "127.0.0.1";
+		flags.network === true ? "0.0.0.0" : (flags.host as string) || "127.0.0.1";
 	const dbMode =
 		(flags["db-mode"] as string) || cfg.server.db.mode || "ephemeral";
 	const dbPath =
@@ -20,7 +18,7 @@ export async function rpcStartCommand(args: string[]) {
 	const guiEnabled =
 		flags["no-gui"] === true
 			? false
-			: flags["gui"] === true
+			: flags.gui === true
 				? true
 				: cfg.gui.enabled !== false;
 
@@ -28,10 +26,12 @@ export async function rpcStartCommand(args: string[]) {
 	const guiMsg = guiEnabled ? `, GUI on ${guiPort}` : "";
 	s.start(`Starting RPC on ${host}:${rpcPort}, WS on ${wsPort}${guiMsg}...`);
 	try {
+		const mode: "ephemeral" | "persistent" =
+			dbMode === "persistent" ? "persistent" : "ephemeral";
 		const started = startRpcServers({
 			rpcPort,
 			wsPort,
-			dbMode: dbMode as any,
+			dbMode: mode,
 			dbPath,
 			host,
 			guiEnabled,

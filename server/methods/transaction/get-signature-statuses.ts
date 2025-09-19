@@ -7,7 +7,7 @@ export const getSignatureStatuses: RpcMethodHandler = async (
 ) => {
 	const [signatures] = params;
 
-	let persisted: Map<string, { slot: number; err: any | null }> = new Map();
+	let persisted: Map<string, { slot: number; err: unknown | null }> = new Map();
 	try {
 		persisted = (await context.store?.getStatuses(signatures)) || new Map();
 	} catch {}
@@ -17,7 +17,7 @@ export const getSignatureStatuses: RpcMethodHandler = async (
 			// Prefer locally recorded transactions for reliability with CLI tooling
 			const rec = context.getRecordedTransaction(sig);
 			if (rec) {
-				const errVal: any = rec.err ?? null;
+				const errVal: unknown = rec.err ?? null;
 				const status = errVal ? { Err: errVal } : { Ok: null };
 				return {
 					slot: rec.slot,
@@ -29,7 +29,7 @@ export const getSignatureStatuses: RpcMethodHandler = async (
 			}
 			const db = persisted.get(sig);
 			if (db) {
-				const errVal: any = db.err ?? null;
+				const errVal: unknown = db.err ?? null;
 				const status = errVal ? { Err: errVal } : { Ok: null };
 				return {
 					slot: db.slot,
@@ -41,13 +41,20 @@ export const getSignatureStatuses: RpcMethodHandler = async (
 			}
 
 			const sigBytes = context.decodeBase58(sig);
-			const tx = (context.svm as any).getTransaction(sigBytes);
+			const txGetter = (
+				context.svm as unknown as {
+					getTransaction?: (sig: Uint8Array) => { err?: unknown } | undefined;
+				}
+			).getTransaction;
+			const tx =
+				typeof txGetter === "function" ? txGetter(sigBytes) : undefined;
 			if (!tx) return null;
 
-			let errVal: any = null;
+			let errVal: unknown = null;
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				errVal = "err" in tx ? (tx as any).err() : null;
+				const rawErr = (tx as { err?: unknown }).err;
+				errVal =
+					typeof rawErr === "function" ? (rawErr as () => unknown)() : rawErr;
 			} catch {
 				errVal = null;
 			}

@@ -12,7 +12,7 @@ import type { RpcMethodHandler } from "../../types";
  * @see https://docs.solana.com/api/http#requestairdrop
  */
 export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
-	const [pubkeyStr, lamports, config] = params || [];
+	const [pubkeyStr, lamports, _config] = params || [];
 
 	try {
 		const toPubkey = new PublicKey(pubkeyStr);
@@ -59,13 +59,16 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		tx.sign([faucet]);
 
 		// Compute pre balances for all static account keys
-		const txMsg: any = tx.message as any;
-		const rawKeys: any[] = Array.isArray(txMsg.staticAccountKeys)
-			? txMsg.staticAccountKeys
-			: Array.isArray(txMsg.accountKeys)
-				? txMsg.accountKeys
+		const msg = tx.message as unknown as {
+			staticAccountKeys?: unknown;
+			accountKeys?: unknown;
+		};
+		const rawKeys = Array.isArray(msg.staticAccountKeys)
+			? (msg.staticAccountKeys as unknown[])
+			: Array.isArray(msg.accountKeys)
+				? (msg.accountKeys as unknown[])
 				: [];
-		const staticKeys = rawKeys.map((k: any) => {
+		const staticKeys = rawKeys.map((k) => {
 			try {
 				return typeof k === "string" ? new PublicKey(k) : (k as PublicKey);
 			} catch {
@@ -94,18 +97,22 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		const sendResult = context.svm.sendTransaction(tx);
 		// Surface errors to aid debugging
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const rawErrFun = (sendResult as any).err;
+			const rawErr = (sendResult as { err?: unknown }).err;
 			const maybeErr =
-				typeof rawErrFun === "function" ? rawErrFun() : rawErrFun;
+				typeof rawErr === "function" ? (rawErr as () => unknown)() : rawErr;
 			if (maybeErr) {
 				let logsForErr: string[] = [];
 				try {
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const anyRes: any = sendResult;
-					if (typeof anyRes?.logs === "function") logsForErr = anyRes.logs();
-					else if (typeof anyRes?.meta === "function")
-						logsForErr = anyRes.meta()?.logs?.() ?? [];
+					const sr = sendResult as {
+						logs?: () => string[];
+						meta?: () => { logs?: () => string[] } | undefined;
+					};
+					if (typeof sr?.logs === "function") logsForErr = sr.logs();
+					else if (typeof sr?.meta === "function") {
+						const m = sr.meta();
+						const lg = m?.logs;
+						if (typeof lg === "function") logsForErr = lg();
+					}
 				} catch {}
 				console.warn(
 					"[requestAirdrop] transfer failed. err=",
@@ -130,11 +137,16 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		});
 		let logs: string[] = [];
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const anyRes: any = sendResult;
-			if (typeof anyRes?.logs === "function") logs = anyRes.logs();
-			else if (typeof anyRes?.meta === "function")
-				logs = anyRes.meta()?.logs?.() ?? [];
+			const sr = sendResult as {
+				logs?: () => string[];
+				meta?: () => { logs?: () => string[] } | undefined;
+			};
+			if (typeof sr?.logs === "function") logs = sr.logs();
+			else if (typeof sr?.meta === "function") {
+				const m = sr.meta();
+				const lg = m?.logs;
+				if (typeof lg === "function") logs = lg();
+			}
 		} catch {}
 		// Verify recipient received lamports; retry once if not
 		const afterTo =
@@ -175,7 +187,9 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 				tx2.sign([faucet]);
 				const res2 = context.svm.sendTransaction(tx2);
 				try {
-					const e2 = (res2 as any).err?.() ?? (res2 as any).err;
+					const e2Raw = (res2 as { err?: unknown }).err;
+					const e2 =
+						typeof e2Raw === "function" ? (e2Raw as () => unknown)() : e2Raw;
 					if (e2) console.warn("[requestAirdrop] retry failed:", e2);
 				} catch {}
 				signature = tx2.signatures[0]
@@ -193,10 +207,13 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		}
 
 		// Try to capture error again for accurate status reporting
-		let recErr: any = null;
+		let recErr: unknown = null;
 		try {
-			const rawErrFun = (sendResult as any).err;
-			recErr = typeof rawErrFun === "function" ? rawErrFun() : rawErrFun;
+			const rawErrFun = (sendResult as { err?: unknown }).err;
+			recErr =
+				typeof rawErrFun === "function"
+					? (rawErrFun as () => unknown)()
+					: rawErrFun;
 		} catch {}
 		context.recordTransaction(signature, tx, {
 			logs,
@@ -208,12 +225,8 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		});
 
 		return context.createSuccessResponse(id, signature);
-	} catch (error: any) {
-		return context.createErrorResponse(
-			id,
-			-32602,
-			"Invalid params",
-			error.message,
-		);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(id, -32602, "Invalid params", message);
 	}
 };

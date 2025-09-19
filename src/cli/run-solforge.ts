@@ -15,7 +15,7 @@ const CONFIG_PATH = "sf.config.json";
 
 export async function runSolforge(args: string[] = []) {
 	const { flags } = parseFlags(args);
-	const ci = flags["ci"] === true || flags["y"] === true;
+	const ci = flags.ci === true || flags.y === true;
 	const config = await ensureConfig(ci);
 	await startWithConfig(config, args);
 }
@@ -53,9 +53,9 @@ async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 	const { flags } = parseFlags(args);
 	const host = String(
-		flags["network"] === true
+		flags.network === true
 			? "0.0.0.0"
-			: ((flags["host"] as string) ?? process.env.RPC_HOST ?? "127.0.0.1"),
+			: ((flags.host as string) ?? process.env.RPC_HOST ?? "127.0.0.1"),
 	);
 	const rpcPort = Number(config.server.rpcPort || defaultConfig.server.rpcPort);
 	const wsPort = Number(config.server.wsPort || rpcPort + 1);
