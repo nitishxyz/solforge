@@ -6,12 +6,13 @@ import {
 	VersionedTransaction,
 } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
+import { sendTransaction as sendTxRpc } from "../transaction/send-transaction";
 
 /**
  * Implements the requestAirdrop RPC method
  * @see https://docs.solana.com/api/http#requestairdrop
  */
-export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
+export const requestAirdrop: RpcMethodHandler = async (id, params, context) => {
 	const [pubkeyStr, lamports, _config] = params || [];
 
 	try {
@@ -122,39 +123,21 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 						}
 					})();
 
-		const sendResult = context.svm.sendTransaction(tx);
-		// Surface errors to aid debugging
-		try {
-			const rawErr = (sendResult as { err?: unknown }).err;
-			const maybeErr =
-				typeof rawErr === "function" ? (rawErr as () => unknown)() : rawErr;
-			if (maybeErr) {
-				let logsForErr: string[] = [];
-				try {
-					const sr = sendResult as {
-						logs?: () => string[];
-						meta?: () => { logs?: () => string[] } | undefined;
-					};
-					if (typeof sr?.logs === "function") logsForErr = sr.logs();
-					else if (typeof sr?.meta === "function") {
-						const m = sr.meta();
-						const lg = m?.logs;
-						if (typeof lg === "function") logsForErr = lg();
-					}
-				} catch {}
-				console.warn(
-					"[requestAirdrop] transfer failed. err=",
-					maybeErr,
-					" logs=\n",
-					logsForErr.join("\n"),
-				);
-			}
-		} catch {}
+        // Send via standard sendTransaction RPC to unify capture + persistence
+        const rawB64 = Buffer.from(tx.serialize()).toString("base64");
+        const resp = await (sendTxRpc as RpcMethodHandler)(id, [rawB64], context);
+        if ((resp as any)?.error) return resp;
+        // Surface errors to aid debugging
+        const sendResult = undefined as unknown as { err?: unknown };
+        // Any send errors would have been returned by send-transaction already
 
-		let signature = tx.signatures[0]
-			? context.encodeBase58(tx.signatures[0])
-			: context.encodeBase58(new Uint8Array(64).fill(0));
-		context.notifySignature(signature);
+        let signature = String((resp as any)?.result || "");
+        if (!signature) {
+            signature = tx.signatures[0]
+                ? context.encodeBase58(tx.signatures[0])
+                : context.encodeBase58(new Uint8Array(64).fill(0));
+        }
+        try { context.notifySignature(signature); } catch {}
         // Compute post balances and capture logs if available for explorer detail view
         let postBalances = staticKeys.map((pk) => {
             try {
@@ -191,110 +174,7 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
                 );
             }
         } catch {}
-        let logs: string[] = [];
-        let innerInstructions: unknown[] = [];
-        let computeUnits: number | null = null;
-        let returnData: { programId: string; dataBase64: string } | null = null;
-        try {
-            const DBG = process.env.DEBUG_TX_CAPTURE === "1";
-            const r: any = sendResult as any;
-            try {
-                if (typeof r?.logs === "function") logs = r.logs();
-            } catch {}
-            let metaObj: any | undefined;
-            if (
-                typeof r?.innerInstructions === "function" ||
-                typeof r?.computeUnitsConsumed === "function" ||
-                typeof r?.returnData === "function"
-            ) {
-                metaObj = r;
-            }
-            if (!metaObj && typeof r?.meta === "function") {
-                try {
-                    metaObj = r.meta();
-                    if (!logs.length && typeof metaObj?.logs === "function")
-                        logs = metaObj.logs();
-                } catch (e) {
-                    if (DBG)
-                        console.debug("[tx-capture] meta() threw while extracting:", e);
-                }
-            }
-            if (metaObj) {
-                try {
-                    const inner = metaObj.innerInstructions?.();
-                    if (Array.isArray(inner)) {
-                        innerInstructions = inner.map((group: any, index: number) => {
-                            const instructions = Array.isArray(group)
-                                ? group
-                                      .map((ii: any) => {
-                                          try {
-                                              const inst = ii.instruction?.();
-                                              const accIdxs: number[] = Array.from(
-                                                  inst?.accounts?.() || [],
-                                              );
-                                              const dataBytes: Uint8Array =
-                                                  inst?.data?.() || new Uint8Array();
-                                              return {
-                                                  programIdIndex: Number(
-                                                      inst?.programIdIndex?.() ?? 0,
-                                                  ),
-                                                  accounts: accIdxs,
-                                                  data: context.encodeBase58(dataBytes),
-                                                  stackHeight: Number(ii.stackHeight?.() ?? 0),
-                                              };
-                                          } catch {
-                                              return null;
-                                          }
-                                      })
-                                      .filter(Boolean)
-                                : [];
-                            return { index, instructions };
-                        });
-                    }
-                } catch (e) {
-                    if (DBG)
-                        console.debug(
-                            "[tx-capture] innerInstructions extraction failed:",
-                            e,
-                        );
-                }
-                try {
-                    const cu = metaObj.computeUnitsConsumed?.();
-                    if (typeof cu === "bigint") computeUnits = Number(cu);
-                } catch (e) {
-                    if (DBG)
-                        console.debug(
-                            "[tx-capture] computeUnitsConsumed extraction failed:",
-                            e,
-                        );
-                }
-                try {
-                    const rd = metaObj.returnData?.();
-                    if (rd) {
-                        const pid = new PublicKey(rd.programId()).toBase58();
-                        const dataB64 = Buffer.from(rd.data()).toString("base64");
-                        returnData = { programId: pid, dataBase64: dataB64 };
-                    }
-                } catch (e) {
-                    if (DBG)
-                        console.debug(
-                            "[tx-capture] returnData extraction failed:",
-                            e,
-                        );
-                }
-            } else if (DBG) {
-                console.debug(
-                    "[tx-capture] no metadata object found on result shape",
-                );
-            }
-        } catch {}
-        try {
-            if (process.env.DEBUG_TX_CAPTURE === "1") {
-                console.debug(
-                    `[tx-capture] requestAirdrop meta: logs=${logs.length} innerGroups=${Array.isArray(innerInstructions) ? innerInstructions.length : 0} computeUnits=${computeUnits} returnData=${returnData ? "yes" : "no"}`,
-                );
-            }
-        } catch {}
+        // Parsing, recording etc. are performed by send-transaction
 		// Verify recipient received lamports; retry once if not
 		const afterTo =
 			toIndex >= 0
@@ -354,48 +234,18 @@ export const requestAirdrop: RpcMethodHandler = (id, params, context) => {
 		}
 
 		// Try to capture error again for accurate status reporting
-		let recErr: unknown = null;
-		try {
-			const rawErrFun = (sendResult as { err?: unknown }).err;
-			recErr =
-				typeof rawErrFun === "function"
-					? (rawErrFun as () => unknown)()
-					: rawErrFun;
-		} catch {}
-        context.recordTransaction(signature, tx, {
-            logs,
-            fee: 5000,
-            blockTime: Math.floor(Date.now() / 1000),
-            preBalances,
-            postBalances,
-            err: recErr,
-            innerInstructions,
-            computeUnits,
-            returnData,
-            accountStates: (() => {
-                try {
-                    const byAddr = new Map<string, { pre?: any; post?: any }>();
-                    for (const s of preAccountStates)
-                        byAddr.set(s.address, { pre: s.pre || null });
-                    for (const s of postAccountStates) {
-                        const e = byAddr.get(s.address) || {};
-                        e.post = s.post || null;
-                        byAddr.set(s.address, e);
-                    }
-                    return Array.from(byAddr.entries()).map(([address, v]) => ({
-                        address,
-                        pre: v.pre || null,
-                        post: v.post || null,
-                    }));
-                } catch {
-                    return [] as Array<{
-                        address: string;
-                        pre?: unknown;
-                        post?: unknown;
-                    }>;
-                }
-            })(),
-        });
+        // No additional error capture; send-transaction has already recorded it
+        // Pre/post snapshots are still useful for account cache; we can upsert
+        try {
+            const snapshots = new Map<string, { pre?: any; post?: any }>();
+            for (const s of preAccountStates) snapshots.set(s.address, { pre: s.pre || null });
+            for (const s of postAccountStates) {
+                const e = snapshots.get(s.address) || {};
+                e.post = s.post || null;
+                snapshots.set(s.address, e);
+            }
+            // Not persisted here; DB already has the transaction via send-transaction
+        } catch {}
 
 		return context.createSuccessResponse(id, signature);
 	} catch (error: unknown) {
