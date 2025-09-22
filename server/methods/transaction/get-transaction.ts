@@ -1,51 +1,76 @@
 import { VersionedTransaction } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
+import { parseInstruction } from "../../lib/instruction-parser";
 
 export const getTransaction: RpcMethodHandler = async (id, params, context) => {
-	const [signature, config] = params || [];
-	const encoding = config?.encoding ?? "json";
+    const [signature, config] = params || [];
+    const encoding = config?.encoding ?? "json";
+    const DBG = process.env.DEBUG_TX_CAPTURE === "1";
+    try {
+        if (DBG) console.debug(`[tx-capture] getTransaction request: sig=${signature} enc=${encoding}`);
+    } catch {}
 
 	try {
 		const rec = context.getRecordedTransaction(signature);
-		if (rec) {
-			const tx = rec.tx;
-			if (encoding === "base64") {
-				const raw = Buffer.from(tx.serialize()).toString("base64");
-				// Top-level version is required by some clients
-				const isV0 = (() => {
-					const m = tx.message as unknown as { version?: number };
-					return typeof m?.version === "number" ? m.version === 0 : true;
-				})();
-				return context.createSuccessResponse(id, {
-					slot: rec.slot,
-					transaction: [raw, "base64"],
-					version: isV0 ? 0 : "legacy",
-					meta: {
-						status: rec.err ? { Err: rec.err } : { Ok: null },
-						err: rec.err ?? null,
-						fee: rec.fee,
-						loadedAddresses: { writable: [], readonly: [] },
-						preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
-						postBalances: Array.isArray(rec.postBalances)
-							? rec.postBalances
-							: [],
-						innerInstructions: [],
-						logMessages: rec.logs || [],
-						preTokenBalances: (() => {
-							const arr = (rec as unknown as { preTokenBalances?: unknown[] })
-								.preTokenBalances;
-							return Array.isArray(arr) ? arr : [];
-						})(),
-						postTokenBalances: (() => {
-							const arr = (rec as unknown as { postTokenBalances?: unknown[] })
-								.postTokenBalances;
-							return Array.isArray(arr) ? arr : [];
-						})(),
-						rewards: [],
-					},
-					blockTime: rec.blockTime,
-				});
-			}
+        if (rec) {
+            try {
+                if (DBG)
+                    console.debug(
+                        `[tx-capture] getTransaction hit memory: logs=${rec.logs?.length || 0} inner=${Array.isArray((rec as any).innerInstructions) ? (rec as any).innerInstructions.length : 0}`,
+                    );
+            } catch {}
+            const tx = rec.tx;
+            if (encoding === "base64") {
+                const raw = Buffer.from(tx.serialize()).toString("base64");
+                // Top-level version is required by some clients
+                const isV0 = (() => {
+                    const m = tx.message as unknown as { version?: number };
+                    return typeof m?.version === "number" ? m.version === 0 : true;
+                })();
+                return context.createSuccessResponse(id, {
+                    slot: rec.slot,
+                    transaction: [raw, "base64"],
+                    version: isV0 ? 0 : "legacy",
+                    meta: {
+                        status: rec.err ? { Err: rec.err } : { Ok: null },
+                        err: rec.err ?? null,
+                        fee: rec.fee,
+                        loadedAddresses: { writable: [], readonly: [] },
+                        preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
+                        postBalances: Array.isArray(rec.postBalances)
+                            ? rec.postBalances
+                            : [],
+                        innerInstructions: Array.isArray((rec as any).innerInstructions)
+                            ? (rec as any).innerInstructions
+                            : [],
+                        logMessages: rec.logs || [],
+                        preTokenBalances: (() => {
+                            const arr = (rec as unknown as { preTokenBalances?: unknown[] })
+                                .preTokenBalances;
+                            return Array.isArray(arr) ? arr : [];
+                        })(),
+                        postTokenBalances: (() => {
+                            const arr = (rec as unknown as { postTokenBalances?: unknown[] })
+                                .postTokenBalances;
+                            return Array.isArray(arr) ? arr : [];
+                        })(),
+                        computeUnitsConsumed:
+                            typeof (rec as any).computeUnits === "number"
+                                ? (rec as any).computeUnits
+                                : null,
+                        returnData: (() => {
+                            const rd = (rec as any).returnData as
+                                | { programId: string; dataBase64: string }
+                                | null
+                                | undefined;
+                            if (!rd) return null;
+                            return { programId: rd.programId, data: [rd.dataBase64, "base64"] };
+                        })(),
+                        rewards: [],
+                    },
+                    blockTime: rec.blockTime,
+                });
+            }
 
 			const msg = tx.message as unknown as {
 				staticAccountKeys?: unknown[];
@@ -132,94 +157,102 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 					},
 				},
 				version: isV0 ? 0 : "legacy",
-				meta: {
-					status: rec.err ? { Err: rec.err } : { Ok: null },
-					err: rec.err ?? null,
-					fee: rec.fee,
-					loadedAddresses: { writable: [], readonly: [] },
-					preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
-					postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
-					innerInstructions: [],
-					logMessages: rec.logs || [],
-					preTokenBalances: (() => {
-						const arr = (rec as unknown as { preTokenBalances?: unknown[] })
-							.preTokenBalances;
-						return Array.isArray(arr) ? arr : [];
-					})(),
-					postTokenBalances: (() => {
-						const arr = (rec as unknown as { postTokenBalances?: unknown[] })
-							.postTokenBalances;
-						return Array.isArray(arr) ? arr : [];
-					})(),
-					rewards: [],
-				},
-				blockTime: rec.blockTime,
-			};
+                meta: {
+                    status: rec.err ? { Err: rec.err } : { Ok: null },
+                    err: rec.err ?? null,
+                    fee: rec.fee,
+                    loadedAddresses: { writable: [], readonly: [] },
+                    preBalances: Array.isArray(rec.preBalances) ? rec.preBalances : [],
+                    postBalances: Array.isArray(rec.postBalances) ? rec.postBalances : [],
+                    innerInstructions: Array.isArray((rec as any).innerInstructions)
+                        ? (rec as any).innerInstructions
+                        : [],
+                    logMessages: rec.logs || [],
+                    preTokenBalances: (() => {
+                        const arr = (rec as unknown as { preTokenBalances?: unknown[] })
+                            .preTokenBalances;
+                        return Array.isArray(arr) ? arr : [];
+                    })(),
+                    postTokenBalances: (() => {
+                        const arr = (rec as unknown as { postTokenBalances?: unknown[] })
+                            .postTokenBalances;
+                        return Array.isArray(arr) ? arr : [];
+                    })(),
+                    computeUnitsConsumed:
+                        typeof (rec as any).computeUnits === "number"
+                            ? (rec as any).computeUnits
+                            : null,
+                    returnData: (() => {
+                        const rd = (rec as any).returnData as
+                            | { programId: string; dataBase64: string }
+                            | null
+                            | undefined;
+                        if (!rd) return null;
+                        return { programId: rd.programId, data: [rd.dataBase64, "base64"] };
+                    })(),
+                    rewards: [],
+                },
+                blockTime: rec.blockTime,
+            };
 
-			if (encoding === "jsonParsed") {
-				const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
-				const accountKeysParsed = accountKeys.map((pk: string, i: number) => ({
-					pubkey: pk,
-					signer:
-						typeof msg.isAccountSigner === "function"
-							? !!msg.isAccountSigner(i)
-							: i < (header?.numRequiredSignatures ?? 0),
-					writable:
-						typeof msg.isAccountWritable === "function"
-							? !!msg.isAccountWritable(i)
-							: i < (header?.numRequiredSignatures ?? 0),
-				}));
-				const parsedInstructions = compiled.map((ci) => {
-					const c = ci as {
-						programIdIndex: number;
-						accountKeyIndexes?: number[];
-						accounts?: number[];
-						data: Uint8Array | number[];
-					};
-					const programId = accountKeys[c.programIdIndex];
-					let parsed: unknown;
-					try {
-						const data: Uint8Array =
-							c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
-						if (programId === SYSTEM_PROGRAM_ID && data.length >= 12) {
-							const dv = new DataView(
-								data.buffer,
-								data.byteOffset,
-								data.byteLength,
-							);
-							const discriminator = dv.getUint32(0, true);
-							if (
-								discriminator === 2 &&
-								(ci.accountKeyIndexes?.length ?? 0) >= 2
-							) {
-								const lamports = Number(dv.getBigUint64(4, true));
-								const source = accountKeys[c.accountKeyIndexes?.[0] as number];
-								const destination =
-									accountKeys[c.accountKeyIndexes?.[1] as number];
-								parsed = {
-									type: "transfer",
-									info: { source, destination, lamports },
-								};
-							}
-						}
-					} catch {}
-					if (parsed) return { program: "system", programId, parsed };
-					return {
-						programId,
-						accounts: (c.accountKeyIndexes || []).map(
-							(ix: number) => accountKeys[ix],
-						),
-						data: context.encodeBase58(
-							c.data instanceof Uint8Array ? c.data : Buffer.from(c.data),
-						),
-					};
-				});
-				(result.transaction.message as { accountKeys: unknown[] }).accountKeys =
-					accountKeysParsed;
-				(
-					result.transaction.message as { instructions: unknown[] }
-				).instructions = parsedInstructions as unknown[];
-			}
+            if (encoding === "jsonParsed") {
+                const accountKeysParsed = accountKeys.map((pk: string, i: number) => ({
+                    pubkey: pk,
+                    signer:
+                        typeof msg.isAccountSigner === "function"
+                            ? !!msg.isAccountSigner(i)
+                            : i < (header?.numRequiredSignatures ?? 0),
+                    writable:
+                        typeof msg.isAccountWritable === "function"
+                            ? !!msg.isAccountWritable(i)
+                            : i < (header?.numRequiredSignatures ?? 0),
+                }));
+                const parsedInstructions = compiled.map((ci) => {
+                    const c = ci as {
+                        programIdIndex: number;
+                        accountKeyIndexes?: number[];
+                        accounts?: number[];
+                        data: Uint8Array | number[];
+                    };
+                    const dataBytes: Uint8Array =
+                        c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
+                    const accountsIdx = Array.from(
+                        c.accountKeyIndexes || c.accounts || [],
+                    );
+                    const programId = accountKeys[c.programIdIndex];
+                    return parseInstruction(
+                        programId,
+                        accountsIdx,
+                        context.encodeBase58(dataBytes),
+                        accountKeys,
+                    );
+                });
+                (result.transaction.message as { accountKeys: unknown[] }).accountKeys =
+                    accountKeysParsed;
+                (
+                    result.transaction.message as { instructions: unknown[] }
+                ).instructions = parsedInstructions as unknown[];
+                // Parse inner instructions using the same parser
+                try {
+                    const inner = (result.meta as any)?.innerInstructions as
+                        | Array<{ index: number; instructions: any[] }>
+                        | undefined;
+                    if (Array.isArray(inner)) {
+                        const parsedInner = inner.map((group) => ({
+                            index: group.index,
+                            instructions: (group.instructions || []).map((ii) => {
+                                const accountsIdx = Array.isArray(ii.accounts)
+                                    ? ii.accounts
+                                    : [];
+                                const dataB58 = typeof ii.data === "string" ? ii.data : String(ii.data ?? "");
+                                const pid = accountKeys[ii.programIdIndex ?? 0] || accountKeys[0];
+                                return parseInstruction(pid, accountsIdx, dataB58, accountKeys);
+                            }),
+                        }));
+                        (result.meta as any).innerInstructions = parsedInner;
+                    }
+                } catch {}
+            }
 
 			return context.createSuccessResponse(id, result);
 		}
@@ -227,37 +260,54 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 		// Fallback: persistent store
 		try {
 			const row = await context.store?.getTransaction(signature);
-			if (row) {
-				const errVal = row.errJson ? JSON.parse(row.errJson) : null;
-				const preBalances = JSON.parse(row.preBalancesJson || "[]");
-				const postBalances = JSON.parse(row.postBalancesJson || "[]");
-				const logs = JSON.parse(row.logsJson || "[]");
-				const versionVal =
-					row.version === "0" || row.version === 0 ? 0 : row.version;
-				if (encoding === "base64") {
-					return context.createSuccessResponse(id, {
-						slot: Number(row.slot),
-						transaction: [row.rawBase64, "base64"],
-						version: versionVal,
-						meta: {
-							status: errVal ? { Err: errVal } : { Ok: null },
-							err: errVal,
-							fee: Number(row.fee),
-							loadedAddresses: { writable: [], readonly: [] },
-							preBalances,
-							postBalances,
-							innerInstructions: [],
-							logMessages: logs,
-							preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
-							postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
-							rewards: [],
-						},
-						blockTime: row.blockTime ? Number(row.blockTime) : null,
-					});
-				} else if (encoding === "jsonParsed") {
-					// Build jsonParsed similar to in-memory path
-					const raw = Buffer.from(row.rawBase64, "base64");
-					const tx = VersionedTransaction.deserialize(raw);
+            if (row) {
+                try {
+                    if (DBG)
+                        console.debug(
+                            `[tx-capture] getTransaction hit sqlite: slot=${row.slot} logs=${JSON.parse(row.logsJson || '[]').length} inner=${JSON.parse(row.innerInstructionsJson || '[]').length}`,
+                        );
+                } catch {}
+                const errVal = row.errJson ? JSON.parse(row.errJson) : null;
+                const preBalances = JSON.parse(row.preBalancesJson || "[]");
+                const postBalances = JSON.parse(row.postBalancesJson || "[]");
+                const logs = JSON.parse(row.logsJson || "[]");
+                const inner = JSON.parse(row.innerInstructionsJson || "[]");
+                const versionVal =
+                    row.version === "0" || row.version === 0 ? 0 : row.version;
+                if (encoding === "base64") {
+                    return context.createSuccessResponse(id, {
+                        slot: Number(row.slot),
+                        transaction: [row.rawBase64, "base64"],
+                        version: versionVal,
+                        meta: {
+                            status: errVal ? { Err: errVal } : { Ok: null },
+                            err: errVal,
+                            fee: Number(row.fee),
+                            loadedAddresses: { writable: [], readonly: [] },
+                            preBalances,
+                            postBalances,
+                            innerInstructions: Array.isArray(inner) ? inner : [],
+                            logMessages: logs,
+                            preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+                            postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
+                            computeUnitsConsumed:
+                                row.computeUnits != null ? Number(row.computeUnits) : null,
+                            returnData: (() => {
+                                if (row.returnDataProgramId && row.returnDataBase64)
+                                    return {
+                                        programId: row.returnDataProgramId,
+                                        data: [row.returnDataBase64, "base64"],
+                                    };
+                                return null;
+                            })(),
+                            rewards: [],
+                        },
+                        blockTime: row.blockTime ? Number(row.blockTime) : null,
+                    });
+                } else if (encoding === "jsonParsed") {
+                    // Build jsonParsed similar to in-memory path
+                    const raw = Buffer.from(row.rawBase64, "base64");
+                    const tx = VersionedTransaction.deserialize(raw);
 					const msg = tx.message as unknown as {
 						staticAccountKeys?: unknown[];
 						accountKeys?: unknown[];
@@ -293,54 +343,26 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 						: Array.isArray(msg.instructions)
 							? msg.instructions
 							: [];
-					const parsedInstructions = compiled.map((ci) => {
-						const c = ci as {
-							programIdIndex: number;
-							accountKeyIndexes?: number[];
-							accounts?: number[];
-							data: Uint8Array | number[];
-						};
-						const programId = accountKeys[c.programIdIndex];
-						let parsed: unknown;
-						try {
-							const data: Uint8Array =
-								c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
-							// Minimal system transfer parser
-							if (
-								programId === "11111111111111111111111111111111" &&
-								data.length >= 12
-							) {
-								const dv = new DataView(
-									data.buffer,
-									data.byteOffset,
-									data.byteLength,
-								);
-								const discriminator = dv.getUint32(0, true);
-								if (
-									discriminator === 2 &&
-									(ci.accountKeyIndexes?.length ?? 0) >= 2
-								) {
-									const lamports = Number(dv.getBigUint64(4, true));
-									const source = accountKeys[c.accountKeyIndexes?.[0]];
-									const destination = accountKeys[c.accountKeyIndexes?.[1]];
-									parsed = {
-										type: "transfer",
-										info: { source, destination, lamports },
-									};
-								}
-							}
-						} catch {}
-						if (parsed) return { program: "system", programId, parsed };
-						return {
-							programId,
-							accounts: (c.accountKeyIndexes || []).map(
-								(ix: number) => accountKeys[ix],
-							),
-							data: context.encodeBase58(
-								c.data instanceof Uint8Array ? c.data : Buffer.from(c.data),
-							),
-						};
-					});
+                    const parsedInstructions = compiled.map((ci) => {
+                        const c = ci as {
+                            programIdIndex: number;
+                            accountKeyIndexes?: number[];
+                            accounts?: number[];
+                            data: Uint8Array | number[];
+                        };
+                        const dataBytes: Uint8Array =
+                            c.data instanceof Uint8Array ? c.data : Buffer.from(c.data);
+                        const accountsIdx = Array.from(
+                            c.accountKeyIndexes || c.accounts || [],
+                        );
+                        const programId = accountKeys[c.programIdIndex];
+                        return parseInstruction(
+                            programId,
+                            accountsIdx,
+                            context.encodeBase58(dataBytes),
+                            accountKeys,
+                        );
+                    });
 					const accountKeysParsed = accountKeys.map(
 						(pk: string, i: number) => ({
 							pubkey: pk,
@@ -354,36 +376,65 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 									: i < (header?.numRequiredSignatures ?? 0),
 						}),
 					);
-					const result = {
-						slot: Number(row.slot),
-						transaction: {
-							signatures: [signature],
-							message: {
-								accountKeys: accountKeysParsed,
-								header,
-								recentBlockhash: msg.recentBlockhash || "",
-								instructions: parsedInstructions,
-								addressTableLookups: msg.addressTableLookups || [],
-							},
-						},
-						version: row.version === "0" || row.version === 0 ? 0 : row.version,
-						meta: {
-							status: errVal ? { Err: errVal } : { Ok: null },
-							err: errVal,
-							fee: Number(row.fee),
-							loadedAddresses: { writable: [], readonly: [] },
-							preBalances,
-							postBalances,
-							innerInstructions: [],
-							logMessages: logs,
-							preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
-							postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
-							rewards: [],
-						},
-						blockTime: row.blockTime ? Number(row.blockTime) : null,
-					};
-					return context.createSuccessResponse(id, result);
-				} else {
+                    const result = {
+                        slot: Number(row.slot),
+                        transaction: {
+                            signatures: [signature],
+                            message: {
+                                accountKeys: accountKeysParsed,
+                                header,
+                                recentBlockhash: msg.recentBlockhash || "",
+                                instructions: parsedInstructions,
+                                addressTableLookups: msg.addressTableLookups || [],
+                            },
+                        },
+                        version: row.version === "0" || row.version === 0 ? 0 : row.version,
+                        meta: {
+                            status: errVal ? { Err: errVal } : { Ok: null },
+                            err: errVal,
+                            fee: Number(row.fee),
+                            loadedAddresses: { writable: [], readonly: [] },
+                            preBalances,
+                            postBalances,
+                            innerInstructions: Array.isArray(inner) ? inner : [],
+                            logMessages: logs,
+                            preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+                            postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
+                            computeUnitsConsumed:
+                                row.computeUnits != null ? Number(row.computeUnits) : null,
+                            returnData: (() => {
+                                if (row.returnDataProgramId && row.returnDataBase64)
+                                    return {
+                                        programId: row.returnDataProgramId,
+                                        data: [row.returnDataBase64, "base64"],
+                                    };
+                                return null;
+                            })(),
+                            rewards: [],
+                        },
+                        blockTime: row.blockTime ? Number(row.blockTime) : null,
+                    };
+                    // Also parse inner instructions from DB row
+                    try {
+                        const innerSrc = JSON.parse(row.innerInstructionsJson || "[]");
+                        const innerParsed = (innerSrc as any[]).map((group) => ({
+                            index: Number(group.index || 0),
+                            instructions: Array.isArray(group.instructions)
+                                ? group.instructions.map((ii: any) =>
+                                      parseInstruction(
+                                          accountKeys[ii.programIdIndex ?? 0] || accountKeys[0],
+                                          Array.isArray(ii.accounts) ? ii.accounts : [],
+                                          typeof ii.data === "string" ? ii.data : String(ii.data ?? ""),
+                                          accountKeys,
+                                      ),
+                                  )
+                                : [],
+                        }));
+                        (result as any).meta.innerInstructions = innerParsed;
+                    } catch {}
+
+                    return context.createSuccessResponse(id, result);
+                } else {
 					const raw = Buffer.from(row.rawBase64, "base64");
 					const tx = VersionedTransaction.deserialize(raw);
 					const msg = tx.message as unknown as {
@@ -434,36 +485,46 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 							),
 						};
 					});
-					const result = {
-						slot: Number(row.slot),
-						transaction: {
-							signatures: [signature],
-							message: {
-								accountKeys,
-								header,
-								recentBlockhash: msg.recentBlockhash || "",
-								instructions,
-								addressTableLookups: msg.addressTableLookups || [],
-							},
-						},
-						version: versionVal,
-						meta: {
-							status: errVal ? { Err: errVal } : { Ok: null },
-							err: errVal,
-							fee: Number(row.fee),
-							loadedAddresses: { writable: [], readonly: [] },
-							preBalances,
-							postBalances,
-							innerInstructions: [],
-							logMessages: logs,
-							preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
-							postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
-							rewards: [],
-						},
-						blockTime: row.blockTime ? Number(row.blockTime) : null,
-					};
-					return context.createSuccessResponse(id, result);
-				}
+                    const result = {
+                        slot: Number(row.slot),
+                        transaction: {
+                            signatures: [signature],
+                            message: {
+                                accountKeys,
+                                header,
+                                recentBlockhash: msg.recentBlockhash || "",
+                                instructions,
+                                addressTableLookups: msg.addressTableLookups || [],
+                            },
+                        },
+                        version: versionVal,
+                        meta: {
+                            status: errVal ? { Err: errVal } : { Ok: null },
+                            err: errVal,
+                            fee: Number(row.fee),
+                            loadedAddresses: { writable: [], readonly: [] },
+                            preBalances,
+                            postBalances,
+                            innerInstructions: Array.isArray(inner) ? inner : [],
+                            logMessages: logs,
+                            preTokenBalances: JSON.parse(row.preTokenBalancesJson || "[]"),
+                            postTokenBalances: JSON.parse(row.postTokenBalancesJson || "[]"),
+                            computeUnitsConsumed:
+                                row.computeUnits != null ? Number(row.computeUnits) : null,
+                            returnData: (() => {
+                                if (row.returnDataProgramId && row.returnDataBase64)
+                                    return {
+                                        programId: row.returnDataProgramId,
+                                        data: [row.returnDataBase64, "base64"],
+                                    };
+                                return null;
+                            })(),
+                            rewards: [],
+                        },
+                        blockTime: row.blockTime ? Number(row.blockTime) : null,
+                    };
+                    return context.createSuccessResponse(id, result);
+                }
 			}
 		} catch {}
 
