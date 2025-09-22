@@ -1,0 +1,3129 @@
+{
+  "address": "JARSq9S9RgyynuAwcdWh2yEG6MbhfntWq7zjXjAo87uQ",
+  "metadata": {
+    "name": "soljar",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "create_deposit",
+      "discriminator": [
+        157,
+        30,
+        11,
+        129,
+        16,
+        166,
+        115,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tip_link",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  112,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tip_link_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "relations": [
+            "tip_link"
+          ]
+        },
+        {
+          "name": "deposit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.deposit_count",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "supporter_index",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116,
+                  101,
+                  114,
+                  95,
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.supporter_index",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "supporter",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tip_link_id",
+          "type": "string"
+        },
+        {
+          "name": "referrer",
+          "type": "string"
+        },
+        {
+          "name": "memo",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_invoice",
+      "discriminator": [
+        154,
+        170,
+        31,
+        135,
+        134,
+        100,
+        156,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "signer1",
+          "docs": [
+            "First signer (owner for single-sig, or one of active keys for multisig)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "signer2",
+          "docs": [
+            "Second signer (only used for multisig, should be default pubkey for single-sig)"
+          ]
+        },
+        {
+          "name": "signer3",
+          "docs": [
+            "Third signer (only used for multisig, should be default pubkey for single-sig)"
+          ]
+        },
+        {
+          "name": "paymaster",
+          "docs": [
+            "The paymaster for invoice creation (can be same as signer1)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "account",
+          "docs": [
+            "The AccountV2 PDA that owns the route"
+          ]
+        },
+        {
+          "name": "multisig_keys",
+          "docs": [
+            "The MultisigKeys account (only required for multisig accounts)"
+          ]
+        },
+        {
+          "name": "route_by_id",
+          "docs": [
+            "The route_by_id mapping to find the route"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  98,
+                  121,
+                  95,
+                  105,
+                  100,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "route_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "route",
+          "docs": [
+            "The route that will own this invoice"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "route_by_id.account",
+                "account": "RouteByIdV2"
+              },
+              {
+                "kind": "account",
+                "path": "route_by_id.route_number",
+                "account": "RouteByIdV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "invoice",
+          "docs": [
+            "The new invoice to be created"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  118,
+                  111,
+                  105,
+                  99,
+                  101,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "route"
+              },
+              {
+                "kind": "account",
+                "path": "route.invoice_count",
+                "account": "RouteV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route_id",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "expires_at",
+          "type": {
+            "option": "i64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_route",
+      "discriminator": [
+        195,
+        0,
+        51,
+        188,
+        181,
+        114,
+        84,
+        177
+      ],
+      "accounts": [
+        {
+          "name": "signer1",
+          "docs": [
+            "First signer (owner for single-sig, or one of active keys for multisig)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "signer2",
+          "docs": [
+            "Second signer (only used for multisig, should be default pubkey for single-sig)"
+          ]
+        },
+        {
+          "name": "signer3",
+          "docs": [
+            "Third signer (only used for multisig, should be default pubkey for single-sig)"
+          ]
+        },
+        {
+          "name": "paymaster",
+          "docs": [
+            "The paymaster for route creation (can be same as signer1)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "soljar_account",
+          "docs": [
+            "The AccountV2 PDA that will own this route"
+          ],
+          "writable": true
+        },
+        {
+          "name": "multisig_keys",
+          "docs": [
+            "The MultisigKeys account (only required for multisig accounts)"
+          ]
+        },
+        {
+          "name": "route",
+          "docs": [
+            "The new route to be created"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "soljar_account"
+              },
+              {
+                "kind": "arg",
+                "path": "route_number"
+              }
+            ]
+          }
+        },
+        {
+          "name": "route_by_id",
+          "docs": [
+            "The route_by_id mapping for global uniqueness"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  98,
+                  121,
+                  95,
+                  105,
+                  100,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "route_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "route_id",
+          "type": "string"
+        },
+        {
+          "name": "route_number",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "create_spl_deposit",
+      "discriminator": [
+        101,
+        42,
+        125,
+        13,
+        104,
+        16,
+        50,
+        48
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tip_link",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  112,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tip_link_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "relations": [
+            "tip_link"
+          ]
+        },
+        {
+          "name": "deposit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.deposit_count",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "source_token_account",
+          "writable": true
+        },
+        {
+          "name": "supporter_index",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116,
+                  101,
+                  114,
+                  95,
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.supporter_index",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "supporter",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "tip_link_id",
+          "type": "string"
+        },
+        {
+          "name": "referrer",
+          "type": "string"
+        },
+        {
+          "name": "memo",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_supporter_index",
+      "discriminator": [
+        29,
+        115,
+        162,
+        147,
+        43,
+        70,
+        81,
+        126
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  106,
+                  97,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "supporter_index",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116,
+                  101,
+                  114,
+                  95,
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "create_user",
+      "discriminator": [
+        108,
+        227,
+        130,
+        130,
+        252,
+        109,
+        75,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_by_name",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  106,
+                  97,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tip_link",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  112,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "create_withdrawl",
+      "discriminator": [
+        11,
+        89,
+        236,
+        15,
+        11,
+        223,
+        1,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  106,
+                  97,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "withdrawl",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  105,
+                  116,
+                  104,
+                  100,
+                  114,
+                  97,
+                  119,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.withdrawl_count",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "currency_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "deposit_v2",
+      "discriminator": [
+        109,
+        75,
+        69,
+        153,
+        172,
+        218,
+        146,
+        19
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "docs": [
+            "The depositor making the payment"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "route_by_id",
+          "docs": [
+            "The route_by_id mapping to find the route"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  98,
+                  121,
+                  95,
+                  105,
+                  100,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "route_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "account",
+          "docs": [
+            "The account that owns the route"
+          ],
+          "writable": true,
+          "relations": [
+            "route_by_id"
+          ]
+        },
+        {
+          "name": "route",
+          "docs": [
+            "The route receiving the deposit"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "route_by_id.account",
+                "account": "RouteByIdV2"
+              },
+              {
+                "kind": "account",
+                "path": "route_by_id.route_number",
+                "account": "RouteByIdV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deposit",
+          "docs": [
+            "The deposit record"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              },
+              {
+                "kind": "account",
+                "path": "account.total_deposit_count",
+                "account": "AccountV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The vault for holding funds"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "USDC mint account"
+          ]
+        },
+        {
+          "name": "depositor_token_account",
+          "docs": [
+            "Depositor's USDC token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "docs": [
+            "Vault's USDC token account (created during setup)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  198,
+                  250,
+                  122,
+                  243,
+                  190,
+                  219,
+                  173,
+                  58,
+                  61,
+                  101,
+                  243,
+                  106,
+                  171,
+                  201,
+                  116,
+                  49,
+                  177,
+                  187,
+                  228,
+                  194,
+                  210,
+                  246,
+                  224,
+                  228,
+                  124,
+                  166,
+                  2,
+                  3,
+                  69,
+                  47,
+                  93,
+                  97
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Associated token program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "route_id",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "invoice_id",
+          "type": {
+            "option": "u32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute_multisig_transaction",
+      "discriminator": [
+        244,
+        174,
+        151,
+        214,
+        52,
+        196,
+        224,
+        95
+      ],
+      "accounts": [
+        {
+          "name": "account",
+          "docs": [
+            "The account that owns the vault (must be multisig)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account.owner",
+                "account": "AccountV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "multisig_keys",
+          "docs": [
+            "The multisig keys account containing active and recovery keys"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103,
+                  95,
+                  107,
+                  101,
+                  121,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The vault PDA that acts as the smart wallet signer for transactions"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for CPI calls"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "TransactionInstruction"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute_transaction",
+      "discriminator": [
+        231,
+        173,
+        49,
+        91,
+        235,
+        24,
+        68,
+        19
+      ],
+      "accounts": [
+        {
+          "name": "account",
+          "docs": [
+            "The account that owns the vault"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account.owner",
+                "account": "AccountV2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The vault PDA that acts as the smart wallet signer for transactions"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "docs": [
+            "The owner of the account (must be signer)"
+          ],
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for CPI calls"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "instructions",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "TransactionInstruction"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup_account_v2",
+      "discriminator": [
+        120,
+        158,
+        80,
+        25,
+        115,
+        184,
+        237,
+        25
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The owner/creator of the account (must be signer)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "paymaster",
+          "docs": [
+            "The paymaster for account creation (can be same as owner)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "account",
+          "docs": [
+            "The main AccountV2 PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "route",
+          "docs": [
+            "The first route (route number 0)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "route_by_id",
+          "docs": [
+            "The route_by_id mapping for global uniqueness"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  116,
+                  101,
+                  95,
+                  98,
+                  121,
+                  95,
+                  105,
+                  100,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "route_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The vault PDA for holding funds (derived but not initialized as an account)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint",
+          "docs": [
+            "USDC mint account"
+          ]
+        },
+        {
+          "name": "vault_usdc_account",
+          "docs": [
+            "Vault's USDC token account (created during setup)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Token program for token operations"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Associated token program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "route_id",
+          "type": "string"
+        },
+        {
+          "name": "default_currency_id",
+          "type": {
+            "option": "u8"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup_multisig",
+      "discriminator": [
+        147,
+        66,
+        31,
+        44,
+        255,
+        11,
+        108,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The owner of the account (must be signer and match account.owner)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "device_key",
+          "docs": [
+            "The device key (must be signer to prove ownership)"
+          ],
+          "signer": true
+        },
+        {
+          "name": "passkey",
+          "docs": [
+            "The passkey (must be signer to prove ownership)"
+          ],
+          "signer": true
+        },
+        {
+          "name": "paymaster",
+          "docs": [
+            "The paymaster for multisig setup (can be same as owner)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "account",
+          "docs": [
+            "The AccountV2 that will be converted to multisig"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  95,
+                  118,
+                  50
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "multisig_keys",
+          "docs": [
+            "The MultisigKeys account to be created"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  117,
+                  108,
+                  116,
+                  105,
+                  115,
+                  105,
+                  103,
+                  95,
+                  107,
+                  101,
+                  121,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw_spl_tokens",
+      "discriminator": [
+        30,
+        150,
+        152,
+        52,
+        225,
+        67,
+        73,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "jar",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  106,
+                  97,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "withdrawl",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  105,
+                  116,
+                  104,
+                  100,
+                  114,
+                  97,
+                  119,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "jar.withdrawl_count",
+                "account": "Jar"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "jar"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "associated_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AccountV2",
+      "discriminator": [
+        81,
+        219,
+        132,
+        77,
+        5,
+        44,
+        24,
+        91
+      ]
+    },
+    {
+      "name": "Deposit",
+      "discriminator": [
+        148,
+        146,
+        121,
+        66,
+        207,
+        173,
+        21,
+        227
+      ]
+    },
+    {
+      "name": "DepositV2",
+      "discriminator": [
+        113,
+        199,
+        120,
+        239,
+        17,
+        187,
+        28,
+        196
+      ]
+    },
+    {
+      "name": "InvoiceV2",
+      "discriminator": [
+        232,
+        102,
+        108,
+        236,
+        63,
+        85,
+        251,
+        124
+      ]
+    },
+    {
+      "name": "Jar",
+      "discriminator": [
+        197,
+        50,
+        234,
+        142,
+        247,
+        216,
+        114,
+        137
+      ]
+    },
+    {
+      "name": "MultisigKeys",
+      "discriminator": [
+        38,
+        162,
+        112,
+        77,
+        125,
+        125,
+        79,
+        35
+      ]
+    },
+    {
+      "name": "RouteByIdV2",
+      "discriminator": [
+        151,
+        153,
+        106,
+        240,
+        33,
+        6,
+        132,
+        172
+      ]
+    },
+    {
+      "name": "RouteV2",
+      "discriminator": [
+        95,
+        114,
+        89,
+        205,
+        239,
+        82,
+        202,
+        35
+      ]
+    },
+    {
+      "name": "Supporter",
+      "discriminator": [
+        198,
+        125,
+        73,
+        94,
+        72,
+        40,
+        233,
+        159
+      ]
+    },
+    {
+      "name": "SupporterIndex",
+      "discriminator": [
+        89,
+        202,
+        10,
+        80,
+        80,
+        123,
+        176,
+        198
+      ]
+    },
+    {
+      "name": "TipLink",
+      "discriminator": [
+        197,
+        93,
+        252,
+        135,
+        16,
+        11,
+        146,
+        202
+      ]
+    },
+    {
+      "name": "User",
+      "discriminator": [
+        159,
+        117,
+        95,
+        227,
+        239,
+        151,
+        58,
+        236
+      ]
+    },
+    {
+      "name": "UserByName",
+      "discriminator": [
+        166,
+        9,
+        56,
+        163,
+        76,
+        235,
+        143,
+        10
+      ]
+    },
+    {
+      "name": "Withdrawl",
+      "discriminator": [
+        39,
+        119,
+        9,
+        87,
+        192,
+        193,
+        129,
+        150
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Overflow",
+      "msg": "OVERFLOW"
+    },
+    {
+      "code": 6001,
+      "name": "NoChanges",
+      "msg": "NO_CHANGES_DETECTED"
+    },
+    {
+      "code": 6002,
+      "name": "UsernameTooLong",
+      "msg": "USERNAME_TOO_LONG"
+    },
+    {
+      "code": 6003,
+      "name": "UsernameAlreadyTaken",
+      "msg": "USERNAME_ALREADY_TAKEN"
+    },
+    {
+      "code": 6004,
+      "name": "AmountOverflow",
+      "msg": "Amount overflow occurred"
+    },
+    {
+      "code": 6005,
+      "name": "TipCountOverflow",
+      "msg": "Tip count overflow occurred"
+    },
+    {
+      "code": 6006,
+      "name": "IndexOverflow",
+      "msg": "Index overflow occurred"
+    },
+    {
+      "code": 6007,
+      "name": "TotalSupportersOverflow",
+      "msg": "Total supporters overflow occurred"
+    },
+    {
+      "code": 6008,
+      "name": "PageOverflow",
+      "msg": "Page number overflow occurred"
+    },
+    {
+      "code": 6009,
+      "name": "SupporterIndexFull",
+      "msg": "Supporter index is full"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than 0"
+    },
+    {
+      "code": 6011,
+      "name": "UserCountOverflow",
+      "msg": "User count overflow occurred"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidIndexPage",
+      "msg": "Invalid index page"
+    },
+    {
+      "code": 6013,
+      "name": "TooManyTipLinks",
+      "msg": "Too many tip links"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidIdLength",
+      "msg": "Invalid ID length"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidDescriptionLength",
+      "msg": "Invalid description length"
+    },
+    {
+      "code": 6016,
+      "name": "TipLinkCountOverflow",
+      "msg": "Tip link count overflow"
+    },
+    {
+      "code": 6017,
+      "name": "ReferrerTooLong",
+      "msg": "Referrer string too long"
+    },
+    {
+      "code": 6018,
+      "name": "MemoTooLong",
+      "msg": "Memo string too long"
+    },
+    {
+      "code": 6019,
+      "name": "TooManyDeposits",
+      "msg": "Too many deposits in index"
+    },
+    {
+      "code": 6020,
+      "name": "InsufficientFundsInJar",
+      "msg": "Insufficient funds in jar"
+    },
+    {
+      "code": 6021,
+      "name": "TooManyWithdrawls",
+      "msg": "Too many withdrawls in index"
+    },
+    {
+      "code": 6022,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6023,
+      "name": "InsufficientSolBalance",
+      "msg": "Insufficient SOL balance"
+    },
+    {
+      "code": 6024,
+      "name": "InsufficientTokenBalance",
+      "msg": "Insufficient token balance"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidTokenMint",
+      "msg": "Invalid token mint"
+    },
+    {
+      "code": 6026,
+      "name": "MaxCurrenciesReached",
+      "msg": "Max currencies reached"
+    },
+    {
+      "code": 6027,
+      "name": "UnsupportedCurrency",
+      "msg": "Unsupported currency"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidCurrencyMint",
+      "msg": "Invalid currency mint"
+    },
+    {
+      "code": 6029,
+      "name": "DepositCountOverflow",
+      "msg": "Deposit count overflow"
+    },
+    {
+      "code": 6030,
+      "name": "WithdrawlCountOverflow",
+      "msg": "Withdrawl count overflow"
+    },
+    {
+      "code": 6031,
+      "name": "SupporterCountOverflow",
+      "msg": "Supporter count overflow"
+    },
+    {
+      "code": 6032,
+      "name": "UsernameNotAllowed",
+      "msg": "This username is not allowed"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidUsernameFormat",
+      "msg": "Username can only contain alphanumeric characters and underscores"
+    },
+    {
+      "code": 6034,
+      "name": "UsernameMustBeLowercase",
+      "msg": "Username must be lowercase"
+    },
+    {
+      "code": 6035,
+      "name": "TipLinkIdMustBeLowercase",
+      "msg": "Tip link ID must be lowercase"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidDeposit",
+      "msg": "Invalid deposit"
+    },
+    {
+      "code": 6037,
+      "name": "MissingAccountInfo",
+      "msg": "Missing account info"
+    },
+    {
+      "code": 6038,
+      "name": "SupporterAccountNotInitialized",
+      "msg": "Supporter account not initialized"
+    },
+    {
+      "code": 6039,
+      "name": "DepositAlreadyHasSigner",
+      "msg": "Deposit already has a signer"
+    },
+    {
+      "code": 6040,
+      "name": "JarCountOverflow",
+      "msg": "Jar count overflow"
+    },
+    {
+      "code": 6041,
+      "name": "WithdrawalCountOverflow",
+      "msg": "Withdrawal count overflow"
+    },
+    {
+      "code": 6042,
+      "name": "InvoiceCountOverflow",
+      "msg": "Invoice count overflow"
+    },
+    {
+      "code": 6043,
+      "name": "JarIdAlreadyExists",
+      "msg": "Jar ID already exists"
+    },
+    {
+      "code": 6044,
+      "name": "InvoiceAlreadyPaid",
+      "msg": "Invoice already paid"
+    },
+    {
+      "code": 6045,
+      "name": "InvoiceExpired",
+      "msg": "Invoice expired"
+    },
+    {
+      "code": 6046,
+      "name": "InvalidJarIdFormat",
+      "msg": "Invalid jar ID format"
+    },
+    {
+      "code": 6047,
+      "name": "JarNotFound",
+      "msg": "Jar not found"
+    },
+    {
+      "code": 6048,
+      "name": "InvoiceNotFound",
+      "msg": "Invoice not found"
+    },
+    {
+      "code": 6049,
+      "name": "JarInactive",
+      "msg": "Jar is inactive"
+    },
+    {
+      "code": 6050,
+      "name": "CurrencyNotSupported",
+      "msg": "Currency not supported by vault"
+    },
+    {
+      "code": 6051,
+      "name": "TotalOverflow",
+      "msg": "Total amount overflow"
+    },
+    {
+      "code": 6052,
+      "name": "UnauthorizedSigner",
+      "msg": "Unauthorized signer"
+    },
+    {
+      "code": 6053,
+      "name": "TooManySigners",
+      "msg": "Too many signers provided"
+    },
+    {
+      "code": 6054,
+      "name": "MultisigKeysRequired",
+      "msg": "Multisig keys account required"
+    },
+    {
+      "code": 6055,
+      "name": "NotMultisigAccount",
+      "msg": "Account is not multisig"
+    },
+    {
+      "code": 6056,
+      "name": "InvalidMultisigKeys",
+      "msg": "Invalid multisig keys"
+    },
+    {
+      "code": 6057,
+      "name": "InvalidJarNumber",
+      "msg": "Invalid jar number provided"
+    },
+    {
+      "code": 6058,
+      "name": "RouteCountOverflowV2",
+      "msg": "Route count overflow"
+    },
+    {
+      "code": 6059,
+      "name": "RouteNotFoundV2",
+      "msg": "Route not found"
+    },
+    {
+      "code": 6060,
+      "name": "InvalidRouteNumberV2",
+      "msg": "Invalid route number provided"
+    }
+  ],
+  "types": [
+    {
+      "name": "AccountV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "default_route_number",
+            "type": "u8"
+          },
+          {
+            "name": "default_currency_id",
+            "type": "u8"
+          },
+          {
+            "name": "route_count",
+            "type": "u8"
+          },
+          {
+            "name": "total_deposit_count",
+            "type": "u32"
+          },
+          {
+            "name": "is_multisig",
+            "type": "u8"
+          },
+          {
+            "name": "signatures_required",
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Deposit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "link_id",
+            "type": "string"
+          },
+          {
+            "name": "currency",
+            "type": "u8"
+          },
+          {
+            "name": "memo",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "currency_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "invoice_id",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InvoiceV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "invoice_number",
+            "type": "u32"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "is_paid",
+            "type": "bool"
+          },
+          {
+            "name": "paid_by",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jar",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_count",
+            "type": "u32"
+          },
+          {
+            "name": "withdrawl_count",
+            "type": "u32"
+          },
+          {
+            "name": "supporter_count",
+            "type": "u32"
+          },
+          {
+            "name": "supporter_index",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MultisigKeys",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "account",
+            "type": "pubkey"
+          },
+          {
+            "name": "active_keys",
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "recovery_keys",
+            "type": {
+              "array": [
+                "pubkey",
+                3
+              ]
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouteByIdV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "route_id_taken",
+            "type": "bool"
+          },
+          {
+            "name": "account",
+            "type": "pubkey"
+          },
+          {
+            "name": "route_number",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouteV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "route_number",
+            "type": "u8"
+          },
+          {
+            "name": "route_id",
+            "type": "string"
+          },
+          {
+            "name": "deposit_count",
+            "type": "u32"
+          },
+          {
+            "name": "invoice_count",
+            "type": "u32"
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Supporter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "tip_count",
+            "type": "u16"
+          },
+          {
+            "name": "tips",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "TipInfo"
+                  }
+                },
+                4
+              ]
+            }
+          },
+          {
+            "name": "active_tips",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SupporterIndex",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "total_items",
+            "type": "u8"
+          },
+          {
+            "name": "supporters",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TipInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "currency",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TipLink",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "jar",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransactionInstruction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "name": "account_indices",
+            "type": "bytes"
+          },
+          {
+            "name": "account_write_flags",
+            "type": {
+              "vec": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "User",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "jar",
+            "type": "pubkey"
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserByName",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "username_taken",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Withdrawl",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "jar",
+            "type": "pubkey"
+          },
+          {
+            "name": "currency",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,20 +1,27 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1757791582272,
-			"tag": "0000_friendly_millenium_guard",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1757872206845,
-			"tag": "0001_stale_sentinels",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1757791582272,
+      "tag": "0000_friendly_millenium_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1757872206845,
+      "tag": "0001_stale_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758555480354,
+      "tag": "0002_graceful_caretaker",
+      "breakpoints": true
+    }
+  ]
 }
