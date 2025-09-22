@@ -16,6 +16,7 @@ import {
 	VersionedTransaction,
 } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
+import { sendTransaction as sendTxRpc } from "../transaction/send-transaction";
 
 // Mint via a real SPL Token transaction signed by faucet (must be mint authority)
 export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
@@ -148,16 +149,15 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 			}
 		} catch {}
 
-		// Send transaction via svm
-		const _res = context.svm.sendTransaction(vtx);
-		// Compute signature (base58) from the signed transaction
-		let signatureStr = "";
-		try {
-			const sigBytes = vtx.signatures?.[0];
-			if (sigBytes)
-				signatureStr = context.encodeBase58(new Uint8Array(sigBytes));
-		} catch {}
-		if (!signatureStr) signatureStr = `mint:${ata.toBase58()}:${Date.now()}`;
+        // Send via the standard RPC sendTransaction path to unify capture/parsing
+        const rawBase64ForRpc = Buffer.from(vtx.serialize()).toString("base64");
+        const rpcResp = await (sendTxRpc as RpcMethodHandler)(
+            id,
+            [rawBase64ForRpc],
+            context,
+        );
+        if ((rpcResp as any)?.error) return rpcResp;
+        const signatureStr = String((rpcResp as any)?.result || "");
 
 		// Token balance deltas (pre/post) for ATA
 		type UiTokenAmount = {
@@ -229,34 +229,7 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 			];
 		} catch {}
 
-		// Insert into DB for explorer via context.recordTransaction for richer details
-		try {
-			const rawBase64 = Buffer.from(vtx.serialize()).toString("base64");
-			const postBalances = trackedKeys.map((pk) => {
-				try {
-					return Number(context.svm.getBalance(pk) || 0n);
-				} catch {
-					return 0;
-				}
-			});
-			const logs: string[] = ["spl-token mintToChecked"];
-			try {
-				(vtx as unknown as { serialize: () => Uint8Array }).serialize = () =>
-					Buffer.from(rawBase64, "base64");
-			} catch {}
-			context.recordTransaction(signatureStr, vtx, {
-				logs,
-				fee: 0,
-				blockTime: Math.floor(Date.now() / 1000),
-				preBalances,
-				postBalances,
-				preTokenBalances,
-				postTokenBalances,
-			});
-		} catch {}
-		try {
-			context.notifySignature(signatureStr);
-		} catch {}
+        // send-transaction already records/announces signature and persists to DB
 
 		return context.createSuccessResponse(id, {
 			ok: true,
