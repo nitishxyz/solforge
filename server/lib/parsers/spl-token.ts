@@ -12,6 +12,11 @@ import {
 } from "@solana/spl-token";
 import { u8 } from "@solana/buffer-layout";
 import { PublicKey as PK } from "@solana/web3.js";
+import {
+    TOKEN_PROGRAM_ID as TOKEN_PROGRAM_V1,
+    TOKEN_2022_PROGRAM_ID as TOKEN_PROGRAM_2022,
+    getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
 // Keep shape compatible with instruction-parser
 export type ParsedInstruction =
@@ -219,10 +224,30 @@ export function tryParseSplToken(
                         return undefined;
                     }
                 })();
+                const ownerStr = asBase58(a.data.owner);
+                const mintStr = asBase58(a.keys.mint?.pubkey) || hintMint;
+                let accountStr = asBase58(a.keys.account?.pubkey);
+                try {
+                    if (!accountStr && ownerStr && mintStr) {
+                        const ownerPk = new PK(ownerStr);
+                        const mintPk = new PK(mintStr);
+                        const programId =
+                            programIdStr === TOKEN_PROGRAM_2022.toBase58()
+                                ? TOKEN_PROGRAM_2022
+                                : TOKEN_PROGRAM_V1;
+                        const ata = getAssociatedTokenAddressSync(
+                            mintPk,
+                            ownerPk,
+                            true,
+                            programId,
+                        );
+                        accountStr = ata.toBase58();
+                    }
+                } catch {}
                 return ok(programIdStr, "initializeAccount3", {
-                    account: asBase58(a.keys.account?.pubkey),
-                    mint: asBase58(a.keys.mint?.pubkey) || hintMint,
-                    owner: asBase58(a.data.owner),
+                    account: accountStr,
+                    mint: mintStr,
+                    owner: ownerStr,
                 });
             }
 			// InitializeImmutableOwner
