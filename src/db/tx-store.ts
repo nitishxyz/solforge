@@ -7,33 +7,33 @@ import { txAccounts } from "./schema/tx-accounts";
 import { txAccountStates } from "./schema/tx-account-states";
 
 export type InsertTxBundle = {
-    signature: string;
-    slot: number;
-    blockTime?: number;
-    version: 0 | "legacy";
-    fee: number;
-    err: unknown | null;
-    rawBase64: string;
-    preBalances: number[];
-    postBalances: number[];
-    logs: string[];
-    innerInstructions?: unknown[];
-    computeUnits?: number | bigint | null;
-    returnData?: { programId: string; dataBase64: string } | null;
-    accounts: Array<{
-        address: string;
-        index: number;
-        signer: boolean;
-        writable: boolean;
-        programIdIndex?: number;
-    }>;
-    preTokenBalances?: unknown[];
-    postTokenBalances?: unknown[];
-    accountStates?: Array<{
-        address: string;
-        pre?: Partial<AccountSnapshot> | null;
-        post?: Partial<AccountSnapshot> | null;
-    }>;
+	signature: string;
+	slot: number;
+	blockTime?: number;
+	version: 0 | "legacy";
+	fee: number;
+	err: unknown | null;
+	rawBase64: string;
+	preBalances: number[];
+	postBalances: number[];
+	logs: string[];
+	innerInstructions?: unknown[];
+	computeUnits?: number | bigint | null;
+	returnData?: { programId: string; dataBase64: string } | null;
+	accounts: Array<{
+		address: string;
+		index: number;
+		signer: boolean;
+		writable: boolean;
+		programIdIndex?: number;
+	}>;
+	preTokenBalances?: unknown[];
+	postTokenBalances?: unknown[];
+	accountStates?: Array<{
+		address: string;
+		pre?: Partial<AccountSnapshot> | null;
+		post?: Partial<AccountSnapshot> | null;
+	}>;
 };
 
 export type AccountSnapshot = {
@@ -48,81 +48,79 @@ export type AccountSnapshot = {
 };
 
 export class TxStore {
-    async insertTransactionBundle(bundle: InsertTxBundle): Promise<void> {
-        const errJson = bundle.err ? JSON.stringify(bundle.err) : null;
-        await db.transaction(async (tx) => {
-            await tx
-                .insert(transactions)
-                .values({
-                    signature: bundle.signature,
-                    slot: bundle.slot,
-                    blockTime: bundle.blockTime ?? null,
-                    version: String(bundle.version),
-                    errJson,
-                    fee: bundle.fee,
-                    rawBase64: bundle.rawBase64,
-                    preBalancesJson: JSON.stringify(bundle.preBalances ?? []),
-                    postBalancesJson: JSON.stringify(bundle.postBalances ?? []),
-                    logsJson: JSON.stringify(bundle.logs ?? []),
-                    preTokenBalancesJson: JSON.stringify(bundle.preTokenBalances ?? []),
-                    postTokenBalancesJson: JSON.stringify(bundle.postTokenBalances ?? []),
-                    innerInstructionsJson: JSON.stringify(bundle.innerInstructions ?? []),
-                    computeUnits:
-                        bundle.computeUnits == null
-                            ? null
-                            : Number(bundle.computeUnits),
-                    returnDataProgramId: bundle.returnData?.programId ?? null,
-                    returnDataBase64: bundle.returnData?.dataBase64 ?? null,
-                })
-                .onConflictDoNothing();
+	async insertTransactionBundle(bundle: InsertTxBundle): Promise<void> {
+		const errJson = bundle.err ? JSON.stringify(bundle.err) : null;
+		await db.transaction(async (tx) => {
+			await tx
+				.insert(transactions)
+				.values({
+					signature: bundle.signature,
+					slot: bundle.slot,
+					blockTime: bundle.blockTime ?? null,
+					version: String(bundle.version),
+					errJson,
+					fee: bundle.fee,
+					rawBase64: bundle.rawBase64,
+					preBalancesJson: JSON.stringify(bundle.preBalances ?? []),
+					postBalancesJson: JSON.stringify(bundle.postBalances ?? []),
+					logsJson: JSON.stringify(bundle.logs ?? []),
+					preTokenBalancesJson: JSON.stringify(bundle.preTokenBalances ?? []),
+					postTokenBalancesJson: JSON.stringify(bundle.postTokenBalances ?? []),
+					innerInstructionsJson: JSON.stringify(bundle.innerInstructions ?? []),
+					computeUnits:
+						bundle.computeUnits == null ? null : Number(bundle.computeUnits),
+					returnDataProgramId: bundle.returnData?.programId ?? null,
+					returnDataBase64: bundle.returnData?.dataBase64 ?? null,
+				})
+				.onConflictDoNothing();
 
-            if (Array.isArray(bundle.accounts) && bundle.accounts.length > 0) {
-                await tx
-                    .insert(txAccounts)
-                    .values(
-                        bundle.accounts.map((a) => ({
-                            signature: bundle.signature,
-                            accountIndex: a.index,
-                            address: a.address,
-                            signer: a.signer ? 1 : 0,
-                            writable: a.writable ? 1 : 0,
-                            programIdIndex: a.programIdIndex ?? null,
-                        })),
-                    )
-                    .onConflictDoNothing();
+			if (Array.isArray(bundle.accounts) && bundle.accounts.length > 0) {
+				await tx
+					.insert(txAccounts)
+					.values(
+						bundle.accounts.map((a) => ({
+							signature: bundle.signature,
+							accountIndex: a.index,
+							address: a.address,
+							signer: a.signer ? 1 : 0,
+							writable: a.writable ? 1 : 0,
+							programIdIndex: a.programIdIndex ?? null,
+						})),
+					)
+					.onConflictDoNothing();
 
-                await tx
-                    .insert(addressSignatures)
-                    .values(
-                        bundle.accounts.map((a) => ({
-                            address: a.address,
-                            signature: bundle.signature,
-                            slot: bundle.slot,
-                            err: errJson ? 1 : 0,
-                            blockTime: bundle.blockTime ?? null,
-                        })),
-                    )
-                    .onConflictDoNothing();
-            }
+				await tx
+					.insert(addressSignatures)
+					.values(
+						bundle.accounts.map((a) => ({
+							address: a.address,
+							signature: bundle.signature,
+							slot: bundle.slot,
+							err: errJson ? 1 : 0,
+							blockTime: bundle.blockTime ?? null,
+						})),
+					)
+					.onConflictDoNothing();
+			}
 
-            if (
-                Array.isArray(bundle.accountStates) &&
-                bundle.accountStates.length > 0
-            ) {
-                await tx
-                    .insert(txAccountStates)
-                    .values(
-                        bundle.accountStates.map((s) => ({
-                            signature: bundle.signature,
-                            address: s.address,
-                            preJson: s.pre ? JSON.stringify(s.pre) : null,
-                            postJson: s.post ? JSON.stringify(s.post) : null,
-                        })),
-                    )
-                    .onConflictDoNothing();
-            }
-        });
-    }
+			if (
+				Array.isArray(bundle.accountStates) &&
+				bundle.accountStates.length > 0
+			) {
+				await tx
+					.insert(txAccountStates)
+					.values(
+						bundle.accountStates.map((s) => ({
+							signature: bundle.signature,
+							address: s.address,
+							preJson: s.pre ? JSON.stringify(s.pre) : null,
+							postJson: s.post ? JSON.stringify(s.post) : null,
+						})),
+					)
+					.onConflictDoNothing();
+			}
+		});
+	}
 
 	async upsertAccounts(snapshots: AccountSnapshot[]): Promise<void> {
 		if (!Array.isArray(snapshots) || snapshots.length === 0) return;

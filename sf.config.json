@@ -1,41 +1,41 @@
 {
-  "server": {
-    "rpcPort": 8899,
-    "wsPort": 8900,
-    "db": {
-      "mode": "ephemeral",
-      "path": ".solforge/db.db"
-    }
-  },
-  "svm": {
-    "initialLamports": "1000000000000000",
-    "faucetSOL": 1000
-  },
-  "clone": {
-    "endpoint": "https://api.mainnet-beta.solana.com",
-    "programs": [
-      "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
-      "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
-      "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"
-    ],
-    "tokens": [
-      "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-      "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
-      "2AFzzF7EKDygNJ2VthGWNSftCthpSkTmqSg9p8bFsend"
-    ],
-    "programAccounts": []
-  },
-  "gui": {
-    "enabled": true,
-    "port": 42069
-  },
-  "bootstrap": {
-    "airdrops": [
-      {
-        "address": "JARSnsWXAxUAp6Ny3Td9H1i4wNpesqkcfL1wf82t5tKi",
-        "amountSol": 100
-      }
-    ]
-  }
+	"server": {
+		"rpcPort": 8899,
+		"wsPort": 8900,
+		"db": {
+			"mode": "ephemeral",
+			"path": ".solforge/db.db"
+		}
+	},
+	"svm": {
+		"initialLamports": "1000000000000000",
+		"faucetSOL": 1000
+	},
+	"clone": {
+		"endpoint": "https://api.mainnet-beta.solana.com",
+		"programs": [
+			"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+			"pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+			"pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"
+		],
+		"tokens": [
+			"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+			"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+			"XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB",
+			"2AFzzF7EKDygNJ2VthGWNSftCthpSkTmqSg9p8bFsend"
+		],
+		"programAccounts": []
+	},
+	"gui": {
+		"enabled": true,
+		"port": 42069
+	},
+	"bootstrap": {
+		"airdrops": [
+			{
+				"address": "JARSnsWXAxUAp6Ny3Td9H1i4wNpesqkcfL1wf82t5tKi",
+				"amountSol": 100
+			}
+		]
+	}
 }
