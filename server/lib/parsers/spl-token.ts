@@ -1,10 +1,14 @@
 import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import {
-	decodeMintToCheckedInstruction,
-	decodeTransferInstruction,
-	decodeTransferCheckedInstruction,
-	decodeInitializeAccount3Instruction,
-	decodeInitializeImmutableOwnerInstruction,
+    decodeMintToCheckedInstruction,
+    decodeTransferInstruction,
+    decodeTransferCheckedInstruction,
+    decodeInitializeAccount3Instruction,
+    decodeInitializeImmutableOwnerInstruction,
+    decodeTransferCheckedInstructionUnchecked,
+    decodeTransferInstructionUnchecked,
+    decodeInitializeAccount3InstructionUnchecked,
+    decodeInitializeImmutableOwnerInstructionUnchecked,
 } from "@solana/spl-token";
 import { u8 } from "@solana/buffer-layout";
 import { PublicKey as PK } from "@solana/web3.js";
@@ -19,7 +23,8 @@ export type ParsedInstruction =
 	| { programId: string; accounts: string[]; data: string };
 
 function ok(programId: string, type: string, info: unknown): ParsedInstruction {
-	return { program: "spl-token", programId, parsed: { type, info } };
+    // Use a single label for both SPL v1 and Token-2022 for compatibility with UIs
+    return { program: "spl-token", programId, parsed: { type, info } };
 }
 
 function asBase58(pk: PublicKey | undefined): string | undefined {
@@ -31,10 +36,11 @@ function asBase58(pk: PublicKey | undefined): string | undefined {
 }
 
 export function tryParseSplToken(
-	ix: TransactionInstruction,
-	programIdStr: string,
-	_accountKeys: string[],
-	dataBase58: string,
+    ix: TransactionInstruction,
+    programIdStr: string,
+    _accountKeys: string[],
+    dataBase58: string,
+    tokenBalanceHints?: Array<{ mint: string; decimals: number }>,
 ): ParsedInstruction | null {
 	try {
 		// Accept both SPL Token and Token-2022 program ids
@@ -70,7 +76,7 @@ export function tryParseSplToken(
 			});
 		} catch {}
 
-		// Transfer / TransferChecked
+		// Transfer / TransferChecked (strict)
 		try {
 			const t = decodeTransferInstruction(ix, programPk);
 			const amt = t.data.amount;
@@ -98,7 +104,7 @@ export function tryParseSplToken(
 			});
 		} catch {}
 
-		// InitializeAccount3
+		// InitializeAccount3 (strict)
 		try {
 			const a = decodeInitializeAccount3Instruction(ix, programPk);
 			return ok(programIdStr, "initializeAccount3", {
@@ -150,7 +156,139 @@ export function tryParseSplToken(
 			}
 		} catch {}
 
-		// Unknown SPL token instruction
+		// Unchecked fallbacks: decode data fields even if keys/validation missing
+		try {
+			const raw = bs58decode(dataBase58);
+			const op = raw[0];
+			// Transfer
+			if (op === 3) {
+				const t = decodeTransferInstructionUnchecked(ix);
+				const amt = t.data.amount;
+				return ok(programIdStr, "transfer", {
+					amount: typeof amt === "bigint" ? amt.toString() : String(amt),
+					source: asBase58(t.keys.source?.pubkey),
+					destination: asBase58(t.keys.destination?.pubkey),
+					authority: asBase58(t.keys.owner?.pubkey),
+				});
+			}
+			// TransferChecked
+            if (op === 12) {
+                const t = decodeTransferCheckedInstructionUnchecked(ix);
+                const amt = t.data.amount;
+                const decimals = t.data.decimals;
+                const hintMint = (() => {
+                    try {
+                        const dec = Number(decimals);
+                        const candidates = (tokenBalanceHints || []).filter(
+                            (h) => Number(h.decimals) === dec,
+                        );
+                        if (candidates.length === 1) return candidates[0].mint;
+                        // Prefer non-zero decimals over 0 (filters out native 4uQe mint in many cases)
+                        const nonZero = candidates.filter((c) => c.decimals > 0);
+                        if (nonZero.length === 1) return nonZero[0].mint;
+                        // Fall back to first candidate if multiple
+                        return candidates[0]?.mint;
+                    } catch {
+                        return undefined;
+                    }
+                })();
+                return ok(programIdStr, "transferChecked", {
+                    tokenAmount: {
+                        amount: typeof amt === "bigint" ? amt.toString() : String(amt),
+                        decimals,
+                    },
+                    source: asBase58(t.keys.source?.pubkey),
+                    destination: asBase58(t.keys.destination?.pubkey),
+                    authority: asBase58(t.keys.owner?.pubkey),
+                    mint: asBase58(t.keys.mint?.pubkey) || hintMint,
+                });
+            }
+			// InitializeAccount3
+            if (op === 18) {
+                const a = decodeInitializeAccount3InstructionUnchecked(ix);
+                const hintMint = (() => {
+                    try {
+                        // Prefer single non-zero-decimals mint in this tx
+                        const nonZero = (tokenBalanceHints || []).filter(
+                            (h) => h.decimals > 0,
+                        );
+                        if (nonZero.length === 1) return nonZero[0].mint;
+                        // Fall back to first available mint
+                        return (tokenBalanceHints || [])[0]?.mint;
+                    } catch {
+                        return undefined;
+                    }
+                })();
+                return ok(programIdStr, "initializeAccount3", {
+                    account: asBase58(a.keys.account?.pubkey),
+                    mint: asBase58(a.keys.mint?.pubkey) || hintMint,
+                    owner: asBase58(a.data.owner),
+                });
+            }
+			// InitializeImmutableOwner
+			if (op === 22) {
+				const im = decodeInitializeImmutableOwnerInstructionUnchecked(ix);
+				return ok(programIdStr, "initializeImmutableOwner", {
+					account: asBase58(im.keys.account?.pubkey),
+				});
+			}
+		} catch {}
+
+		// Fallback: classify by TokenInstruction opcode (first byte) when nothing else matched
+		try {
+			const raw = bs58decode(dataBase58);
+			if (raw.length > 0) {
+				const op = raw[0];
+				const map: Record<number, string> = {
+					0: "initializeMint",
+					1: "initializeAccount",
+					2: "initializeMultisig",
+					3: "transfer",
+					4: "approve",
+					5: "revoke",
+					6: "setAuthority",
+					7: "mintTo",
+					8: "burn",
+					9: "closeAccount",
+					10: "freezeAccount",
+					11: "thawAccount",
+					12: "transferChecked",
+					13: "approveChecked",
+					14: "mintToChecked",
+					15: "burnChecked",
+					16: "initializeAccount2",
+					17: "syncNative",
+					18: "initializeAccount3",
+					19: "initializeMultisig2",
+					20: "initializeMint2",
+					21: "getAccountDataSize",
+					22: "initializeImmutableOwner",
+					23: "amountToUiAmount",
+					24: "uiAmountToAmount",
+					25: "initializeMintCloseAuthority",
+					26: "transferFeeExtension",
+					27: "confidentialTransferExtension",
+					28: "defaultAccountStateExtension",
+					29: "reallocate",
+					30: "memoTransferExtension",
+					31: "createNativeMint",
+					32: "initializeNonTransferableMint",
+					33: "interestBearingMintExtension",
+					34: "cpiGuardExtension",
+					35: "initializePermanentDelegate",
+					36: "transferHookExtension",
+					39: "metadataPointerExtension",
+					40: "groupPointerExtension",
+					41: "groupMemberPointerExtension",
+					43: "scaledUiAmountExtension",
+					44: "pausableExtension",
+				};
+				const type = map[op];
+				if (type) return ok(programIdStr, type, {});
+			}
+		} catch {}
+
+		// Unknown SPL token instruction (unrecognized opcode)
 		return null;
 	} catch {
 		return null;

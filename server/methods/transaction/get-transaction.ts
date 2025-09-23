@@ -219,6 +219,23 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 							? !!msg.isAccountWritable(i)
 							: i < (header?.numRequiredSignatures ?? 0),
 				}));
+				// Collect token balance hints: (mint, decimals) pairs to help identify mint when keys are missing
+				const preTbs = ((result as unknown as { meta?: { preTokenBalances?: unknown[] } })?.meta?.preTokenBalances || []) as Array<{
+					mint?: string;
+					uiTokenAmount?: { decimals?: number };
+				}>;
+				const postTbs = ((result as unknown as { meta?: { postTokenBalances?: unknown[] } })?.meta?.postTokenBalances || []) as Array<{
+					mint?: string;
+					uiTokenAmount?: { decimals?: number };
+				}>;
+				const tokenBalanceHints: Array<{ mint: string; decimals: number }> = [];
+				for (const tb of [...preTbs, ...postTbs]) {
+					try {
+						const mint = tb?.mint ? String(tb.mint) : "";
+						const decimals = Number(tb?.uiTokenAmount?.decimals ?? 0);
+						if (mint) tokenBalanceHints.push({ mint, decimals });
+					} catch {}
+				}
 				const parsedInstructions = compiled.map((ci) => {
 					const c = ci as {
 						programIdIndex: number;
@@ -237,6 +254,7 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 						accountsIdx,
 						context.encodeBase58(dataBytes),
 						accountKeys,
+						tokenBalanceHints,
 					);
 				});
 				(result.transaction.message as { accountKeys: unknown[] }).accountKeys =
@@ -264,7 +282,13 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 									typeof ii.data === "string" ? ii.data : String(ii.data ?? "");
 								const pid =
 									accountKeys[ii.programIdIndex ?? 0] || accountKeys[0];
-								return parseInstruction(pid, accountsIdx, dataB58, accountKeys);
+								return parseInstruction(
+									pid,
+									accountsIdx,
+									dataB58,
+									accountKeys,
+									tokenBalanceHints,
+								);
 							}),
 						}));
 						(
