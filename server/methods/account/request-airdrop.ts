@@ -69,48 +69,48 @@ export const requestAirdrop: RpcMethodHandler = async (id, params, context) => {
 			: Array.isArray(msg.accountKeys)
 				? (msg.accountKeys as unknown[])
 				: [];
-        const staticKeys = rawKeys.map((k) => {
-            try {
-                return typeof k === "string" ? new PublicKey(k) : (k as PublicKey);
-            } catch {
-                return faucet.publicKey;
-            }
-        });
-        const preBalances = staticKeys.map((pk) => {
-            try {
-                return Number(context.svm.getBalance(pk));
-            } catch {
-                return 0;
-            }
-        });
-        const preAccountStates = staticKeys.map((pk) => {
-            try {
-                const addr = pk.toBase58();
-                const acc = context.svm.getAccount(pk);
-                if (!acc) return { address: addr, pre: null } as const;
-                return {
-                    address: addr,
-                    pre: {
-                        lamports: Number(acc.lamports || 0n),
-                        ownerProgram: new PublicKey(acc.owner).toBase58(),
-                        executable: !!acc.executable,
-                        rentEpoch: Number(acc.rentEpoch || 0),
-                        dataLen: acc.data?.length ?? 0,
-                        dataBase64: undefined,
-                        lastSlot: Number(context.slot),
-                    },
-                } as const;
-            } catch {
-                return { address: pk.toBase58(), pre: null } as const;
-            }
-        });
-        try {
-            if (process.env.DEBUG_TX_CAPTURE === "1") {
-                console.debug(
-                    `[tx-capture] pre snapshots: keys=${staticKeys.length} captured=${preAccountStates.length}`,
-                );
-            }
-        } catch {}
+		const staticKeys = rawKeys.map((k) => {
+			try {
+				return typeof k === "string" ? new PublicKey(k) : (k as PublicKey);
+			} catch {
+				return faucet.publicKey;
+			}
+		});
+		const preBalances = staticKeys.map((pk) => {
+			try {
+				return Number(context.svm.getBalance(pk));
+			} catch {
+				return 0;
+			}
+		});
+		const preAccountStates = staticKeys.map((pk) => {
+			try {
+				const addr = pk.toBase58();
+				const acc = context.svm.getAccount(pk);
+				if (!acc) return { address: addr, pre: null } as const;
+				return {
+					address: addr,
+					pre: {
+						lamports: Number(acc.lamports || 0n),
+						ownerProgram: new PublicKey(acc.owner).toBase58(),
+						executable: !!acc.executable,
+						rentEpoch: Number(acc.rentEpoch || 0),
+						dataLen: acc.data?.length ?? 0,
+						dataBase64: undefined,
+						lastSlot: Number(context.slot),
+					},
+				} as const;
+			} catch {
+				return { address: pk.toBase58(), pre: null } as const;
+			}
+		});
+		try {
+			if (process.env.DEBUG_TX_CAPTURE === "1") {
+				console.debug(
+					`[tx-capture] pre snapshots: keys=${staticKeys.length} captured=${preAccountStates.length}`,
+				);
+			}
+		} catch {}
 		const toIndex = staticKeys.findIndex((pk) => pk.equals(toPubkey));
 		const beforeTo =
 			toIndex >= 0
@@ -123,58 +123,73 @@ export const requestAirdrop: RpcMethodHandler = async (id, params, context) => {
 						}
 					})();
 
-        // Send via standard sendTransaction RPC to unify capture + persistence
-        const rawB64 = Buffer.from(tx.serialize()).toString("base64");
-        const resp = await (sendTxRpc as RpcMethodHandler)(id, [rawB64], context);
-        if ((resp as any)?.error) return resp;
-        // Surface errors to aid debugging
-        const sendResult = undefined as unknown as { err?: unknown };
-        // Any send errors would have been returned by send-transaction already
+		// Send via standard sendTransaction RPC to unify capture + persistence
+		const rawB64 = Buffer.from(tx.serialize()).toString("base64");
+		const resp = await (sendTxRpc as RpcMethodHandler)(id, [rawB64], context);
+		if (
+			resp &&
+			typeof resp === "object" &&
+			"error" in (resp as Record<string, unknown>) &&
+			(resp as Record<string, unknown>).error != null
+		) {
+			return resp;
+		}
+		// Any send errors would have been returned by send-transaction already
 
-        let signature = String((resp as any)?.result || "");
-        if (!signature) {
-            signature = tx.signatures[0]
-                ? context.encodeBase58(tx.signatures[0])
-                : context.encodeBase58(new Uint8Array(64).fill(0));
-        }
-        try { context.notifySignature(signature); } catch {}
-        // Compute post balances and capture logs if available for explorer detail view
-        let postBalances = staticKeys.map((pk) => {
-            try {
-                return Number(context.svm.getBalance(pk));
-            } catch {
-                return 0;
-            }
-        });
-        const postAccountStates = staticKeys.map((pk) => {
-            try {
-                const addr = pk.toBase58();
-                const acc = context.svm.getAccount(pk);
-                if (!acc) return { address: addr, post: null } as const;
-                return {
-                    address: addr,
-                    post: {
-                        lamports: Number(acc.lamports || 0n),
-                        ownerProgram: new PublicKey(acc.owner).toBase58(),
-                        executable: !!acc.executable,
-                        rentEpoch: Number(acc.rentEpoch || 0),
-                        dataLen: acc.data?.length ?? 0,
-                        dataBase64: undefined,
-                        lastSlot: Number(context.slot),
-                    },
-                } as const;
-            } catch {
-                return { address: pk.toBase58(), post: null } as const;
-            }
-        });
-        try {
-            if (process.env.DEBUG_TX_CAPTURE === "1") {
-                console.debug(
-                    `[tx-capture] post snapshots: keys=${staticKeys.length} captured=${postAccountStates.length}`,
-                );
-            }
-        } catch {}
-        // Parsing, recording etc. are performed by send-transaction
+		let signature = (() => {
+			try {
+				const r = resp as Record<string, unknown>;
+				const v = r?.result;
+				return v == null ? "" : String(v);
+			} catch {
+				return "";
+			}
+		})();
+		if (!signature) {
+			signature = tx.signatures[0]
+				? context.encodeBase58(tx.signatures[0])
+				: context.encodeBase58(new Uint8Array(64).fill(0));
+		}
+		try {
+			context.notifySignature(signature);
+		} catch {}
+		// Compute post balances and capture logs if available for explorer detail view
+		let postBalances = staticKeys.map((pk) => {
+			try {
+				return Number(context.svm.getBalance(pk));
+			} catch {
+				return 0;
+			}
+		});
+		const postAccountStates = staticKeys.map((pk) => {
+			try {
+				const addr = pk.toBase58();
+				const acc = context.svm.getAccount(pk);
+				if (!acc) return { address: addr, post: null } as const;
+				return {
+					address: addr,
+					post: {
+						lamports: Number(acc.lamports || 0n),
+						ownerProgram: new PublicKey(acc.owner).toBase58(),
+						executable: !!acc.executable,
+						rentEpoch: Number(acc.rentEpoch || 0),
+						dataLen: acc.data?.length ?? 0,
+						dataBase64: undefined,
+						lastSlot: Number(context.slot),
+					},
+				} as const;
+			} catch {
+				return { address: pk.toBase58(), post: null } as const;
+			}
+		});
+		try {
+			if (process.env.DEBUG_TX_CAPTURE === "1") {
+				console.debug(
+					`[tx-capture] post snapshots: keys=${staticKeys.length} captured=${postAccountStates.length}`,
+				);
+			}
+		} catch {}
+		// Parsing, recording etc. are performed by send-transaction
 		// Verify recipient received lamports; retry once if not
 		const afterTo =
 			toIndex >= 0
@@ -234,18 +249,19 @@ export const requestAirdrop: RpcMethodHandler = async (id, params, context) => {
 		}
 
 		// Try to capture error again for accurate status reporting
-        // No additional error capture; send-transaction has already recorded it
-        // Pre/post snapshots are still useful for account cache; we can upsert
-        try {
-            const snapshots = new Map<string, { pre?: any; post?: any }>();
-            for (const s of preAccountStates) snapshots.set(s.address, { pre: s.pre || null });
-            for (const s of postAccountStates) {
-                const e = snapshots.get(s.address) || {};
-                e.post = s.post || null;
-                snapshots.set(s.address, e);
-            }
-            // Not persisted here; DB already has the transaction via send-transaction
-        } catch {}
+		// No additional error capture; send-transaction has already recorded it
+		// Pre/post snapshots are still useful for account cache; we can upsert
+		try {
+			const snapshots = new Map<string, { pre?: unknown; post?: unknown }>();
+			for (const s of preAccountStates)
+				snapshots.set(s.address, { pre: s.pre || null });
+			for (const s of postAccountStates) {
+				const e = snapshots.get(s.address) || {};
+				e.post = s.post || null;
+				snapshots.set(s.address, e);
+			}
+			// Not persisted here; DB already has the transaction via send-transaction
+		} catch {}
 
 		return context.createSuccessResponse(id, signature);
 	} catch (error: unknown) {

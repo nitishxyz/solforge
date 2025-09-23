@@ -44,62 +44,62 @@ export interface RpcMethodContext {
 	listMints?: () => string[];
 	registerProgram?: (program: PublicKey | string) => void;
 	listPrograms?: () => string[];
-    recordTransaction: (
-        signature: string,
-        tx: VersionedTransaction,
-        meta?: {
-            logs?: string[];
-            err?: unknown;
-            fee?: number;
-            blockTime?: number;
-            preBalances?: number[];
-            postBalances?: number[];
-            preTokenBalances?: unknown[];
-            postTokenBalances?: unknown[];
-            innerInstructions?: unknown[];
-            computeUnits?: number | bigint | null;
-            returnData?: { programId: string; dataBase64: string } | null;
-            // Optional rich per-account snapshots captured around execution
-            accountStates?: Array<{
-                address: string;
-                pre?: {
-                    lamports?: number;
-                    ownerProgram?: string;
-                    executable?: boolean;
-                    rentEpoch?: number;
-                    dataLen?: number;
-                    dataBase64?: string | null;
-                    lastSlot?: number;
-                } | null;
-                post?: {
-                    lamports?: number;
-                    ownerProgram?: string;
-                    executable?: boolean;
-                    rentEpoch?: number;
-                    dataLen?: number;
-                    dataBase64?: string | null;
-                    lastSlot?: number;
-                } | null;
-            }>;
-        },
-    ) => void;
-    getRecordedTransaction: (signature: string) =>
-        | {
-                tx: VersionedTransaction;
-                logs: string[];
-                err: unknown;
-                fee: number;
-                slot: number;
-                blockTime?: number;
-                preBalances?: number[];
-                postBalances?: number[];
-                preTokenBalances?: unknown[];
-                postTokenBalances?: unknown[];
-                innerInstructions?: unknown[];
-                computeUnits?: number | null;
-                returnData?: { programId: string; dataBase64: string } | null;
-          }
-        | undefined;
+	recordTransaction: (
+		signature: string,
+		tx: VersionedTransaction,
+		meta?: {
+			logs?: string[];
+			err?: unknown;
+			fee?: number;
+			blockTime?: number;
+			preBalances?: number[];
+			postBalances?: number[];
+			preTokenBalances?: unknown[];
+			postTokenBalances?: unknown[];
+			innerInstructions?: unknown[];
+			computeUnits?: number | bigint | null;
+			returnData?: { programId: string; dataBase64: string } | null;
+			// Optional rich per-account snapshots captured around execution
+			accountStates?: Array<{
+				address: string;
+				pre?: {
+					lamports?: number;
+					ownerProgram?: string;
+					executable?: boolean;
+					rentEpoch?: number;
+					dataLen?: number;
+					dataBase64?: string | null;
+					lastSlot?: number;
+				} | null;
+				post?: {
+					lamports?: number;
+					ownerProgram?: string;
+					executable?: boolean;
+					rentEpoch?: number;
+					dataLen?: number;
+					dataBase64?: string | null;
+					lastSlot?: number;
+				} | null;
+			}>;
+		},
+	) => void;
+	getRecordedTransaction: (signature: string) =>
+		| {
+				tx: VersionedTransaction;
+				logs: string[];
+				err: unknown;
+				fee: number;
+				slot: number;
+				blockTime?: number;
+				preBalances?: number[];
+				postBalances?: number[];
+				preTokenBalances?: unknown[];
+				postTokenBalances?: unknown[];
+				innerInstructions?: unknown[];
+				computeUnits?: number | null;
+				returnData?: { programId: string; dataBase64: string } | null;
+		  }
+		| undefined;
 }
 
 export type RpcMethodHandler = (

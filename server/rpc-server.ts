@@ -150,36 +150,34 @@ export class LiteSVMRpcServer {
 				} catch {}
 			},
 			listPrograms: () => Array.from(this.knownPrograms),
-            recordTransaction: (signature, tx, meta) => {
-                this.txRecords.set(signature, {
-                    tx,
-                    logs: meta?.logs || [],
-                    err: meta?.err ?? null,
-                    fee: meta?.fee ?? 5000,
-                    slot: Number(this.slot),
-                    blockTime: meta?.blockTime,
-                    preBalances: meta?.preBalances,
-                    postBalances: meta?.postBalances,
-                    preTokenBalances: (
-                        meta as { preTokenBalances?: unknown[] } | undefined
-                    )?.preTokenBalances,
-                    postTokenBalances: (
-                        meta as { postTokenBalances?: unknown[] } | undefined
-                    )?.postTokenBalances,
-                    innerInstructions: meta?.innerInstructions || [],
-                    computeUnits:
-                        meta?.computeUnits == null
-                            ? null
-                            : Number(meta.computeUnits),
-                    returnData: meta?.returnData ?? null,
-                });
-                try {
-                    if (process.env.DEBUG_TX_CAPTURE === "1") {
-                        console.debug(
-                            `[tx-capture] recordTransaction: sig=${signature} slot=${this.slot} logs=${meta?.logs?.length || 0} inner=${Array.isArray(meta?.innerInstructions) ? meta?.innerInstructions?.length : 0} cu=${meta?.computeUnits ?? null} returnData=${meta?.returnData ? "yes" : "no"}`,
-                        );
-                    }
-                } catch {}
+			recordTransaction: (signature, tx, meta) => {
+				this.txRecords.set(signature, {
+					tx,
+					logs: meta?.logs || [],
+					err: meta?.err ?? null,
+					fee: meta?.fee ?? 5000,
+					slot: Number(this.slot),
+					blockTime: meta?.blockTime,
+					preBalances: meta?.preBalances,
+					postBalances: meta?.postBalances,
+					preTokenBalances: (
+						meta as { preTokenBalances?: unknown[] } | undefined
+					)?.preTokenBalances,
+					postTokenBalances: (
+						meta as { postTokenBalances?: unknown[] } | undefined
+					)?.postTokenBalances,
+					innerInstructions: meta?.innerInstructions || [],
+					computeUnits:
+						meta?.computeUnits == null ? null : Number(meta.computeUnits),
+					returnData: meta?.returnData ?? null,
+				});
+				try {
+					if (process.env.DEBUG_TX_CAPTURE === "1") {
+						console.debug(
+							`[tx-capture] recordTransaction: sig=${signature} slot=${this.slot} logs=${meta?.logs?.length || 0} inner=${Array.isArray(meta?.innerInstructions) ? meta?.innerInstructions?.length : 0} cu=${meta?.computeUnits ?? null} returnData=${meta?.returnData ? "yes" : "no"}`,
+						);
+					}
+				} catch {}
 
 				// Persist to SQLite for durability and history queries
 				try {
@@ -240,82 +238,81 @@ export class LiteSVMRpcServer {
 								: "legacy"
 							: 0;
 					const rawBase64 = Buffer.from(tx.serialize()).toString("base64");
-                    this.store
-                        .insertTransactionBundle({
-                            signature,
-                            slot: Number(this.slot),
-                            blockTime: meta?.blockTime,
-                            version,
-                            fee: Number(meta?.fee ?? 5000),
-                            err: meta?.err ?? null,
-                            rawBase64,
-                            preBalances: Array.isArray(meta?.preBalances)
-                                ? (meta?.preBalances as number[])
-                                : [],
-                            postBalances: Array.isArray(meta?.postBalances)
-                                ? (meta?.postBalances as number[])
-                                : [],
-                            logs: Array.isArray(meta?.logs) ? (meta?.logs as string[]) : [],
-                            preTokenBalances: (() => {
-                                const arr = (
-                                    meta as { preTokenBalances?: unknown[] } | undefined
-                                )?.preTokenBalances;
-                                return Array.isArray(arr) ? arr : [];
-                            })(),
-                            postTokenBalances: (() => {
-                                const arr = (
-                                    meta as { postTokenBalances?: unknown[] } | undefined
-                                )?.postTokenBalances;
-                                return Array.isArray(arr) ? arr : [];
-                            })(),
-                            innerInstructions: Array.isArray(meta?.innerInstructions)
-                                ? meta?.innerInstructions
-                                : [],
-                            computeUnits:
-                                meta?.computeUnits == null
-                                    ? null
-                                    : Number(meta.computeUnits),
-                            returnData: meta?.returnData ?? null,
-                            accounts,
-                            accountStates: Array.isArray(meta?.accountStates)
-                                ? meta?.accountStates
-                                : [],
-                        })
-                        .catch(() => {});
+					this.store
+						.insertTransactionBundle({
+							signature,
+							slot: Number(this.slot),
+							blockTime: meta?.blockTime,
+							version,
+							fee: Number(meta?.fee ?? 5000),
+							err: meta?.err ?? null,
+							rawBase64,
+							preBalances: Array.isArray(meta?.preBalances)
+								? (meta?.preBalances as number[])
+								: [],
+							postBalances: Array.isArray(meta?.postBalances)
+								? (meta?.postBalances as number[])
+								: [],
+							logs: Array.isArray(meta?.logs) ? (meta?.logs as string[]) : [],
+							preTokenBalances: (() => {
+								const arr = (
+									meta as { preTokenBalances?: unknown[] } | undefined
+								)?.preTokenBalances;
+								return Array.isArray(arr) ? arr : [];
+							})(),
+							postTokenBalances: (() => {
+								const arr = (
+									meta as { postTokenBalances?: unknown[] } | undefined
+								)?.postTokenBalances;
+								return Array.isArray(arr) ? arr : [];
+							})(),
+							innerInstructions: Array.isArray(meta?.innerInstructions)
+								? meta?.innerInstructions
+								: [],
+							computeUnits:
+								meta?.computeUnits == null ? null : Number(meta.computeUnits),
+							returnData: meta?.returnData ?? null,
+							accounts,
+							accountStates: Array.isArray(meta?.accountStates)
+								? meta?.accountStates
+								: [],
+						})
+						.catch(() => {});
 
 					// Upsert account snapshots for static keys
-                    const snapshots = keys
-                        .map((addr) => {
-                            try {
-                                const acc = this.svm.getAccount(new PublicKey(addr));
-                                if (!acc) return null;
-                                const ownerStr = new PublicKey(acc.owner).toBase58();
-                                let dataBase64: string | undefined;
-                                // Store raw data for SPL Token accounts to reflect balance changes
-                                try {
-                                    if (
-                                        ownerStr === "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" ||
-                                        ownerStr === "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-                                    ) {
-                                        if (acc.data && acc.data.length > 0) {
-                                            dataBase64 = Buffer.from(acc.data).toString("base64");
-                                        }
-                                    }
-                                } catch {}
-                                return {
-                                    address: addr,
-                                    lamports: Number(acc.lamports || 0n),
-                                    ownerProgram: ownerStr,
-                                    executable: !!acc.executable,
-                                    rentEpoch: Number(acc.rentEpoch || 0),
-                                    dataLen: acc.data?.length ?? 0,
-                                    dataBase64,
-                                    lastSlot: Number(this.slot),
-                                };
-                            } catch {
-                                return null;
-                            }
-                        })
+					const snapshots = keys
+						.map((addr) => {
+							try {
+								const acc = this.svm.getAccount(new PublicKey(addr));
+								if (!acc) return null;
+								const ownerStr = new PublicKey(acc.owner).toBase58();
+								let dataBase64: string | undefined;
+								// Store raw data for SPL Token accounts to reflect balance changes
+								try {
+									if (
+										ownerStr ===
+											"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" ||
+										ownerStr === "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+									) {
+										if (acc.data && acc.data.length > 0) {
+											dataBase64 = Buffer.from(acc.data).toString("base64");
+										}
+									}
+								} catch {}
+								return {
+									address: addr,
+									lamports: Number(acc.lamports || 0n),
+									ownerProgram: ownerStr,
+									executable: !!acc.executable,
+									rentEpoch: Number(acc.rentEpoch || 0),
+									dataLen: acc.data?.length ?? 0,
+									dataBase64,
+									lastSlot: Number(this.slot),
+								};
+							} catch {
+								return null;
+							}
+						})
 						.filter(Boolean) as import("../src/db/tx-store").AccountSnapshot[];
 					if (snapshots.length > 0)
 						this.store.upsertAccounts(snapshots).catch(() => {});

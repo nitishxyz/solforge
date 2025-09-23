@@ -126,7 +126,7 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 
 		// Capture preBalances for primary accounts referenced and token pre amount
 		const trackedKeys = [faucet.publicKey, ata, mint, owner];
-		const preBalances = trackedKeys.map((pk) => {
+		const _preBalances = trackedKeys.map((pk) => {
 			try {
 				return Number(context.svm.getBalance(pk) || 0n);
 			} catch {
@@ -149,15 +149,30 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 			}
 		} catch {}
 
-        // Send via the standard RPC sendTransaction path to unify capture/parsing
-        const rawBase64ForRpc = Buffer.from(vtx.serialize()).toString("base64");
-        const rpcResp = await (sendTxRpc as RpcMethodHandler)(
-            id,
-            [rawBase64ForRpc],
-            context,
-        );
-        if ((rpcResp as any)?.error) return rpcResp;
-        const signatureStr = String((rpcResp as any)?.result || "");
+		// Send via the standard RPC sendTransaction path to unify capture/parsing
+		const rawBase64ForRpc = Buffer.from(vtx.serialize()).toString("base64");
+		const rpcResp = await (sendTxRpc as RpcMethodHandler)(
+			id,
+			[rawBase64ForRpc],
+			context,
+		);
+		if (
+			rpcResp &&
+			typeof rpcResp === "object" &&
+			"error" in (rpcResp as Record<string, unknown>) &&
+			(rpcResp as Record<string, unknown>).error != null
+		) {
+			return rpcResp;
+		}
+		const signatureStr = (() => {
+			try {
+				const r = rpcResp as Record<string, unknown>;
+				const v = r?.result;
+				return v == null ? "" : String(v);
+			} catch {
+				return "";
+			}
+		})();
 
 		// Token balance deltas (pre/post) for ATA
 		type UiTokenAmount = {
@@ -172,8 +187,8 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 			owner: string;
 			uiTokenAmount: UiTokenAmount;
 		};
-		let preTokenBalances: TokenBalance[] = [];
-		let postTokenBalances: TokenBalance[] = [];
+		const _preTokenBalances: TokenBalance[] = [];
+		let _postTokenBalances: TokenBalance[] = [];
 		try {
 			const decs = decsForMint;
 			const ui = (n: bigint) => ({
@@ -219,7 +234,7 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 					uiTokenAmount: ui(preAmt),
 				},
 			];
-			postTokenBalances = [
+			_postTokenBalances = [
 				{
 					accountIndex: ataIndex >= 0 ? ataIndex : 0,
 					mint: mint.toBase58(),
@@ -229,7 +244,7 @@ export const solforgeMintTo: RpcMethodHandler = async (id, params, context) => {
 			];
 		} catch {}
 
-        // send-transaction already records/announces signature and persists to DB
+		// send-transaction already records/announces signature and persists to DB
 
 		return context.createSuccessResponse(id, {
 			ok: true,
