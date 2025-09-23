@@ -86,18 +86,30 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 			TOKEN_2022_PROGRAM_ID.toBase58(),
 		]);
 		const tokenAccountSet = new Set<string>();
+		// 1) Collect from compiled ixs (best-effort)
 		for (const ci of compiled) {
 			try {
-				const pid = staticKeys[ci.programIdIndex]?.toBase58();
+				const pid = staticKeys[(ci as any).programIdIndex]?.toBase58();
 				if (!pid || !tokenProgramIds.has(pid)) continue;
-				const accIdxs: number[] = Array.isArray(ci.accountKeyIndexes)
-					? ci.accountKeyIndexes
-					: Array.isArray(ci.accounts)
-						? ci.accounts
+				const accIdxs: number[] = Array.isArray((ci as any).accountKeyIndexes)
+					? (ci as any).accountKeyIndexes
+					: Array.isArray((ci as any).accounts)
+						? (ci as any).accounts
 						: [];
 				for (const ix of accIdxs) {
 					const addr = staticKeys[ix]?.toBase58();
 					if (addr) tokenAccountSet.add(addr);
+				}
+			} catch {}
+		}
+		// 2) Also collect from all static keys that are SPL token accounts pre-send
+		for (const pk of staticKeys) {
+			try {
+				const acc = context.svm.getAccount(pk);
+				if (!acc) continue;
+				const ownerStr = new PublicKey(acc.owner).toBase58();
+				if (tokenProgramIds.has(ownerStr) && (acc.data?.length ?? 0) >= ACCOUNT_SIZE) {
+					tokenAccountSet.add(pk.toBase58());
 				}
 			} catch {}
 		}
@@ -215,7 +227,7 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
                 );
             }
         } catch {}
-		// Post token balances
+		// Post token balances (scan token accounts among static keys)
 		const postTokenBalances: unknown[] = [];
 		for (const addr of tokenAccountSet) {
 			try {
