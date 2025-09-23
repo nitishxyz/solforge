@@ -284,25 +284,38 @@ export class LiteSVMRpcServer {
                         .catch(() => {});
 
 					// Upsert account snapshots for static keys
-					const snapshots = keys
-						.map((addr) => {
-							try {
-								const acc = this.svm.getAccount(new PublicKey(addr));
-								if (!acc) return null;
-								return {
-									address: addr,
-									lamports: Number(acc.lamports || 0n),
-									ownerProgram: new PublicKey(acc.owner).toBase58(),
-									executable: !!acc.executable,
-									rentEpoch: Number(acc.rentEpoch || 0),
-									dataLen: acc.data?.length ?? 0,
-									dataBase64: undefined,
-									lastSlot: Number(this.slot),
-								};
-							} catch {
-								return null;
-							}
-						})
+                    const snapshots = keys
+                        .map((addr) => {
+                            try {
+                                const acc = this.svm.getAccount(new PublicKey(addr));
+                                if (!acc) return null;
+                                const ownerStr = new PublicKey(acc.owner).toBase58();
+                                let dataBase64: string | undefined;
+                                // Store raw data for SPL Token accounts to reflect balance changes
+                                try {
+                                    if (
+                                        ownerStr === "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" ||
+                                        ownerStr === "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+                                    ) {
+                                        if (acc.data && acc.data.length > 0) {
+                                            dataBase64 = Buffer.from(acc.data).toString("base64");
+                                        }
+                                    }
+                                } catch {}
+                                return {
+                                    address: addr,
+                                    lamports: Number(acc.lamports || 0n),
+                                    ownerProgram: ownerStr,
+                                    executable: !!acc.executable,
+                                    rentEpoch: Number(acc.rentEpoch || 0),
+                                    dataLen: acc.data?.length ?? 0,
+                                    dataBase64,
+                                    lastSlot: Number(this.slot),
+                                };
+                            } catch {
+                                return null;
+                            }
+                        })
 						.filter(Boolean) as import("../src/db/tx-store").AccountSnapshot[];
 					if (snapshots.length > 0)
 						this.store.upsertAccounts(snapshots).catch(() => {});
