@@ -8,6 +8,9 @@ import {
   TransactionInstruction,
   VoteInstruction,
 } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { tryParseSplToken } from "./parsers/spl-token";
+import { tryParseAta } from "./parsers/spl-associated-token-account";
 import { decodeBase58 as _decodeBase58 } from "./base58";
 
 export type ParsedInstruction =
@@ -43,18 +46,38 @@ export function parseInstruction(
     const pid = new PublicKey(programId);
     const ix = makeIx(programId, accountKeys, accounts, dataBase58);
 
+    // SPL Token
+    if (pid.equals(TOKEN_PROGRAM_ID)) {
+      const parsed = tryParseSplToken(ix, programId, accountKeys, dataBase58);
+      if (parsed) return parsed;
+    }
+
+    // Associated Token Account
+    if (pid.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) {
+      const parsed = tryParseAta(ix, programId);
+      if (parsed) return parsed;
+    }
+
     // System Program
     if (pid.equals(SystemProgram.programId)) {
       const t = SystemInstruction.decodeInstructionType(ix);
       switch (t) {
         case "Create": {
           const p = SystemInstruction.decodeCreateAccount(ix);
+          const from = p.fromPubkey.toBase58();
+          const newAcc = p.newAccountPubkey.toBase58();
+          const owner = p.programId.toBase58();
           return ok("system", programId, "createAccount", {
-            fromPubkey: p.fromPubkey.toBase58(),
-            newAccountPubkey: p.newAccountPubkey.toBase58(),
+            // Explorer-compatible field names
+            source: from,
+            newAccount: newAcc,
+            owner,
             lamports: Number(p.lamports),
             space: Number(p.space),
-            programId: p.programId.toBase58(),
+            // Keep legacy aliases too
+            fromPubkey: from,
+            newAccountPubkey: newAcc,
+            programId: owner,
           });
         }
         case "Transfer": {
@@ -239,4 +262,3 @@ export function parseInstruction(
     };
   }
 }
-
