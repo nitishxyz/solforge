@@ -36,11 +36,13 @@ export function tryParseSplToken(
   try {
     if (!ix.programId.equals(TOKEN_PROGRAM_ID)) return null;
 
-    // Fast path via provided decoder for common instructions
+    // Probe with generic decoder (ignore result), then try specific decoders
     try {
-      const d = splDecodeInstruction(ix);
-      // MintToChecked
-      try {
+      splDecodeInstruction(ix);
+    } catch {}
+
+    // MintToChecked
+    try {
         const m = decodeMintToCheckedInstruction(ix);
         const amount = m.data.amount;
         const decimals = m.data.decimals;
@@ -61,10 +63,10 @@ export function tryParseSplToken(
             uiAmountString: uiStr,
           },
         });
-      } catch {}
+    } catch {}
 
-      // Transfer / TransferChecked
-      try {
+    // Transfer / TransferChecked
+    try {
         const t = decodeTransferInstruction(ix);
         const amt = t.data.amount;
         return ok(programIdStr, "transfer", {
@@ -73,9 +75,9 @@ export function tryParseSplToken(
           destination: asBase58(t.keys.destination.pubkey),
           authority: asBase58(t.keys.owner.pubkey),
         });
-      } catch {}
+    } catch {}
 
-      try {
+    try {
         const t = decodeTransferCheckedInstruction(ix);
         const amt = t.data.amount;
         const decimals = t.data.decimals;
@@ -89,25 +91,24 @@ export function tryParseSplToken(
           authority: asBase58(t.keys.owner.pubkey),
           mint: asBase58(t.keys.mint.pubkey),
         });
-      } catch {}
+    } catch {}
 
-      // InitializeAccount3
-      try {
+    // InitializeAccount3
+    try {
         const a = decodeInitializeAccount3Instruction(ix);
         return ok(programIdStr, "initializeAccount3", {
           account: asBase58(a.keys.account.pubkey),
           mint: asBase58(a.keys.mint.pubkey),
           owner: asBase58(a.data.owner),
         });
-      } catch {}
+    } catch {}
 
-      // InitializeImmutableOwner
-      try {
-        const im = decodeInitializeImmutableOwnerInstruction(ix);
+    // InitializeImmutableOwner
+    try {
+        const im = decodeInitializeImmutableOwnerInstruction(ix, TOKEN_PROGRAM_ID);
         return ok(programIdStr, "initializeImmutableOwner", {
           account: asBase58(im.keys.account.pubkey),
         });
-      } catch {}
     } catch {}
 
     // GetAccountDataSize: decode extension types (u16 little-endian sequence)
