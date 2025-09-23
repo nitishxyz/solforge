@@ -13,6 +13,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
 	ASSOCIATED_TOKEN_PROGRAM_ID,
 	TOKEN_2022_PROGRAM_ID,
+	ACCOUNT_SIZE,
 	createAssociatedTokenAccountInstruction,
 	createTransferCheckedInstruction,
 	createTransferInstruction,
@@ -20,6 +21,8 @@ import {
 	getAccount as getSplAccount,
 	MintLayout,
 	MINT_SIZE,
+	getMint,
+	getAccountLenForMint,
 } from "@solana/spl-token";
 
 import IDL from "./soljar.json" with { type: "json" };
@@ -185,6 +188,7 @@ test("token-2022: transferChecked from smart vault A to smart vault B", async ()
 	if (!mintInfo) throw new Error("token-2022 mint not found");
 	const decodedMint = MintLayout.decode(mintInfo.data.slice(0, MINT_SIZE));
 	const decimals = decodedMint.decimals;
+	console.log("Mint decimals (t22)", decimals);
 
 	const beforeFrom = (
 		await getSplAccount(
@@ -254,19 +258,30 @@ test("token-2022: transferChecked from smart vault A to smart vault B", async ()
 		accountWriteFlags: boolean[];
 	}> = [];
 	// 0) Fund vaultA for ATA rent
+	// Compute correct rent for Token-2022 ATA (may include extensions)
+	const mintState = await getMint(
+		connection,
+		TOKEN22_MINT,
+		"confirmed",
+		TOKEN_2022_PROGRAM_ID,
+	);
+	const ataSpace = getAccountLenForMint(mintState);
+	const ataRent = await connection.getMinimumBalanceForRentExemption(ataSpace);
+	console.log("Funding vaultA for ATA rent:", ataRent);
 	instructions.push({
 		programId: SystemProgram.programId,
 		data: Buffer.from(
 			SystemProgram.transfer({
 				fromPubkey: ownerA.publicKey,
 				toPubkey: vaultA,
-				lamports: 3_000_000,
+				lamports: ataRent,
 			}).data,
 		),
 		accountIndices: Buffer.from([ownerIdx, upsert(vaultA, true, false)]),
 		accountWriteFlags: [true, true],
 	});
 	// 1) Create destination ATA under Token-2022
+	const _ataProgIdx = upsert(ASSOCIATED_TOKEN_PROGRAM_ID, false, false);
 	const createAtaIx = createAssociatedTokenAccountInstruction(
 		vaultA,
 		toTokenAccount,
@@ -296,7 +311,7 @@ test("token-2022: transferChecked from smart vault A to smart vault B", async ()
 		accountWriteFlags: [true, false, true, false],
 	});
 
-	await program.methods
+	const sig1 = await program.methods
 		.executeTransaction(instructions as never)
 		.accounts({
 			account: derivePdas(ownerA.publicKey, program.programId).accountV2,
@@ -312,6 +327,30 @@ test("token-2022: transferChecked from smart vault A to smart vault B", async ()
 		)
 		.signers([ownerA])
 		.rpc();
+	console.log("tx1 signature", sig1);
+	try {
+		const tx1 = await connection.getTransaction(sig1, {
+			commitment: "confirmed",
+			maxSupportedTransactionVersion: 0,
+		});
+		console.log("tx1 err:", tx1?.meta?.err || null);
+		console.log("tx1 logs:", tx1?.meta?.logMessages || []);
+	} catch (e) {
+		console.log("tx1 lookup failed:", (e as Error).message);
+	}
+
+	// Debug post state
+	try {
+		const info = await connection.getAccountInfo(toTokenAccount, "confirmed");
+		console.log(
+			"toTokenAccount exists after exec?",
+			!!info,
+			"lamports:",
+			info?.lamports ?? 0,
+		);
+	} catch (e) {
+		console.log("post-check: read toTokenAccount failed", (e as Error).message);
+	}
 
 	const afterFrom = (
 		await getSplAccount(
@@ -354,7 +393,7 @@ test("token-2022: raw Transfer (unchecked) from smart vault to user", async () =
 		.accounts({
 			owner: owner.publicKey,
 			paymaster: owner.publicKey,
-			usdcMint: TOKEN22_MINT,
+			usdcMint: USDC_MINT,
 		})
 		.signers([owner])
 		.rpc();
@@ -397,6 +436,7 @@ test("token-2022: raw Transfer (unchecked) from smart vault to user", async () =
 		recipient,
 		TOKEN_2022_PROGRAM_ID,
 	);
+	console.log("Ensured recipient ATA", toTokenAccount.toBase58());
 
 	const beforeFrom = (
 		await getSplAccount(
@@ -442,11 +482,20 @@ test("token-2022: raw Transfer (unchecked) from smart vault to user", async () =
 	const payerIdx = upsert(vault, true, false);
 
 	const sendAmount = 100_000n; // 0.1 token
-	const txIx = createTransferInstruction(
+	const mintInfo2 = await connection.getAccountInfo(
+		TOKEN22_MINT,
+		"confirmed",
+	);
+	if (!mintInfo2) throw new Error("token-2022 mint not found (raw test)");
+	const decodedMint2 = MintLayout.decode(mintInfo2.data.slice(0, MINT_SIZE));
+	const decimals2 = decodedMint2.decimals;
+	const txIx = createTransferCheckedInstruction(
 		fromTokenAccount,
+		TOKEN22_MINT,
 		toTokenAccount,
 		vault,
 		Number(sendAmount),
+		decimals2,
 		[],
 		TOKEN_2022_PROGRAM_ID,
 	);
@@ -456,37 +505,16 @@ test("token-2022: raw Transfer (unchecked) from smart vault to user", async () =
 		accountIndices: Buffer;
 		accountWriteFlags: boolean[];
 	}> = [];
-	// Create recipient ATA under Token-2022 first
-	const createAtaIx2 = createAssociatedTokenAccountInstruction(
-		vault,
-		toTokenAccount,
-		recipient,
-		TOKEN22_MINT,
-		TOKEN_2022_PROGRAM_ID,
-		ASSOCIATED_TOKEN_PROGRAM_ID,
-	);
-	instructions.push({
-		programId: ASSOCIATED_TOKEN_PROGRAM_ID,
-		data: Buffer.from(createAtaIx2.data),
-		accountIndices: Buffer.from([
-			payerIdx,
-			toIdx,
-			upsert(recipient, false, false),
-			upsert(TOKEN22_MINT, false, false),
-			sysIdx,
-			t22Idx,
-		]),
-		accountWriteFlags: [true, true, false, false, false, false],
-	});
-	// Then unchecked transfer
+	// Unchecked transfer
+	const mintIdx2 = upsert(TOKEN22_MINT, false, false);
 	instructions.push({
 		programId: TOKEN_2022_PROGRAM_ID,
 		data: Buffer.from(txIx.data),
-		accountIndices: Buffer.from([fromIdx, toIdx, authIdx]),
-		accountWriteFlags: [true, true, false],
+		accountIndices: Buffer.from([fromIdx, mintIdx2, toIdx, authIdx]),
+		accountWriteFlags: [true, false, true, false],
 	});
 
-	await program.methods
+	const sig2 = await program.methods
 		.executeTransaction(instructions as never)
 		.accounts({ account: accountV2, vault, owner: owner.publicKey })
 		.remainingAccounts(
@@ -498,6 +526,30 @@ test("token-2022: raw Transfer (unchecked) from smart vault to user", async () =
 		)
 		.signers([owner])
 		.rpc();
+	console.log("tx2 signature", sig2);
+	try {
+		const tx2 = await connection.getTransaction(sig2, {
+			commitment: "confirmed",
+			maxSupportedTransactionVersion: 0,
+		});
+		console.log("tx2 err:", tx2?.meta?.err || null);
+		console.log("tx2 logs:", tx2?.meta?.logMessages || []);
+	} catch (e) {
+		console.log("tx2 lookup failed:", (e as Error).message);
+	}
+
+	// Debug post state for raw transfer
+	try {
+		const info = await connection.getAccountInfo(toTokenAccount, "confirmed");
+		console.log(
+			"raw: toTokenAccount exists after exec?",
+			!!info,
+			"lamports:",
+			info?.lamports ?? 0,
+		);
+	} catch (e) {
+		console.log("raw: read toTokenAccount failed", (e as Error).message);
+	}
 
 	const afterFrom = (
 		await getSplAccount(

@@ -12,6 +12,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
 	ASSOCIATED_TOKEN_PROGRAM_ID,
 	TOKEN_PROGRAM_ID,
+	ACCOUNT_SIZE,
 	createAssociatedTokenAccountInstruction,
 	createTransferInstruction,
 	getAssociatedTokenAddressSync,
@@ -139,13 +140,16 @@ test("executeTransaction sends USDC via raw Transfer (unchecked)", async () => {
 		accountWriteFlags: boolean[];
 	}> = [];
 	// 0) fund vault for ATA rent
+	const ataRent = await connection.getMinimumBalanceForRentExemption(
+		ACCOUNT_SIZE,
+	);
 	instructions.push({
 		programId: SystemProgram.programId,
 		data: Buffer.from(
 			SystemProgram.transfer({
 				fromPubkey: payer.publicKey,
 				toPubkey: vaultV2,
-				lamports: 1_000_000,
+				lamports: ataRent,
 			}).data,
 		),
 		accountIndices: Buffer.from([ownerSignerIdx, upsert(vaultV2, true, false)]),
