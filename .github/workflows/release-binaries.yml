@@ -89,12 +89,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Regenerate clean lockfile
-        shell: bash
-        run: |
-          rm -f bun.lock
-          bun install
-
       - name: Setup npm auth (optional)
         if: ${{ env.NPM_TOKEN != '' }}
         shell: bash
