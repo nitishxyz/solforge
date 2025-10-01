@@ -13,10 +13,10 @@
     "url": "https://github.com/nitishxyz/solforge/issues"
   },
   "bin": {
-    "solforge": "start.js"
+    "solforge": "start.cjs"
   },
   "files": [
-    "start.js",
+    "start.cjs",
     "scripts",
     "src",
     "server",
@@ -37,7 +37,7 @@
     "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify",
     "cli": "bun src/cli/main.ts",
     "lint": "biome check",
-    "prepack": "chmod +x start.js || true"
+    "prepack": "chmod +x start.cjs || true"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

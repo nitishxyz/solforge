@@ -154,7 +154,7 @@ jobs:
       - name: Ensure CLI entry is executable
         shell: bash
         run: |
-          chmod +x start.js || true
+          chmod +x start.cjs || true
 
       - name: Publish to npm (Bun)
         shell: bash

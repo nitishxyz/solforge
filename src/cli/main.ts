@@ -1,7 +1,13 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
-// CLI version string; keep in sync with package.json if possible
-const VERSION = "0.2.4";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkgPath = join(__dirname, "../../package.json");
+const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+const VERSION = pkg.version;
 
 // Robust arg parsing for both bun script and compiled binary
 const known = new Set([
