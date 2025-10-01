@@ -17,10 +17,6 @@
   },
   "files": [
     "start.cjs",
-    "scripts",
-    "src",
-    "server",
-    "docs",
     "README.md",
     "LICENSE"
   ],
