@@ -13,6 +13,30 @@ info() { printf "\033[1;34m[i]\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 err()  { printf "\033[1;31m[x]\033[0m %s\n" "$*" 1>&2; }
 
+get_latest_version() {
+  http_get "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/'
+}
+
+compare_versions() {
+  [ "$1" = "$2" ] && return 0
+  
+  old_ifs=$IFS
+  IFS=.
+  set -- $1
+  v1_major=$1 v1_minor=$2 v1_patch=$3
+  set -- $2
+  v2_major=$1 v2_minor=$2 v2_patch=$3
+  IFS=$old_ifs
+  
+  [ "${v1_major:-0}" -gt "${v2_major:-0}" ] && return 1
+  [ "${v1_major:-0}" -lt "${v2_major:-0}" ] && return 2
+  [ "${v1_minor:-0}" -gt "${v2_minor:-0}" ] && return 1
+  [ "${v1_minor:-0}" -lt "${v2_minor:-0}" ] && return 2
+  [ "${v1_patch:-0}" -gt "${v2_patch:-0}" ] && return 1
+  [ "${v1_patch:-0}" -lt "${v2_patch:-0}" ] && return 2
+  return 0
+}
+
 # Detect downloader
 http_get() {
   if command -v curl >/dev/null 2>&1; then
@@ -64,6 +88,8 @@ fi
 url="$base/$filename"
 
 info "Installing $BIN_NAME ($os/$arch) from: $url"
+
+
 
 # Download
 tmpdir=${TMPDIR:-/tmp}

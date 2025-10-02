@@ -76,7 +76,7 @@ function downloadWithProgress(url, dest) {
 			} else if (response.statusCode === 200) {
 				totalBytes = Number.parseInt(
 					response.headers["content-length"] || "0",
-					10
+					10,
 				);
 
 				response.on("data", (chunk) => {
@@ -86,7 +86,7 @@ function downloadWithProgress(url, dest) {
 						const downloadedMB = (downloadedBytes / 1024 / 1024).toFixed(1);
 						const totalMB = (totalBytes / 1024 / 1024).toFixed(1);
 						process.stdout.write(
-							`\rDownloading: ${percent}% (${downloadedMB}MB / ${totalMB}MB)`
+							`\rDownloading: ${percent}% (${downloadedMB}MB / ${totalMB}MB)`,
 						);
 					}
 				});
@@ -152,7 +152,9 @@ async function install() {
 	try {
 		const asset = assetName();
 		if (!asset) {
-			throw new Error(`Unsupported platform: ${process.platform}-${process.arch}`);
+			throw new Error(
+				`Unsupported platform: ${process.platform}-${process.arch}`,
+			);
 		}
 
 		const { version, repository } = pkg();
@@ -178,27 +180,21 @@ async function install() {
 
 		fs.chmodSync(binPath, 0o755);
 
-		const result = spawnSync(binPath, ["--version"], { encoding: "utf8" });
-		if (result.status === 0) {
-			console.log("\n✓ solforge installed successfully!");
-			console.log(`Version: ${result.stdout.trim()}`);
-			console.log(`Location: ${binPath}`);
+		console.log("\n✓ solforge installed successfully!");
+		console.log(`Location: ${binPath}`);
 
-			const pathDirs = (process.env.PATH || "").split(path.delimiter);
-			if (!pathDirs.includes(userBin)) {
-				updateShellProfile(userBin);
-				console.log(`\n⚠️  Add ${userBin} to your PATH:`);
-				console.log(
-					`   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc`
-				);
-				console.log(
-					`   Or for zsh: echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc`
-				);
-			} else {
-				console.log(`✓ ${userBin} already in PATH`);
-			}
+		const pathDirs = (process.env.PATH || "").split(path.delimiter);
+		if (!pathDirs.includes(userBin)) {
+			updateShellProfile(userBin);
+			console.log(`\n⚠️  Add ${userBin} to your PATH:`);
+			console.log(
+				`   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc`,
+			);
+			console.log(
+				`   Or for zsh: echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc`,
+			);
 		} else {
-			console.log(`\n✓ Installed to ${binPath}`);
+			console.log(`✓ ${userBin} already in PATH`);
 		}
 
 		console.log("\nRun: solforge --help");
