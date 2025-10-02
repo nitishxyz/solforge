@@ -1,21 +1,8 @@
 // Minimal, fast CLI router with @clack/prompts for UX
 import * as p from "@clack/prompts";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import PKG from "../../package.json" with { type: "json" };
 
-function getVersion(): string {
-	try {
-		const __dirname = dirname(fileURLToPath(import.meta.url));
-		const pkgPath = join(__dirname, "..", "..", "package.json");
-		const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-		return pkg.version || "0.2.9";
-	} catch {
-		return "0.2.9";
-	}
-}
-
-const VERSION = getVersion();
+const VERSION = PKG.version;
 
 // Robust arg parsing for both bun script and compiled binary
 const known = new Set([
