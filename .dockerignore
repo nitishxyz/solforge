@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.github
+*.log
+.env
+tests
+docs
+scripts
+infra
+.vscode
+.idea
+*.md
+!sf.config.json
