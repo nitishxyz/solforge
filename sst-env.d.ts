@@ -4,13 +4,14 @@
 /* deno-fmt-ignore-file */
 
 declare module "sst" {
-	export interface Resource {
-		SolforgeSh: {
-			type: "sst.cloudflare.Worker";
-			url: string;
-		};
-	}
+  export interface Resource {
+    "SolforgeSh": {
+      "type": "sst.cloudflare.Worker"
+      "url": string
+    }
+  }
 }
 /// <reference path="sst-env.d.ts" />
 
-import "sst";
+import "sst"
+export {}

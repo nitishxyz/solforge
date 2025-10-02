@@ -99,27 +99,11 @@ http_down "$url" "$tmpfile"
 # Make executable
 chmod +x "$tmpfile"
 
-# Choose install dir
-install_dir="/usr/local/bin"
-if [ ! -w "$install_dir" ]; then
-  if command -v sudo >/dev/null 2>&1; then
-    sudo_cmd="sudo"
-  else
-    sudo_cmd=""
-  fi
-fi
-
-if [ -n "$sudo_cmd" ] && [ -d "$install_dir" ] && [ ! -w "$install_dir" ]; then
-  info "Moving binary to $install_dir (requires sudo)"
-  $sudo_cmd mv "$tmpfile" "$install_dir/$BIN_NAME"
-else
-  # Fallback to user bin
-  user_bin="$HOME/.local/bin"
-  mkdir -p "$user_bin"
-  info "Moving binary to $user_bin"
-  mv "$tmpfile" "$user_bin/$BIN_NAME"
-  install_dir="$user_bin"
-fi
+# Install to ~/.local/bin (same as start.cjs)
+install_dir="$HOME/.local/bin"
+mkdir -p "$install_dir"
+info "Moving binary to $install_dir"
+mv "$tmpfile" "$install_dir/$BIN_NAME"
 
 # Verify
 if "$install_dir/$BIN_NAME" --version >/dev/null 2>&1; then
