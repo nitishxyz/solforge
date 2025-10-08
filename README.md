@@ -301,13 +301,13 @@ cd solforge
 bun install
 
 # Run from source
-bun src/cli/main.ts start
+bun apps/cli/index.ts start
 
 # Build binary
-bun run build:bin
+bun run --filter @solforge/cli build:bin
 
 # Build for all platforms
-bun run build:bin:all
+bun run --filter @solforge/cli build:bin:all
 ```
 
 ### Platform-Specific Builds
@@ -333,18 +333,15 @@ bun run build:bin:windows-x64
 
 ```
 solforge/
-├── src/
-│   ├── cli/           # CLI commands and routing
-│   ├── config/        # Configuration management
-│   ├── db/            # Database schemas and operations
-│   ├── rpc/           # RPC server bootstrap
-│   └── gui/           # Web GUI (React)
-├── server/
-│   ├── methods/       # RPC method implementations
-│   ├── lib/           # Shared utilities
-│   └── types.ts       # TypeScript definitions
+├── apps/
+│   ├── cli/           # SolForge CLI (commands, services, RPC bootstrap)
+│   └── web/           # Web UI (in development)
+├── packages/
+│   ├── server/        # LiteSVM RPC and WebSocket servers
+│   └── install/       # Installer CLI
 ├── scripts/           # Build and setup scripts
-└── sf.config.json     # Configuration file
+├── drizzle/           # SQLite migrations
+└── docs/              # Architecture and planning docs
 ```
 
 ## 🔍 Troubleshooting

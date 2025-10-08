@@ -38,9 +38,9 @@ Visual diagrams and architecture documentation for the Solforge monorepo refacto
 │  │  │                                                      │     │  │
 │  │  │  • Download binary from GitHub releases             │     │  │
 │  │  │  • Install to ~/.local/bin/                      │     │  │
-│  │  │  • Published to npm as @solforge/install            │     │  │
+│  │  │  • Published to npm as solforge            │     │  │
 │  │  │                                                      │     │  │
-│  │  │  Usage: bunx @solforge/install                      │     │  │
+│  │  │  Usage: bunx solforge                      │     │  │
 │  │  │                                                      │     │  │
 │  │  └──────────────────────────────────────────────────────┘     │  │
 │  │                                                               │  │
@@ -464,22 +464,22 @@ User Action (Web UI)
 ┌───────────────────────────────────────────────────────────────────┐
 │                        NPM PACKAGE                                │
 │                                                                   │
-│  1. Build @solforge/install package                              │
+│  1. Build solforge package                              │
 │                                                                   │
 │  2. Publish to npm:                                              │
 │     npm publish packages/install                                 │
 │                                                                   │
 │  3. Users can install via:                                       │
-│     bunx @solforge/install                                       │
+│     bunx solforge                                       │
 │     or                                                           │
-│     npx @solforge/install                                        │
+│     npx solforge                                        │
 └───────────────────────────────────────────────────────────────────┘
                                 │
                                 ↓
 ┌───────────────────────────────────────────────────────────────────┐
 │                    INSTALLATION FLOW                              │
 │                                                                   │
-│  User runs: bunx @solforge/install                               │
+│  User runs: bunx solforge                               │
 │                   │                                              │
 │                   ↓                                              │
 │  1. Detect platform (darwin-arm64, etc.)                         │
@@ -635,6 +635,6 @@ User Action (Web UI)
 
 ---
 
-**Last Updated**: 2024  
-**Version**: 1.0  
+**Last Updated**: 2025
+**Version**: 1.0
 **Status**: Architecture Documentation

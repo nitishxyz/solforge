@@ -10,7 +10,7 @@ import {
 } from "@solana/spl-token";
 import { unpack as unpackTokenMetadata } from "@solana/spl-token-metadata";
 import { type AccountInfo, PublicKey } from "@solana/web3.js";
-import type { RpcMethodContext } from "../../../server/types";
+import type { RpcMethodContext } from "../../../types";
 
 export function parseSplTokenAccountOrMint(
 	pubkey: PublicKey,

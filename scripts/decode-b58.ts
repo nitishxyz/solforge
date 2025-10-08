@@ -1,4 +1,4 @@
-import { decodeBase58 } from "../server/lib/base58";
+import { decodeBase58 } from "../packages/server/src/lib/base58";
 
 const s = process.argv[2] || "84eT";
 const bytes = decodeBase58(s);

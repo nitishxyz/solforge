@@ -53,7 +53,7 @@
 
 ## Build & Packaging
 - Tailwind build step (e.g., `bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/tailwind.css --minify`) runs before compiling the executable.
-- Compile the CLI+servers into a single binary: `bun build --compile src/cli/main.ts --outfile dist/solforge` (plus `--target` variants as needed).
+- Compile the CLI+servers into a single binary: `bun build --compile apps/cli/index.ts --outfile dist/solforge` (plus `--target` variants as needed).
 - Document the build pipeline and configuration flags in README.
 
 ## Testing & Validation

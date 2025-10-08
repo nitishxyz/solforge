@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
-import type { AccountSnapshot } from "../../../src/db/tx-store";
+import type { AccountSnapshot } from "../../db/tx-store";
 
 /**
  * Implements the getMultipleAccounts RPC method

@@ -4,8 +4,8 @@ import {
 	type VersionedTransaction,
 } from "@solana/web3.js";
 import { LiteSVM } from "litesvm";
-import { sqlite } from "../src/db/index";
-import { TxStore } from "../src/db/tx-store";
+import { sqlite } from "./db/index";
+import { TxStore } from "./db/tx-store";
 import { decodeBase58, encodeBase58 } from "./lib/base58";
 import { fundFaucetIfNeeded, loadOrCreateFaucet } from "./lib/faucet";
 import { rpcMethods } from "./methods";
@@ -313,7 +313,7 @@ export class LiteSVMRpcServer {
 								return null;
 							}
 						})
-						.filter(Boolean) as import("../src/db/tx-store").AccountSnapshot[];
+						.filter(Boolean) as import("./db/tx-store").AccountSnapshot[];
 					if (snapshots.length > 0)
 						this.store.upsertAccounts(snapshots).catch(() => {});
 				} catch {}

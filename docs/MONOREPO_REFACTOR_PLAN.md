@@ -45,20 +45,17 @@
 
 ```
 solforge/
-├── src/
-│   ├── cli/              # CLI commands and router
-│   ├── gui/              # Current GUI (basic React app)
-│   ├── commands/         # Command implementations
-│   ├── config/           # Configuration management
-│   ├── db/               # Database layer
-│   ├── rpc/              # RPC server
-│   ├── services/         # Core services
-│   ├── types/            # Type definitions
-│   └── utils/            # Utilities
-├── server/               # Legacy server code
+├── apps/
+│   ├── cli/              # CLI commands, services, RPC bootstrap
+│   └── web/              # New web UI (in development)
+├── packages/
+│   ├── server/           # LiteSVM RPC + WS servers
+│   └── install/          # Installer CLI
+├── src/gui/              # Legacy GUI assets (being migrated)
 ├── scripts/              # Build scripts
+├── drizzle/              # SQLite migrations
 ├── package.json          # Root package config
-└── index.ts              # Entry point
+└── index.ts              # Legacy entry point
 ```
 
 ### Current Build Process
@@ -66,7 +63,7 @@ solforge/
 ```json
 {
   "build": "bun run build:bin",
-  "build:bin": "bun run build:css && bun run build:gui && bun build --compile src/cli/main.ts --outfile dist/solforge",
+  "build:bin": "bun run build:css && bun run build:gui && bun build --compile apps/cli/index.ts --outfile dist/solforge",
   "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
   "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify"
 }
@@ -156,7 +153,7 @@ solforge/
 ```
 ┌─────────────────────────────────────────────────────┐
 │                                                     │
-│  @solforge/install (packages/install)              │
+│  solforge (packages/install)                       │
 │  - Downloads and installs Solforge CLI binary      │
 │  - Published to npm                                │
 │                                                     │
@@ -207,7 +204,7 @@ solforge/
 
 **Steps**:
 1. Create `apps/cli/package.json` with dependencies
-2. Move `src/cli/*` → `apps/cli/src/commands/`
+2. Move `src/cli/*` → `apps/cli/src/cli/`
 3. Move `src/commands/*` → `apps/cli/src/commands/`
 4. Move `src/config/*` → `apps/cli/src/config/`
 5. Move `src/db/*` → `apps/cli/src/db/`
@@ -262,10 +259,10 @@ solforge/
 3. Implement binary download logic
 4. Implement installation to system PATH
 5. Create `packages/install/index.ts` as CLI entry
-6. Publish to npm as `@solforge/install`
+6. Publish to npm as `solforge`
 7. Update docs with new installation method
 
-**Validation**: `bunx @solforge/install` successfully installs Solforge
+**Validation**: `bunx solforge` successfully installs Solforge
 
 ### Phase 6: Cleanup & Documentation (Week 4)
 
@@ -273,7 +270,7 @@ solforge/
 
 **Steps**:
 1. Remove old `src/gui/` directory
-2. Remove legacy `server/` directory (if unused)
+2. Consolidate RPC code in `packages/server/` (remove any legacy `server/` dir)
 3. Update all documentation
 4. Update README with new structure
 5. Create migration guide for contributors
@@ -324,7 +321,7 @@ solforge/
 
 ```json
 {
-  "name": "solforge-cli",
+  "name": "@solforge/cli",
   "version": "0.3.0",
   "private": false,
   "type": "module",
@@ -428,7 +425,7 @@ export default defineConfig({
 
 ```json
 {
-  "name": "@solforge/install",
+  "name": "solforge",
   "version": "0.3.0",
   "description": "Install Solforge CLI globally",
   "type": "module",
@@ -1099,7 +1096,7 @@ export function createWebServer(port: number, apiPort: number) {
 - [ ] Web UI builds and embeds correctly
 - [ ] All CLI commands work as expected
 - [ ] Web UI loads and connects to API
-- [ ] Installation via `@solforge/install` works
+- [ ] Installation via `solforge` works
 - [ ] Documentation is accurate and complete
 
 ---
@@ -1132,7 +1129,7 @@ export function createWebServer(port: number, apiPort: number) {
 
 ### Week 4: Installer & Cleanup
 
-- ⏳ Create `@solforge/install` package
+- ⏳ Create `solforge` package
 - ⏳ Implement download logic
 - ⏳ Test installation flow
 - ⏳ Remove legacy code
@@ -1142,7 +1139,7 @@ export function createWebServer(port: number, apiPort: number) {
 ### Week 5: Release & Documentation
 
 - ⏳ Release v0.3.0 with new structure
-- ⏳ Publish `@solforge/install` to npm
+- ⏳ Publish `solforge` to npm
 - ⏳ Update README and guides
 - ⏳ Create migration guide
 - ⏳ Announce release
@@ -1181,7 +1178,7 @@ export function createWebServer(port: number, apiPort: number) {
 
 - ~~Old GUI in `src/gui/`~~ → New web UI in `apps/web/`
 - ~~Manual CSS build step~~ → Integrated into web build
-- ~~install.sh script~~ → `@solforge/install` package
+- ~~install.sh script~~ → `solforge` package
 
 ### New Patterns
 
@@ -1193,11 +1190,11 @@ export function createWebServer(port: number, apiPort: number) {
 
 ## Next Steps
 
-1. **Review this plan** with team
-2. **Set up initial monorepo structure** (Phase 1)
-3. **Begin CLI migration** (Phase 2)
-4. **Start web UI development** in parallel (Phase 3)
-5. **Integrate and test** (Phases 4-5)
+1. **Verify CLI workspace build** (`bun run build:cli`)
+2. **Scaffold Vite app in `apps/web/`** (Phase 3)
+3. **Implement `scripts/build-web.ts` + embedding flow** (Phase 4)
+4. **Wire GUI server + `/api` facade** (Phase 4)
+5. **Add installer package + clean legacy GUI** (Phase 5)
 
 ---
 

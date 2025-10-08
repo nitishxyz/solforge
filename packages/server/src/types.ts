@@ -1,6 +1,6 @@
 import type { Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { LiteSVM } from "litesvm";
-import type { TxStore } from "../src/db/tx-store";
+import type { TxStore } from "./db/tx-store";
 
 export interface JsonRpcRequest {
 	jsonrpc: "2.0";

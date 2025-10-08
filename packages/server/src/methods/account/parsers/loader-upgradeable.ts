@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import type { RpcMethodContext } from "../../../server/types";
+import type { RpcMethodContext } from "../../../types";
 
 const LOADER_UPGRADEABLE = "BPFLoaderUpgradeab1e11111111111111111111111";
 

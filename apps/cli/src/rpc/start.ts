@@ -1,8 +1,8 @@
 import {
 	createLiteSVMRpcServer,
 	createLiteSVMWebSocketServer,
-} from "../../server";
-import { startGuiServer } from "../gui/server";
+} from "@solforge/server";
+import { startGuiServer } from "../../../../src/gui/server.js";
 
 export interface RpcStartOptions {
 	rpcPort?: number;

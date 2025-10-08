@@ -47,7 +47,7 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
 
 ### Package Setup
 - [ ] Create `apps/cli/package.json`:
-  - [ ] Set name: `"solforge-cli"`
+  - [ ] Set name: `"@solforge/cli"`
   - [ ] Add dependencies (copy from root package.json)
   - [ ] Add dev scripts (dev, build, prebuild)
   - [ ] Add bin entry: `"solforge": "./dist/solforge"`
@@ -56,7 +56,7 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
   - [ ] Set correct paths
 
 ### Code Migration
-- [ ] Move `src/cli/` → `apps/cli/src/commands/`
+- [ ] Move `src/cli/` → `apps/cli/src/cli/`
 - [ ] Move `src/commands/` → `apps/cli/src/commands/`
 - [ ] Move `src/config/` → `apps/cli/src/config/`
 - [ ] Move `src/db/` → `apps/cli/src/db/`
@@ -260,7 +260,7 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
 
 ### Package Setup
 - [ ] Create `packages/install/package.json`:
-  - [ ] Set name: `"@solforge/install"`
+  - [ ] Set name: `"solforge"`
   - [ ] Add description, keywords, license
   - [ ] Add bin entry
   - [ ] Add dependencies (@clack/prompts)
@@ -293,7 +293,7 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
 - [ ] Verify PATH instructions shown
 - [ ] Test with bunx (if published to npm):
   - [ ] Publish to npm (or test version)
-  - [ ] Run `bunx @solforge/install`
+  - [ ] Run `bunx solforge`
 
 ### Documentation
 - [ ] Create `packages/install/README.md`:
@@ -344,7 +344,7 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
 - [ ] Test CLI: `apps/cli/dist/solforge --help`
 - [ ] Test all CLI commands
 - [ ] Test web UI in browser
-- [ ] Test installer: `bunx @solforge/install` (if published)
+- [ ] Test installer: `bunx solforge` (if published)
 
 ### Platform Testing
 - [ ] Test on macOS (ARM64)
@@ -385,8 +385,8 @@ This checklist breaks down the monorepo refactor into actionable tasks. Check of
 - [ ] Publish installer:
   - [ ] `cd packages/install`
   - [ ] `npm publish --access public`
-- [ ] Verify published: `npm info @solforge/install`
-- [ ] Test installation: `bunx @solforge/install@latest`
+- [ ] Verify published: `npm info solforge`
+- [ ] Test installation: `bunx solforge@latest`
 
 ### Announcement
 - [ ] Update README with latest version
@@ -422,7 +422,7 @@ If critical issues are found:
 
 2. **Unpublish NPM** (within 72 hours):
    ```bash
-   npm unpublish @solforge/install@0.3.0
+   npm unpublish solforge@0.3.0
    ```
 
 3. **Revert to Previous Release**:

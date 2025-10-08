@@ -123,9 +123,9 @@ cd packages/install && bun run build
 
 **Usage:**
 ```bash
-bunx @solforge/install
+bunx solforge
 # or
-npx @solforge/install
+npx solforge
 ```
 
 ---

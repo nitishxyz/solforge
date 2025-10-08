@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8899 8900 42069
 
-CMD ["bun", "run", "src/cli/main.ts", "--ci", "--network"]
+CMD ["bun", "run", "apps/cli/src/cli/main.ts", "--ci", "--network"]

@@ -4,30 +4,26 @@
 
 ```
 solforge/
-├── index.ts                    # Main entry point
-├── server/                     # Core server module
-│   ├── index.ts               # Module exports
-│   ├── rpc-server.ts          # Main RPC server class
-│   ├── types.ts               # Shared TypeScript types
-│   └── methods/               # RPC method implementations
-│       ├── index.ts           # Method registry
-│       ├── account/           # Account methods (modular)
-│       │   ├── index.ts      
-│       │   ├── get-account-info.ts
-│       │   ├── get-balance.ts
-│       │   ├── get-multiple-accounts.ts
-│       │   └── request-airdrop.ts
-│       ├── transaction.ts     # Transaction methods (monolithic for now)
-│       ├── block.ts           # Block/slot methods
-│       ├── system.ts          # System methods
-│       └── TEMPLATE.md        # Template for new methods
-├── test-client.ts             # Test client implementation
-├── package.json               # Dependencies (Bun-based)
-├── tsconfig.json              # TypeScript configuration
-├── SOLFORGE.md                # Project vision and roadmap
-├── AGENTS.md                  # Development guidelines
-├── README.md                  # User documentation
-└── SOLANA_KIT_GUIDE.md        # Solana Kit usage guide
+├── index.ts                    # Legacy entry point
+├── apps/
+│   ├── cli/                    # CLI application
+│   │   ├── index.ts            # CLI entry point
+│   │   └── src/                # Commands, services, RPC bootstrap
+│   └── web/                    # Web UI (in development)
+├── packages/
+│   ├── server/                 # LiteSVM RPC + WS servers
+│   │   └── src/
+│   │       ├── index.ts        # Module exports
+│   │       ├── rpc-server.ts   # RPC server implementation
+│   │       ├── ws-server.ts    # WebSocket server
+│   │       ├── types.ts        # Shared RPC types
+│   │       ├── lib/            # Helpers (base58, faucet, etc.)
+│   │       └── methods/        # JSON-RPC methods
+│   └── install/                # Installer package
+├── scripts/                    # Build and setup scripts
+├── drizzle/                    # SQLite migrations
+├── docs/                       # Documentation
+└── SOLFORGE.md                 # Project vision and roadmap
 ```
 
 ## Module Organization
@@ -61,17 +57,17 @@ Split: methods/category/
 2. **Check file size** of target category
 3. **If < 200 lines**: Add to existing file
 4. **If > 200 lines**: Create subdirectory structure
-5. **Follow template** in `methods/TEMPLATE.md`
-6. **Register method** in `methods/index.ts`
+5. **Follow template** in `packages/server/src/methods/TEMPLATE.md`
+6. **Register method** in `packages/server/src/methods/index.ts`
 7. **Update documentation**
 
 ## Key Files
 
 ### Core Components
 
-- `server/rpc-server.ts`: Main server class, handles routing
-- `server/types.ts`: TypeScript interfaces for RPC
-- `server/methods/index.ts`: Method registry and exports
+- `packages/server/src/rpc-server.ts`: Main server class, handles routing
+- `packages/server/src/types.ts`: TypeScript interfaces for RPC
+- `packages/server/src/methods/index.ts`: Method registry and exports
 
 ### Configuration
 
@@ -107,7 +103,7 @@ import type { RpcMethodHandler } from "../types";
 
 ## Future Growth
 
-As we add more RPC methods, the structure will evolve:
+As we add more RPC methods, the structure under `packages/server/src/methods/` will evolve:
 
 ```
 methods/

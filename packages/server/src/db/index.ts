@@ -69,7 +69,7 @@ try {
 				try {
 					const sql = await Bun.file(m.path).text();
 					sqlite.exec(sql);
-					console.log(`✅ Applied bundled migration: ${m.name}`);
+					// console.log(`✅ Applied bundled migration: ${m.name}`);
 				} catch (e) {
 					console.error(`❌ Failed bundled migration: ${m.name}`, e);
 					throw e;

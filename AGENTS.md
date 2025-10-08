@@ -44,7 +44,7 @@
 
 ### Directory Structure
 ```
-server/
+packages/server/src/
 ├── methods/
 │   ├── account/           # When account.ts gets too big
 │   │   ├── get-account-info.ts
@@ -73,12 +73,12 @@ If `account.ts` or `transaction.ts` grows large:
 
 Example migration:
 ```typescript
-// Before: server/methods/account.ts (300+ lines)
+// Before: packages/server/src/methods/account.ts (300+ lines)
 export const getAccountInfo = ...
 export const getBalance = ...
 export const requestAirdrop = ...
 
-// After: server/methods/account/index.ts
+// After: packages/server/src/methods/account/index.ts
 export { getAccountInfo } from './get-account-info';
 export { getBalance } from './get-balance';
 export { requestAirdrop } from './request-airdrop';
@@ -220,7 +220,7 @@ Each new RPC method needs:
 
 ### Template
 ```typescript
-// server/methods/category/method-name.ts
+// packages/server/src/methods/category/method-name.ts
 import type { RpcMethodHandler } from "../../types";
 
 /**

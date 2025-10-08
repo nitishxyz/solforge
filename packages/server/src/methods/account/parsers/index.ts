@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import type { RpcMethodContext } from "../../../server/types";
+import type { RpcMethodContext } from "../../../types";
 import { parseUpgradeableLoader } from "./loader-upgradeable";
 import { parseSplTokenAccountOrMint } from "./spl-token";
 import { parseSystemAccount } from "./system";

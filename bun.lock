@@ -3,6 +3,24 @@
   "workspaces": {
     "": {
       "name": "solforge",
+      "devDependencies": {
+        "@biomejs/biome": "2.2.4",
+        "@types/bun": "latest",
+        "@types/react": "^19.1.13",
+        "@types/react-dom": "^19.1.9",
+        "autoprefixer": "^10.4.21",
+        "drizzle-kit": "^0.31.4",
+        "postcss": "^8.5.6",
+        "tailwindcss": "3",
+        "typescript": "^5",
+      },
+    },
+    "apps/cli": {
+      "name": "@solforge/cli",
+      "version": "0.2.17",
+      "bin": {
+        "solforge": "./dist/solforge",
+      },
       "dependencies": {
         "@clack/prompts": "^0.11.0",
         "@solana-program/compute-budget": "^0.9.0",
@@ -11,26 +29,24 @@
         "@solana-program/token": "^0.6.0",
         "@solana/kit": "^3.0.3",
         "@solana/spl-token": "^0.4.14",
+        "@solforge/server": "workspace:*",
         "drizzle-orm": "^0.44.5",
         "litesvm": "^0.3.3",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
         "sst": "3.17.13",
       },
-      "devDependencies": {
-        "@biomejs/biome": "2.2.4",
-        "@types/aws-lambda": "8.10.152",
-        "@types/bun": "latest",
-        "@types/react": "^19.1.13",
-        "@types/react-dom": "^19.1.9",
-        "autoprefixer": "^10.4.21",
-        "drizzle-kit": "^0.31.4",
-        "postcss": "^8.5.6",
-        "tailwindcss": "3",
+    },
+    "packages/install": {
+      "name": "solforge",
+      "version": "0.2.17",
+      "bin": {
+        "solforge": "./start.cjs",
       },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
+    },
+    "packages/server": {
+      "name": "@solforge/server",
+      "version": "0.2.17",
     },
   },
   "packages": {
@@ -236,11 +252,13 @@
 
     "@solana/web3.js": ["@solana/web3.js@1.98.4", "", { "dependencies": { "@babel/runtime": "^7.25.0", "@noble/curves": "^1.4.2", "@noble/hashes": "^1.4.0", "@solana/buffer-layout": "^4.0.1", "@solana/codecs-numbers": "^2.1.0", "agentkeepalive": "^4.5.0", "bn.js": "^5.2.1", "borsh": "^0.7.0", "bs58": "^4.0.1", "buffer": "6.0.3", "fast-stable-stringify": "^1.0.0", "jayson": "^4.1.1", "node-fetch": "^2.7.0", "rpc-websockets": "^9.0.2", "superstruct": "^2.0.2" } }, "sha512-vv9lfnvjUsRiq//+j5pBdXig0IQdtzA0BRZ3bXEP4KaIyF1CcaydWqgyzQgfZMNIsWNWmG+AUHwPy4AHOD6gpw=="],
 
+    "@solforge/cli": ["@solforge/cli@workspace:apps/cli"],
+
+    "@solforge/server": ["@solforge/server@workspace:packages/server"],
+
     "@swc/helpers": ["@swc/helpers@0.5.17", "", { "dependencies": { "tslib": "^2.8.0" } }, "sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A=="],
 
     "@tsconfig/bun": ["@tsconfig/bun@1.0.7", "", {}, "sha512-udGrGJBNQdXGVulehc1aWT73wkR9wdaGBtB6yL70RJsqwW/yJhIg6ZbRlPOfIUiFNrnBuYLBi9CSmMKfDC7dvA=="],
-
-    "@types/aws-lambda": ["@types/aws-lambda@8.10.152", "", {}, "sha512-soT/c2gYBnT5ygwiHPmd9a1bftj462NWVk2tKCc1PYHSIacB2UwbTS2zYG4jzag1mRDuzg/OjtxQjQ2NKRB6Rw=="],
 
     "@types/bun": ["@types/bun@1.2.22", "", { "dependencies": { "bun-types": "1.2.22" } }, "sha512-5A/KrKos2ZcN0c6ljRSOa1fYIyCKhZfIVYeuyb4snnvomnpFqC0tTsEkdqNxbAgExV384OETQ//WAjl3XbYqQA=="],
 
@@ -695,6 +713,8 @@
     "signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
 
     "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
+
+    "solforge": ["solforge@workspace:packages/install"],
 
     "source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
 

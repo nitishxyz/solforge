@@ -1,9 +1,8 @@
 {
-  "name": "solforge",
+  "name": "solforge-monorepo",
   "version": "0.2.17",
-  "module": "index.ts",
+  "private": true,
   "type": "module",
-  "private": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nitishxyz/solforge.git"
@@ -12,55 +11,27 @@
   "bugs": {
     "url": "https://github.com/nitishxyz/solforge/issues"
   },
-  "bin": {
-    "solforge": "start.cjs"
-  },
-  "files": [
-    "start.cjs",
-    "README.md",
-    "LICENSE"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "build": "bun run build:bin",
-    "build:bin": "bun run build:css && bun run build:gui && bun build --compile src/cli/main.ts --outfile dist/solforge",
-    "build:bin:all": "bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
-    "build:bin:darwin-arm64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-darwin-arm64 src/cli/main.ts --outfile dist/solforge-darwin-arm64",
-    "build:bin:darwin-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-darwin-x64 src/cli/main.ts --outfile dist/solforge-darwin-x64",
-    "build:bin:linux-arm64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-arm64 src/cli/main.ts --outfile dist/solforge-linux-arm64",
-    "build:bin:linux-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-linux-x64 src/cli/main.ts --outfile dist/solforge-linux-x64",
-    "build:bin:windows-x64": "bun run build:css && bun run build:gui && bun build --compile --target=bun-windows-x64 src/cli/main.ts --outfile dist/solforge-windows-x64.exe",
-    "build:css": "bunx tailwindcss -i src/gui/src/index.css -o src/gui/public/app.css --minify",
-    "build:gui": "bun build src/gui/src/main.tsx --outdir src/gui/public/build --target=browser --minify",
-    "cli": "bun src/cli/main.ts",
-    "lint": "biome check",
-    "prepack": "chmod +x start.cjs || true"
+    "dev:cli": "bun run --filter @solforge/cli dev",
+    "build": "bun run build:cli",
+    "build:cli": "bun run --filter @solforge/cli build",
+    "build:cli:all": "bun run --filter @solforge/cli build:bin:all",
+    "lint": "bunx @biomejs/biome check apps packages src scripts",
+    "legacy:cli": "bun apps/cli/src/cli/main.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
-    "@types/aws-lambda": "8.10.152",
     "@types/bun": "latest",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "autoprefixer": "^10.4.21",
     "drizzle-kit": "^0.31.4",
     "postcss": "^8.5.6",
-    "tailwindcss": "3"
-  },
-  "peerDependencies": {
+    "tailwindcss": "3",
     "typescript": "^5"
-  },
-  "dependencies": {
-    "@clack/prompts": "^0.11.0",
-    "@solana-program/compute-budget": "^0.9.0",
-    "@solana-program/memo": "^0.8.0",
-    "@solana-program/system": "^0.8.0",
-    "@solana-program/token": "^0.6.0",
-    "@solana/kit": "^3.0.3",
-    "@solana/spl-token": "^0.4.14",
-    "drizzle-orm": "^0.44.5",
-    "litesvm": "^0.3.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "sst": "3.17.13"
   }
 }

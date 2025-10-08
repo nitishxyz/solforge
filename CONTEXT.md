@@ -1,12 +1,12 @@
 # SolForge Development Context
 
 ## Build/Test/Lint Commands
-- **Build**: `bun build src/index.ts --outdir ./dist --target node`
-- **Dev**: `bun run --watch src/index.ts` (watch mode)
+- **Build**: `bun run build:cli`
+- **Dev**: `bun apps/cli/index.ts start`
 - **Test**: `bun test` (no test files exist yet)
-- **Lint**: `bunx @biomejs/biome check src/`
-- **Format**: `bunx @biomejs/biome format src/ --write`
-- **Start**: `bun run dist/index.js` (run built version)
+- **Lint**: `bunx @biomejs/biome check apps/cli/src`
+- **Format**: `bunx @biomejs/biome format apps/cli/src --write`
+- **Start**: `bun run --filter @solforge/cli build && ./apps/cli/dist/solforge`
 
 ## Code Style Guidelines
 - **Runtime**: Bun with TypeScript ESNext modules

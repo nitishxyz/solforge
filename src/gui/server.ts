@@ -1,7 +1,6 @@
 import { file, serve } from "bun";
-import type { LiteSVMRpcServer } from "../../server/rpc-server";
-import type { JsonRpcResponse } from "../../server/types";
-import { readConfig, writeConfig } from "../config";
+import type { JsonRpcResponse, LiteSVMRpcServer } from "@solforge/server";
+import { readConfig, writeConfig } from "../../apps/cli/src/config/index.js";
 // Embed built GUI assets as files so the compiled binary can stream them
 import appCssFile from "./public/app.css" with { type: "file" };
 import bundledCssFile from "./public/build/main.css" with { type: "file" };

@@ -74,7 +74,7 @@ Notes:
 
 ## Architecture & Files
 
-- `src/cli/`
+- `apps/cli/src/cli/`
   - `main.ts` — CLI entry: parses `Bun.argv`, dispatches subcommands.
   - `commands/start.ts` — start server from config/flags.
   - `commands/gui.ts` — start server with UI routes.
@@ -84,13 +84,13 @@ Notes:
   - `commands/program-accounts-clone.ts` — clone owned accounts.
   - `utils/prompts.ts` — wrapper around `@clack/prompts` for consistent UX.
 
-- `src/config/`
+- `apps/cli/src/config/`
   - `index.ts` — read/merge/validate config, dot-path get/set, write.
   - `types.ts` — shared config types.
 
-- `src/rpc/` (facade over current `server/` initially)
+- `apps/cli/src/rpc/` (facade over `packages/server/` initially)
   - `start.ts` — wraps existing RPC/WS start with options: ports, db, gui routes.
-  - Reuse `server/rpc-server.ts` and `server/ws-server.ts` (minimal changes). Later we can move code into `src/rpc/`.
+  - Reuse `@solforge/server` exports (`rpc-server.ts`, `ws-server.ts`). Later we can move code into `src/rpc/` if desired.
 
 - `ui/`
   - `public/index.html` — HTML entry (dashboard shell).
@@ -116,7 +116,7 @@ Notes:
 
 ## Build & Packaging
 
-- Compile `src/cli/main.ts` to single binary: `bun build src/cli/main.ts --compile --outfile dist/solforge`.
+- Compile `apps/cli/index.ts` to single binary: `bun build apps/cli/index.ts --compile --outfile dist/solforge`.
 - Drizzle migrations: use the existing `drizzle/` folder. No duplicate embedded SQL.
   - Packaging options:
     - A) Distribute binary alongside the `drizzle/` folder (simple; zero duplication).

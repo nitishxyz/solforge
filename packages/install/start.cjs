@@ -21,9 +21,10 @@ function pkg() {
 }
 
 function isInWorkspace() {
+	const root = path.resolve(__dirname, "..", "..");
 	return (
-		fs.existsSync(path.join(__dirname, "src")) &&
-		fs.existsSync(path.join(__dirname, "package.json"))
+		fs.existsSync(path.join(root, "apps", "cli", "src")) &&
+		fs.existsSync(path.join(root, "package.json"))
 	);
 }
 
@@ -253,7 +254,14 @@ Options:
 
 	if (isInWorkspace()) {
 		const bun = process.env.SOLFORGE_BUN || "bun";
-		const entry = path.join(__dirname, "src", "cli", "main.ts");
+		const entry = path.join(
+			path.resolve(__dirname, "..", ".."),
+			"apps",
+			"cli",
+			"src",
+			"cli",
+			"main.ts",
+		);
 		const code = await run(bun, [entry, ...process.argv.slice(2)]);
 		process.exit(code);
 	}

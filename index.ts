@@ -1,4 +1,7 @@
-import { createLiteSVMRpcServer, createLiteSVMWebSocketServer } from "./server";
+import {
+	createLiteSVMRpcServer,
+	createLiteSVMWebSocketServer,
+} from "@solforge/server";
 
 const PORT = Number(process.env.RPC_PORT) || 8899;
 
