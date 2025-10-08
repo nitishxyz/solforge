@@ -86,7 +86,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 					</div>
 
 					{status.epoch && (
-						<div className="mt-6 p-4 rounded-lg border border-border bg-muted">
+						<div className="mt-6 p-4 rounded-lg border border-border bg-card text-card-foreground">
 							<div className="flex items-center justify-between mb-3">
 								<div className="flex items-center gap-2">
 									<svg
@@ -125,7 +125,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 					)}
 
 					{status.latestBlockhash && (
-						<div className="mt-4 p-4 rounded-lg border border-border bg-muted">
+						<div className="mt-4 p-4 rounded-lg border border-border bg-card text-card-foreground">
 							<div className="flex items-center gap-2 mb-2">
 								<svg
 									className="w-4 h-4 text-violet-400"
@@ -144,7 +144,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 									Latest Blockhash
 								</span>
 							</div>
-							<p className="text-sm font-mono text-violet-300 break-all">
+							<p className="text-sm font-mono text-foreground break-all">
 								{status.latestBlockhash}
 							</p>
 						</div>
