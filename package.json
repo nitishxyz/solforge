@@ -22,6 +22,7 @@
     "build:cli:all": "bun run --filter @solforge/cli build:bin:all",
     "publish:install": "cd packages/install && bun publish --access public",
     "lint": "bunx @biomejs/biome check apps packages scripts",
+    "lint:fix": "bunx @biomejs/biome check --write apps packages scripts",
     "legacy:cli": "bun apps/cli/src/cli/main.ts",
     "test:parsers": "bun run scripts/test-all-parsers.ts"
   },
