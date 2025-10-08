@@ -85,8 +85,47 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 						/>
 					</div>
 
-					{status.latestBlockhash && (
+					{status.epoch && (
 						<div className="mt-6 p-4 rounded-lg border border-border bg-muted">
+							<div className="flex items-center justify-between mb-3">
+								<div className="flex items-center gap-2">
+									<svg
+										className="w-4 h-4 text-cyan-400"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+									<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+										Epoch {status.epoch.epoch}
+									</span>
+								</div>
+								<span className="text-xs text-muted-foreground">
+									{formatter.format(status.epoch.slotIndex)} / {formatter.format(status.epoch.slotsInEpoch)} slots
+								</span>
+							</div>
+							<div className="relative h-2 bg-muted-foreground/20 rounded-full overflow-hidden">
+								<div
+									className="absolute h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
+									style={{
+										width: `${(status.epoch.slotIndex / status.epoch.slotsInEpoch) * 100}%`,
+									}}
+								/>
+							</div>
+							<p className="mt-2 text-xs text-muted-foreground">
+								{((status.epoch.slotIndex / status.epoch.slotsInEpoch) * 100).toFixed(2)}% complete
+							</p>
+						</div>
+					)}
+
+					{status.latestBlockhash && (
+						<div className="mt-4 p-4 rounded-lg border border-border bg-muted">
 							<div className="flex items-center gap-2 mb-2">
 								<svg
 									className="w-4 h-4 text-violet-400"

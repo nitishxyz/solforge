@@ -62,6 +62,54 @@ export class APIServer {
 			res.json({ status: "ok", timestamp: new Date().toISOString() });
 		});
 
+		// Get status (slot, epoch, blockhash, faucet)
+		router.get("/status", async (_req, res) => {
+			try {
+				const [slot, blockHeight, latestBlockhash, epochInfo] = await Promise.all([
+					this.connection.getSlot(),
+					this.connection.getBlockHeight(),
+					this.connection.getLatestBlockhash().then(r => r.blockhash),
+					this.connection.getEpochInfo(),
+				]);
+
+				console.log("[api-server] epochInfo:", epochInfo);
+
+				const faucetPubkey = this.faucetManager.getFaucetKeypair().publicKey;
+				const faucetBalance = await this.connection.getBalance(faucetPubkey);
+
+				const response = {
+					slot,
+					slotBigint: String(slot),
+					blockHeight,
+					blockHeightBigint: String(blockHeight),
+					txCount: 0,
+					txCountBigint: "0",
+					latestBlockhash,
+					epoch: {
+						epoch: epochInfo.epoch,
+						slotIndex: epochInfo.slotIndex,
+						slotsInEpoch: epochInfo.slotsInEpoch,
+						absoluteSlot: epochInfo.absoluteSlot,
+						transactionCount: epochInfo.transactionCount ?? 0,
+					},
+					faucet: {
+						address: faucetPubkey.toBase58(),
+						lamports: String(faucetBalance),
+						sol: faucetBalance / 1_000_000_000,
+					},
+				};
+
+				console.log("[api-server] response:", JSON.stringify(response));
+				res.json(response);
+			} catch (error) {
+				console.error("[api-server] error:", error);
+				res.status(500).json({
+					error: "Failed to fetch status",
+					details: error instanceof Error ? error.message : String(error),
+				});
+			}
+		});
+
 		// Get validator info
 		router.get("/validator/info", async (_req, res) => {
 			try {

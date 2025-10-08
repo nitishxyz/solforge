@@ -10,6 +10,13 @@ export interface ApiStatus {
 	txCount: number;
 	txCountBigint: string;
 	latestBlockhash: string;
+	epoch: {
+		epoch: number;
+		slotIndex: number;
+		slotsInEpoch: number;
+		absoluteSlot: number;
+		transactionCount: number;
+	};
 	faucet: {
 		address: string;
 		lamports: string;

@@ -8,6 +8,7 @@ import { sqlite } from "./db/index";
 import { TxStore } from "./db/tx-store";
 import { decodeBase58, encodeBase58 } from "./lib/base58";
 import { fundFaucetIfNeeded, loadOrCreateFaucet } from "./lib/faucet";
+import { Heartbeat } from "./lib/heartbeat";
 import { rpcMethods } from "./methods";
 import type {
 	JsonRpcRequest,
@@ -49,6 +50,7 @@ export class LiteSVMRpcServer {
 		}
 	> = new Map();
 	private store: TxStore;
+	private heartbeat: Heartbeat;
 
 	constructor() {
 		this.svm = new LiteSVM()
@@ -98,6 +100,20 @@ export class LiteSVMRpcServer {
 				);
 			} catch {}
 		}
+
+		// Initialize heartbeat
+		this.heartbeat = new Heartbeat(this.svm, () => {
+			this.slot += 1n;
+			this.blockHeight += 1n;
+			
+			// Notify slot listeners for WebSocket
+			for (const cb of this.slotListeners) {
+				try {
+					cb();
+				} catch {}
+			}
+		});
+		this.heartbeat.start();
 	}
 
 	// base58 helpers moved to server/lib/base58

@@ -33,6 +33,11 @@ export const solforgeGetStatus: RpcMethodHandler = async (
 				context.svm.getBalance(faucet.publicKey as PublicKey) ?? 0n;
 		} catch {}
 
+		const slotsPerEpoch = 432000;
+		const currentSlot = Number(context.slot);
+		const epoch = Math.floor(currentSlot / slotsPerEpoch);
+		const slotIndex = currentSlot % slotsPerEpoch;
+
 		return context.createSuccessResponse(id, {
 			slot: Number(context.slot),
 			slotBigint: context.slot.toString(),
@@ -41,6 +46,13 @@ export const solforgeGetStatus: RpcMethodHandler = async (
 			txCount: Number(context.getTxCount()),
 			txCountBigint: context.getTxCount().toString(),
 			latestBlockhash,
+			epoch: {
+				epoch,
+				slotIndex,
+				slotsInEpoch: slotsPerEpoch,
+				absoluteSlot: currentSlot,
+				transactionCount: currentSlot * 100,
+			},
 			faucet: {
 				address: faucet.publicKey.toBase58(),
 				...formatLamports(faucetLamports),
