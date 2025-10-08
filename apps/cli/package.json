@@ -1,42 +1,42 @@
 {
-	"name": "@solforge/cli",
-	"version": "0.2.20",
-	"private": true,
-	"type": "module",
-	"bin": {
-		"solforge": "./dist/solforge"
-	},
-	"files": [
-		"dist/solforge*",
-		"README.md",
-		"LICENSE"
-	],
-	"scripts": {
-		"dev": "bun index.ts",
-		"build": "bun ../../scripts/build-web.ts && bun run build:bin",
-		"build:bin": "bun build --compile ./index.ts --outfile dist/solforge",
-		"build:bin:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 ./index.ts --outfile dist/solforge-darwin-arm64",
-		"build:bin:darwin-x64": "bun build --compile --target=bun-darwin-x64 ./index.ts --outfile dist/solforge-darwin-x64",
-		"build:bin:linux-arm64": "bun build --compile --target=bun-linux-arm64 ./index.ts --outfile dist/solforge-linux-arm64",
-		"build:bin:linux-x64": "bun build --compile --target=bun-linux-x64 ./index.ts --outfile dist/solforge-linux-x64",
-		"build:bin:windows-x64": "bun build --compile --target=bun-windows-x64 ./index.ts --outfile dist/solforge-windows-x64.exe",
-		"build:bin:all": "bun ../../scripts/build-web.ts && bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
-		"lint": "biome check"
-	},
-	"dependencies": {
-		"@clack/prompts": "^0.11.0",
-		"@solana-program/compute-budget": "^0.9.0",
-		"@solana-program/memo": "^0.8.0",
-		"@solana-program/system": "^0.8.0",
-		"@solana-program/token": "^0.6.0",
-		"@solana/kit": "^3.0.3",
-		"@solana/spl-token": "^0.4.14",
-		"drizzle-orm": "^0.44.5",
-		"litesvm": "^0.3.3",
-		"react": "^19.1.1",
-		"react-dom": "^19.1.1",
-		"sst": "3.17.13",
-		"@solforge/server": "workspace:*",
-		"@solforge/api": "workspace:*"
-	}
+  "name": "@solforge/cli",
+  "version": "0.2.21",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "solforge": "./dist/solforge"
+  },
+  "files": [
+    "dist/solforge*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "bun index.ts",
+    "build": "bun ../../scripts/build-web.ts && bun run build:bin",
+    "build:bin": "bun build --compile ./index.ts --outfile dist/solforge",
+    "build:bin:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 ./index.ts --outfile dist/solforge-darwin-arm64",
+    "build:bin:darwin-x64": "bun build --compile --target=bun-darwin-x64 ./index.ts --outfile dist/solforge-darwin-x64",
+    "build:bin:linux-arm64": "bun build --compile --target=bun-linux-arm64 ./index.ts --outfile dist/solforge-linux-arm64",
+    "build:bin:linux-x64": "bun build --compile --target=bun-linux-x64 ./index.ts --outfile dist/solforge-linux-x64",
+    "build:bin:windows-x64": "bun build --compile --target=bun-windows-x64 ./index.ts --outfile dist/solforge-windows-x64.exe",
+    "build:bin:all": "bun ../../scripts/build-web.ts && bun run build:bin:darwin-arm64 && bun run build:bin:darwin-x64 && bun run build:bin:linux-x64 && bun run build:bin:linux-arm64 && bun run build:bin:windows-x64",
+    "lint": "biome check"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "@solana-program/compute-budget": "^0.9.0",
+    "@solana-program/memo": "^0.8.0",
+    "@solana-program/system": "^0.8.0",
+    "@solana-program/token": "^0.6.0",
+    "@solana/kit": "^3.0.3",
+    "@solana/spl-token": "^0.4.14",
+    "drizzle-orm": "^0.44.5",
+    "litesvm": "^0.3.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sst": "3.17.13",
+    "@solforge/server": "workspace:*",
+    "@solforge/api": "workspace:*"
+  }
 }
