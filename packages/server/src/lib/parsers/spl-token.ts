@@ -30,6 +30,13 @@ import {
     decodeInitializePermanentDelegateInstruction,
     decodeAmountToUiAmountInstruction,
     decodeUiAmountToAmountInstruction,
+    // Transfer Fee extension decoders
+    decodeInitializeTransferFeeConfigInstructionUnchecked,
+    decodeTransferCheckedWithFeeInstructionUnchecked,
+    decodeWithdrawWithheldTokensFromMintInstructionUnchecked,
+    decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked,
+    decodeHarvestWithheldTokensToMintInstructionUnchecked,
+    decodeSetTransferFeeInstructionUnchecked,
 } from "@solana/spl-token";
 import { u8 } from "@solana/buffer-layout";
 import { PublicKey as PK } from "@solana/web3.js";
@@ -511,6 +518,248 @@ export function tryParseSplToken(
 			}
 		} catch {}
 
+		// Transfer Fee Extension (opcode 26) - Parse sub-instructions
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 26) {
+			const subOp = ix.data[1];
+			try {
+				// InitializeTransferFeeConfig (sub-opcode 0)
+				if (subOp === 0) {
+					const decoded = decodeInitializeTransferFeeConfigInstructionUnchecked(ix);
+					return ok(programIdStr, "initializeTransferFeeConfig", {
+						mint: asBase58(decoded.keys.mint?.pubkey),
+						transferFeeConfigAuthority: asBase58(decoded.data.transferFeeConfigAuthority || undefined),
+						withdrawWithheldAuthority: asBase58(decoded.data.withdrawWithheldAuthority || undefined),
+						transferFeeBasisPoints: decoded.data.transferFeeBasisPoints,
+						maximumFee: decoded.data.maximumFee.toString(),
+					});
+				}
+				// TransferCheckedWithFee (sub-opcode 1)
+				if (subOp === 1) {
+					const decoded = decodeTransferCheckedWithFeeInstructionUnchecked(ix);
+					const amount = decoded.data.amount;
+					const fee = decoded.data.fee;
+					const decimals = decoded.data.decimals;
+					const amtStr = amount.toString();
+					const feeStr = fee.toString();
+					const base = BigInt(10) ** BigInt(decimals);
+					const whole = BigInt(amtStr) / base;
+					const frac = BigInt(amtStr) % base;
+					const fracStr = frac.toString().padStart(decimals, "0").replace(/0+$/, "");
+					const uiStr = fracStr.length ? `${whole}.${fracStr}` : `${whole}`;
+					return ok(programIdStr, "transferCheckedWithFee", {
+						source: asBase58(decoded.keys.source.pubkey),
+						mint: asBase58(decoded.keys.mint.pubkey),
+						destination: asBase58(decoded.keys.destination.pubkey),
+						authority: asBase58(decoded.keys.authority.pubkey),
+						tokenAmount: {
+							amount: amtStr,
+							decimals,
+							uiAmount: Number(uiStr),
+							uiAmountString: uiStr,
+						},
+						fee: feeStr,
+					});
+				}
+				// WithdrawWithheldTokensFromMint (sub-opcode 2)
+				if (subOp === 2) {
+					const decoded = decodeWithdrawWithheldTokensFromMintInstructionUnchecked(ix);
+					return ok(programIdStr, "withdrawWithheldTokensFromMint", {
+						mint: asBase58(decoded.keys.mint.pubkey),
+						destination: asBase58(decoded.keys.destination.pubkey),
+						authority: asBase58(decoded.keys.authority.pubkey),
+					});
+				}
+				// WithdrawWithheldTokensFromAccounts (sub-opcode 3)
+				if (subOp === 3) {
+					const decoded = decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked(ix);
+					return ok(programIdStr, "withdrawWithheldTokensFromAccounts", {
+						mint: asBase58(decoded.keys.mint.pubkey),
+						destination: asBase58(decoded.keys.destination.pubkey),
+						authority: asBase58(decoded.keys.authority.pubkey),
+						numTokenAccounts: decoded.data.numTokenAccounts,
+						sources: decoded.keys.sources?.map(k => asBase58(k.pubkey)) || [],
+					});
+				}
+				// HarvestWithheldTokensToMint (sub-opcode 4)
+				if (subOp === 4) {
+					const decoded = decodeHarvestWithheldTokensToMintInstructionUnchecked(ix);
+					return ok(programIdStr, "harvestWithheldTokensToMint", {
+						mint: asBase58(decoded.keys.mint.pubkey),
+						sources: decoded.keys.sources?.map(k => asBase58(k.pubkey)) || [],
+					});
+				}
+				// SetTransferFee (sub-opcode 5)
+				if (subOp === 5) {
+					const decoded = decodeSetTransferFeeInstructionUnchecked(ix);
+					return ok(programIdStr, "setTransferFee", {
+						mint: asBase58(decoded.keys.mint.pubkey),
+						authority: asBase58(decoded.keys.authority.pubkey),
+						transferFeeBasisPoints: decoded.data.transferFeeBasisPoints,
+						maximumFee: decoded.data.maximumFee.toString(),
+					});
+				}
+			} catch {}
+		}
+
+		// Default Account State Extension (opcode 28) - Simple enable/disable
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 28) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					// Initialize - has account state byte at position 2
+					const accountState = ix.data[2]; // 0=Uninitialized, 1=Initialized, 2=Frozen
+					const stateMap: Record<number, string> = { 0: "uninitialized", 1: "initialized", 2: "frozen" };
+					return ok(programIdStr, "initializeDefaultAccountState", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						accountState: stateMap[accountState] || String(accountState),
+					});
+				}
+				if (subOp === 1) {
+					// Update
+					const accountState = ix.data[2];
+					const stateMap: Record<number, string> = { 0: "uninitialized", 1: "initialized", 2: "frozen" };
+					return ok(programIdStr, "updateDefaultAccountState", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						freezeAuthority: asBase58(ix.keys[1]?.pubkey),
+						accountState: stateMap[accountState] || String(accountState),
+					});
+				}
+			} catch {}
+		}
+
+		// Memo Transfer Extension (opcode 30) - Simple enable/disable
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 30) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					// Enable
+					return ok(programIdStr, "enableRequiredMemoTransfers", {
+						account: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					// Disable
+					return ok(programIdStr, "disableRequiredMemoTransfers", {
+						account: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// CPI Guard Extension (opcode 34) - Simple enable/disable
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 34) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					// Enable
+					return ok(programIdStr, "enableCpiGuard", {
+						account: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					// Disable
+					return ok(programIdStr, "disableCpiGuard", {
+						account: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// Interest Bearing Mint Extension (opcode 33)
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 33) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					return ok(programIdStr, "initializeInterestBearingMint", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						rateAuthority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					return ok(programIdStr, "updateRateInterestBearingMint", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						rateAuthority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// Transfer Hook Extension (opcode 36)
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 36) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					return ok(programIdStr, "initializeTransferHook", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					return ok(programIdStr, "updateTransferHook", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// Metadata Pointer Extension (opcode 39)
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 39) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					return ok(programIdStr, "initializeMetadataPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					return ok(programIdStr, "updateMetadataPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// Group Pointer Extension (opcode 40)
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 40) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					return ok(programIdStr, "initializeGroupPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					return ok(programIdStr, "updateGroupPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
+		// Group Member Pointer Extension (opcode 41)
+		if (ix.data && ix.data.length > 1 && ix.data[0] === 41) {
+			const subOp = ix.data[1];
+			try {
+				if (subOp === 0) {
+					return ok(programIdStr, "initializeGroupMemberPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+					});
+				}
+				if (subOp === 1) {
+					return ok(programIdStr, "updateGroupMemberPointer", {
+						mint: asBase58(ix.keys[0]?.pubkey),
+						authority: asBase58(ix.keys[1]?.pubkey),
+					});
+				}
+			} catch {}
+		}
+
 		// Fallback: classify by TokenInstruction opcode (first byte) when nothing else matched
 		try {
 			const raw = bs58decode(dataBase58);
@@ -543,15 +792,15 @@ export function tryParseSplToken(
 					23: "amountToUiAmount",
 					24: "uiAmountToAmount",
 					25: "initializeMintCloseAuthority",
-					26: "transferFeeExtension",
+					// 26: handled by Transfer Fee Extension parser above
 					27: "confidentialTransferExtension",
-					28: "defaultAccountStateExtension",
+					// 28: handled by Default Account State Extension parser above
 					29: "reallocate",
-					30: "memoTransferExtension",
+					// 30: handled by Memo Transfer Extension parser above
 					31: "createNativeMint",
 					32: "initializeNonTransferableMint",
 					33: "interestBearingMintExtension",
-					34: "cpiGuardExtension",
+					// 34: handled by CPI Guard Extension parser above
 					35: "initializePermanentDelegate",
 					36: "transferHookExtension",
 					39: "metadataPointerExtension",

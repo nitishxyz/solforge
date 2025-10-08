@@ -7,5 +7,8 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@solana/spl-token": "^0.4.14"
+  }
 }

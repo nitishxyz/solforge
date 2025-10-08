@@ -53,6 +53,12 @@ import {
 	ASSOCIATED_TOKEN_PROGRAM_ID,
 	getMint,
 	getAccount,
+	createInitializeTransferFeeConfigInstruction,
+	createTransferCheckedWithFeeInstruction,
+	createWithdrawWithheldTokensFromMintInstruction,
+	createSetTransferFeeInstruction,
+	ExtensionType,
+	getMintLen,
 } from "@solana/spl-token";
 
 const RPC_URL = "http://localhost:8899";
@@ -101,6 +107,7 @@ async function main() {
 	const freezeAuthority = Keypair.generate();
 	const owner = Keypair.generate();
 	const delegate = Keypair.generate();
+	const recipient = Keypair.generate();
 	
 	console.log("💰 Funding accounts...\n");
 	await airdrop(connection, payer.publicKey, 10 * LAMPORTS_PER_SOL);
@@ -694,6 +701,184 @@ async function main() {
 		logResult("CloseAccount", sig, true);
 	} catch (e: any) {
 		logResult("CloseAccount", "", false, e.message);
+	}
+	
+	// ===========================
+	// TOKEN-2022 EXTENSION TESTS
+	// ===========================
+	
+	console.log("🔧 Testing Token-2022 Extension Instructions...\n");
+	
+	// 25. InitializeTransferFeeConfig (Token-2022)
+	try {
+		const feeMint = Keypair.generate();
+		const feeAuthority = Keypair.generate();
+		const withdrawAuthority = Keypair.generate();
+		
+		const extensions = [ExtensionType.TransferFeeConfig];
+		const mintLen = getMintLen(extensions);
+		const lamports = await connection.getMinimumBalanceForRentExemption(mintLen);
+		
+		const tx = new Transaction().add(
+			SystemProgram.createAccount({
+				fromPubkey: payer.publicKey,
+				newAccountPubkey: feeMint.publicKey,
+				space: mintLen,
+				lamports,
+				programId: TOKEN_2022_PROGRAM_ID,
+			}),
+			createInitializeTransferFeeConfigInstruction(
+				feeMint.publicKey,
+				feeAuthority.publicKey,
+				withdrawAuthority.publicKey,
+				100, // 1% fee (100 basis points)
+				BigInt(1000000), // 1 token max fee
+				TOKEN_2022_PROGRAM_ID
+			),
+			createInitializeMint2Instruction(
+				feeMint.publicKey,
+				9,
+				mintAuthority.publicKey,
+				null,
+				TOKEN_2022_PROGRAM_ID
+			)
+		);
+		
+		const sig = await sendAndConfirmTransaction(connection, tx, [payer, feeMint]);
+		logResult("InitializeTransferFeeConfig (Token-2022)", sig, true);
+		
+		// 26. TransferCheckedWithFee (requires fee mint setup)
+		try {
+			const feeSource = await getAssociatedTokenAddress(
+				feeMint.publicKey,
+				owner.publicKey,
+				false,
+				TOKEN_2022_PROGRAM_ID
+			);
+			const feeDestination = await getAssociatedTokenAddress(
+				feeMint.publicKey,
+				recipient.publicKey,
+				false,
+				TOKEN_2022_PROGRAM_ID
+			);
+			
+			// Create accounts
+			const createTx = new Transaction().add(
+				createAssociatedTokenAccountInstruction(
+					payer.publicKey,
+					feeSource,
+					owner.publicKey,
+					feeMint.publicKey,
+					TOKEN_2022_PROGRAM_ID,
+					ASSOCIATED_TOKEN_PROGRAM_ID
+				),
+				createAssociatedTokenAccountInstruction(
+					payer.publicKey,
+					feeDestination,
+					recipient.publicKey,
+					feeMint.publicKey,
+					TOKEN_2022_PROGRAM_ID,
+					ASSOCIATED_TOKEN_PROGRAM_ID
+				)
+			);
+			await sendAndConfirmTransaction(connection, createTx, [payer]);
+			
+			// Mint tokens
+			const mintTx = new Transaction().add(
+				createMintToCheckedInstruction(
+					feeMint.publicKey,
+					feeSource,
+					mintAuthority.publicKey,
+					BigInt(100_000_000_000), // 100 tokens
+					9,
+					[],
+					TOKEN_2022_PROGRAM_ID
+				)
+			);
+			await sendAndConfirmTransaction(connection, mintTx, [payer, mintAuthority]);
+			
+			// Transfer with fee
+			const transferAmount = BigInt(10_000_000_000); // 10 tokens
+			const expectedFee = BigInt(100_000_000); // 1% of 10 tokens = 0.1 tokens
+			
+			const transferTx = new Transaction().add(
+				createTransferCheckedWithFeeInstruction(
+					feeSource,
+					feeMint.publicKey,
+					feeDestination,
+					owner.publicKey,
+					transferAmount,
+					9,
+					expectedFee,
+					[],
+					TOKEN_2022_PROGRAM_ID
+				)
+			);
+			
+			const sig2 = await sendAndConfirmTransaction(connection, transferTx, [payer, owner]);
+			logResult("TransferCheckedWithFee (Token-2022)", sig2, true);
+			
+			// 27. WithdrawWithheldTokensFromMint
+			try {
+				const withdrawDestination = await getAssociatedTokenAddress(
+					feeMint.publicKey,
+					withdrawAuthority.publicKey,
+					false,
+					TOKEN_2022_PROGRAM_ID
+				);
+				
+				const createWithdrawTx = new Transaction().add(
+					createAssociatedTokenAccountInstruction(
+						payer.publicKey,
+						withdrawDestination,
+						withdrawAuthority.publicKey,
+						feeMint.publicKey,
+						TOKEN_2022_PROGRAM_ID,
+						ASSOCIATED_TOKEN_PROGRAM_ID
+					)
+				);
+				await sendAndConfirmTransaction(connection, createWithdrawTx, [payer]);
+				
+				const withdrawTx = new Transaction().add(
+					createWithdrawWithheldTokensFromMintInstruction(
+						feeMint.publicKey,
+						withdrawDestination,
+						withdrawAuthority.publicKey,
+						[],
+						TOKEN_2022_PROGRAM_ID
+					)
+				);
+				
+				const sig3 = await sendAndConfirmTransaction(connection, withdrawTx, [payer, withdrawAuthority]);
+				logResult("WithdrawWithheldTokensFromMint (Token-2022)", sig3, true);
+			} catch (e: any) {
+				logResult("WithdrawWithheldTokensFromMint (Token-2022)", "", false, e.message);
+			}
+			
+			// 28. SetTransferFee
+			try {
+				const setFeeTx = new Transaction().add(
+					createSetTransferFeeInstruction(
+						feeMint.publicKey,
+						feeAuthority.publicKey,
+						[],
+						200, // Update to 2% fee
+						BigInt(2000000), // 2 token max fee
+						TOKEN_2022_PROGRAM_ID
+					)
+				);
+				
+				const sig4 = await sendAndConfirmTransaction(connection, setFeeTx, [payer, feeAuthority]);
+				logResult("SetTransferFee (Token-2022)", sig4, true);
+			} catch (e: any) {
+				logResult("SetTransferFee (Token-2022)", "", false, e.message);
+			}
+			
+		} catch (e: any) {
+			logResult("TransferCheckedWithFee (Token-2022)", "", false, e.message);
+		}
+	} catch (e: any) {
+		logResult("InitializeTransferFeeConfig (Token-2022)", "", false, e.message);
 	}
 	
 	// ===========================

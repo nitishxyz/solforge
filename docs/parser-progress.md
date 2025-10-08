@@ -59,15 +59,28 @@ All implemented in [`packages/server/src/lib/parsers/spl-token.ts`](file:///User
 
 ### Coverage Statistics
 
-**Before:** ~10 instruction types fully parsed (20% coverage)  
-**After:** ~27 instruction types fully parsed (75% coverage)  
-**Partial:** 3 instruction types recognized by opcode only
+**Phase 1 (Core Instructions):**
+- Before: ~10 instruction types (20% coverage)
+- After: ~27 instruction types (75% coverage)
+- Partial: 3 instruction types recognized by opcode only
+
+**Phase 2 (Extension Instructions - Latest):**
+- Transfer Fee Extension: 6 instructions ✅
+- Default Account State: 2 instructions ✅
+- Memo Transfer: 2 instructions ✅
+- CPI Guard: 2 instructions ✅
+- Interest Bearing Mint: 2 instructions ✅
+- Transfer Hook: 2 instructions ✅
+- Metadata Pointer: 2 instructions ✅
+- Group Pointer: 2 instructions ✅
+- Group Member Pointer: 2 instructions ✅
+
+**Total: 52+ fully parsed instruction types!**
 
 **Remaining Core Instructions:**
 - GetAccountDataSize (opcode 21) - Returns account size for extensions
 - CreateNativeMint (opcode 31) - Creates the native SOL mint
-
-All other core instructions (opcodes 0-24) are now fully parsed!
+- Reallocate (opcode 29) - Account reallocation
 
 ---
 
@@ -75,29 +88,68 @@ All other core instructions (opcodes 0-24) are now fully parsed!
 
 ### High Priority Extensions
 
-#### Transfer Fee Extension
-- ❌ InitializeTransferFeeConfig
-- ❌ TransferCheckedWithFee
-- ❌ WithdrawWithheldTokensFromMint
-- ❌ WithdrawWithheldTokensFromAccounts
-- ❌ HarvestWithheldTokensToMint
-- ❌ SetTransferFee
+#### Transfer Fee Extension (Opcode 26) - COMPLETED ✅
+- ✅ InitializeTransferFeeConfig
+- ✅ TransferCheckedWithFee
+- ✅ WithdrawWithheldTokensFromMint
+- ✅ WithdrawWithheldTokensFromAccounts
+- ✅ HarvestWithheldTokensToMint
+- ✅ SetTransferFee
 
-**Status:** Available in SDK (`@solana/spl-token/extensions/transferFee`), needs integration
+**Status:** Fully implemented with all 6 sub-instructions
 
-#### Confidential Transfer Extension
-- ❌ All sub-instructions
+#### Default Account State Extension (Opcode 28) - COMPLETED ✅
+- ✅ InitializeDefaultAccountState
+- ✅ UpdateDefaultAccountState
 
-**Status:** Complex cryptographic operations, lower priority
+**Status:** Fully implemented
 
-#### Interest Bearing Extension
-- ❌ Initialize
-- ❌ UpdateRate
+#### Memo Transfer Extension (Opcode 30) - COMPLETED ✅
+- ✅ EnableRequiredMemoTransfers
+- ✅ DisableRequiredMemoTransfers
 
-**Status:** Available in SDK, medium priority
+**Status:** Fully implemented
 
-#### Other Extensions
-- Memo Transfer, CPI Guard, Transfer Hook, Metadata Pointer, Group Pointer, etc.
+#### CPI Guard Extension (Opcode 34) - COMPLETED ✅
+- ✅ EnableCpiGuard
+- ✅ DisableCpiGuard
+
+**Status:** Fully implemented
+
+#### Interest Bearing Mint Extension (Opcode 33) - COMPLETED ✅
+- ✅ InitializeInterestBearingMint
+- ✅ UpdateRateInterestBearingMint
+
+**Status:** Fully implemented
+
+#### Transfer Hook Extension (Opcode 36) - COMPLETED ✅
+- ✅ InitializeTransferHook
+- ✅ UpdateTransferHook
+
+**Status:** Fully implemented
+
+#### Metadata Pointer Extension (Opcode 39) - COMPLETED ✅
+- ✅ InitializeMetadataPointer
+- ✅ UpdateMetadataPointer
+
+**Status:** Fully implemented
+
+#### Group Pointer Extension (Opcode 40) - COMPLETED ✅
+- ✅ InitializeGroupPointer
+- ✅ UpdateGroupPointer
+
+**Status:** Fully implemented
+
+#### Group Member Pointer Extension (Opcode 41) - COMPLETED ✅
+- ✅ InitializeGroupMemberPointer
+- ✅ UpdateGroupMemberPointer
+
+**Status:** Fully implemented
+
+#### Confidential Transfer Extension (Opcode 27) - DEFERRED
+- ❌ All sub-instructions (~13 instructions)
+
+**Status:** Complex cryptographic operations, SDK support incomplete, deferred to later
 
 ---
 
