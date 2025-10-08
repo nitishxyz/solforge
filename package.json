@@ -17,9 +17,10 @@
   ],
   "scripts": {
     "dev:cli": "bun run --filter @solforge/cli dev",
-    "build": "bun run build:cli",
+    "build": "bun run build:cli:all",
     "build:cli": "bun run --filter @solforge/cli build",
     "build:cli:all": "bun run --filter @solforge/cli build:bin:all",
+    "publish:install": "cd packages/install && bun publish --access public",
     "lint": "bunx @biomejs/biome check apps packages src scripts",
     "legacy:cli": "bun apps/cli/src/cli/main.ts",
     "test:parsers": "bun run scripts/test-all-parsers.ts"
