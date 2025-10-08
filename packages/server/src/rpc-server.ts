@@ -474,6 +474,10 @@ export class LiteSVMRpcServer {
 				this.blockHeight += 1n;
 				this.txCount += 1n;
 				
+				// Warp SVM to new slot and expire blockhash to get a new one
+				this.svm.warpToSlot(this.slot);
+				this.svm.expireBlockhash();
+				
 				// Notify slot listeners for WebSocket
 				for (const cb of this.slotListeners) {
 					try {

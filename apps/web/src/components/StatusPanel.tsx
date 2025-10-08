@@ -1,4 +1,5 @@
 import type { ApiStatus } from "../api/types";
+import { Clock, Blocks, Activity, Coins } from "lucide-react";
 
 interface Props {
 	status: ApiStatus | null;
@@ -64,24 +65,28 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 							value={formatter.format(status.slot)}
 							subtitle={`Raw: ${status.slotBigint}`}
 							color="purple"
+							icon={<Clock className="w-5 h-5" />}
 						/>
 						<StatusCard
 							title="Block Height"
 							value={formatter.format(status.blockHeight)}
 							subtitle={`Raw: ${status.blockHeightBigint}`}
 							color="blue"
+							icon={<Blocks className="w-5 h-5" />}
 						/>
 						<StatusCard
 							title="Transactions"
 							value={formatter.format(status.txCount)}
 							subtitle={`Raw: ${status.txCountBigint}`}
 							color="amber"
+							icon={<Activity className="w-5 h-5" />}
 						/>
 						<StatusCard
 							title="Faucet Balance"
 							value={`${status.faucet.sol.toFixed(3)} SOL`}
 							subtitle={`${status.faucet.address.slice(0, 10)}…`}
 							color="green"
+							icon={<Coins className="w-5 h-5" />}
 						/>
 					</div>
 
@@ -182,6 +187,7 @@ interface StatusCardProps {
 	value: string;
 	subtitle?: string;
 	color: "purple" | "blue" | "amber" | "green";
+	icon?: React.ReactNode;
 }
 
 const colorClasses = {
@@ -191,14 +197,21 @@ const colorClasses = {
 	green: "from-green-500/20 to-emerald-500/20",
 };
 
-function StatusCard({ title, value, subtitle, color }: StatusCardProps) {
+const iconColors = {
+	purple: "text-purple-400",
+	blue: "text-blue-400",
+	amber: "text-amber-400",
+	green: "text-green-400",
+};
+
+function StatusCard({ title, value, subtitle, color, icon }: StatusCardProps) {
 	return (
 		<div className="rounded-lg border border-border bg-card text-card-foreground p-4 group hover:border-ring transition-all duration-200">
 			<div className="flex items-start justify-between mb-3">
 				<div
-					className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform`}
+					className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center group-hover:scale-110 transition-transform ${iconColors[color]}`}
 				>
-					<span className="status-dot online" />
+					{icon || <span className="status-dot online" />}
 				</div>
 			</div>
 			<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
