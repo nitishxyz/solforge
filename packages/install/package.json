@@ -1,26 +1,26 @@
 {
-  "name": "solforge",
-  "version": "0.2.20",
-  "description": "SolForge CLI installer",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nitishxyz/solforge.git"
-  },
-  "homepage": "https://github.com/nitishxyz/solforge#readme",
-  "bugs": {
-    "url": "https://github.com/nitishxyz/solforge/issues"
-  },
-  "bin": {
-    "solforge": "./start.cjs"
-  },
-  "files": [
-    "start.cjs"
-  ],
-  "scripts": {
-    "prepublishOnly": "cd ../.. && bun run --filter @solforge/cli build:bin:all"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "solforge",
+	"version": "0.2.20",
+	"description": "SolForge CLI installer",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nitishxyz/solforge.git"
+	},
+	"homepage": "https://github.com/nitishxyz/solforge#readme",
+	"bugs": {
+		"url": "https://github.com/nitishxyz/solforge/issues"
+	},
+	"bin": {
+		"solforge": "./start.cjs"
+	},
+	"files": [
+		"start.cjs"
+	],
+	"scripts": {
+		"prepublishOnly": "cd ../.. && bun run --filter @solforge/cli build:bin:all"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
