@@ -21,6 +21,15 @@ export class LiteSVMRpcServer {
 	private blockHeight: bigint = 1n;
 	private txCount: bigint = 0n;
 	private signatureListeners: Set<(sig: string) => void> = new Set();
+	private logsListeners: Set<
+		(data: {
+			signature: string;
+			logs: string[];
+			err: unknown;
+			accounts: string[];
+		}) => void
+	> = new Set();
+	private slotListeners: Set<() => void> = new Set();
 	private knownMints: Set<string> = new Set();
 	private knownPrograms: Set<string> = new Set();
 	private faucet: Keypair;
@@ -179,6 +188,35 @@ export class LiteSVMRpcServer {
 					}
 				} catch {}
 
+				// Notify logs listeners for WebSocket
+				try {
+					const msg = tx.message as unknown as {
+						staticAccountKeys?: unknown[];
+						accountKeys?: unknown[];
+					};
+					const rawKeys: unknown[] = Array.isArray(msg.staticAccountKeys)
+						? msg.staticAccountKeys
+						: Array.isArray(msg.accountKeys)
+							? msg.accountKeys
+							: [];
+					const accounts = rawKeys.map((k) => {
+						try {
+							return typeof k === "string" ? k : (k as PublicKey).toBase58();
+						} catch {
+							return String(k);
+						}
+					});
+					
+					for (const cb of this.logsListeners) {
+						cb({
+							signature,
+							logs: meta?.logs || [],
+							err: meta?.err ?? null,
+							accounts,
+						});
+					}
+				} catch {}
+
 				// Persist to SQLite for durability and history queries
 				try {
 					const msg = tx.message as unknown as {
@@ -327,6 +365,27 @@ export class LiteSVMRpcServer {
 		return () => this.signatureListeners.delete(cb);
 	}
 
+	onLogsRecorded(
+		cb: (data: {
+			signature: string;
+			logs: string[];
+			err: unknown;
+			accounts: string[];
+		}) => void,
+	) {
+		this.logsListeners.add(cb);
+		return () => this.logsListeners.delete(cb);
+	}
+
+	onSlotAdvanced(cb: () => void) {
+		this.slotListeners.add(cb);
+		return () => this.slotListeners.delete(cb);
+	}
+
+	getCurrentSlot(): bigint {
+		return this.slot;
+	}
+
 	getFaucetAddress(): string {
 		try {
 			return this.faucet.publicKey.toBase58();
@@ -398,6 +457,13 @@ export class LiteSVMRpcServer {
 				this.slot += 1n;
 				this.blockHeight += 1n;
 				this.txCount += 1n;
+				
+				// Notify slot listeners for WebSocket
+				for (const cb of this.slotListeners) {
+					try {
+						cb();
+					} catch {}
+				}
 			}
 
 			return result;
