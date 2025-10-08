@@ -21,7 +21,7 @@ function getApiBaseUrl(): string {
 	}
 
 	// Fallback for standalone dev
-	return 'http://localhost:9100';
+	return "http://localhost:9100";
 }
 
 export const API_BASE_URL = getApiBaseUrl();

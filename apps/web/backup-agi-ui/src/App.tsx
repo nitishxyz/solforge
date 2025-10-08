@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppLayout } from './components/layout/AppLayout';
-import { SessionListContainer } from './components/sessions/SessionListContainer';
-import { MessageThreadContainer } from './components/messages/MessageThreadContainer';
-import { ChatInputContainer } from './components/chat/ChatInputContainer';
-import { useCreateSession } from './hooks/useSessions';
-import { useTheme } from './hooks/useTheme';
-import { useWorkingDirectory } from './hooks/useWorkingDirectory';
+import { useState, useCallback } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppLayout } from "./components/layout/AppLayout";
+import { SessionListContainer } from "./components/sessions/SessionListContainer";
+import { MessageThreadContainer } from "./components/messages/MessageThreadContainer";
+import { ChatInputContainer } from "./components/chat/ChatInputContainer";
+import { useCreateSession } from "./hooks/useSessions";
+import { useTheme } from "./hooks/useTheme";
+import { useWorkingDirectory } from "./hooks/useWorkingDirectory";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -29,11 +29,11 @@ function AppContent() {
 	const handleNewSession = useCallback(async () => {
 		try {
 			const session = await createSession.mutateAsync({
-				agent: 'general',
+				agent: "general",
 			});
 			setActiveSessionId(session.id);
 		} catch (error) {
-			console.error('Failed to create session:', error);
+			console.error("Failed to create session:", error);
 		}
 	}, [createSession]);
 

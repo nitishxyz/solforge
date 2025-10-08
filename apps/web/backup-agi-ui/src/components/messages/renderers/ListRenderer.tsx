@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { File, Folder } from 'lucide-react';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { File, Folder } from "lucide-react";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 export function ListRenderer({
 	contentJson,
@@ -28,7 +28,7 @@ export function ListRenderer({
 				<span className="font-medium">ls</span>
 				<span className="text-muted-foreground/70">·</span>
 				<span className="text-foreground/70">
-					{entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+					{entries.length} {entries.length === 1 ? "entry" : "entries"}
 				</span>
 				<span className="text-muted-foreground/80">· {timeStr}</span>
 			</button>

@@ -1,7 +1,7 @@
-import { memo } from 'react';
-import { Sparkles } from 'lucide-react';
-import type { Message } from '../../types/api';
-import { MessagePartItem } from './MessagePartItem';
+import { memo } from "react";
+import { Sparkles } from "lucide-react";
+import type { Message } from "../../types/api";
+import { MessagePartItem } from "./MessagePartItem";
 
 interface AssistantMessageGroupProps {
 	message: Message;
@@ -11,20 +11,20 @@ interface AssistantMessageGroupProps {
 }
 
 const loadingMessages = [
-	'Generating...',
-	'Cooking up something...',
-	'Thinking...',
-	'Processing...',
-	'Working on it...',
-	'Crafting response...',
-	'Brewing magic...',
-	'Computing...',
+	"Generating...",
+	"Cooking up something...",
+	"Thinking...",
+	"Processing...",
+	"Working on it...",
+	"Crafting response...",
+	"Brewing magic...",
+	"Computing...",
 ];
 
 function getLoadingMessage(messageId: string) {
 	// Use messageId to consistently pick the same message for this session
 	const hash = messageId
-		.split('')
+		.split("")
 		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
 	return loadingMessages[hash % loadingMessages.length];
 }
@@ -37,10 +37,10 @@ export const AssistantMessageGroup = memo(
 		hasNextAssistantMessage,
 	}: AssistantMessageGroupProps) {
 		const parts = message.parts || [];
-		const hasFinish = parts.some((part) => part.toolName === 'finish');
+		const hasFinish = parts.some((part) => part.toolName === "finish");
 		const latestProgressUpdateIndex = parts.reduce(
 			(lastIndex, part, index) =>
-				part.type === 'tool_result' && part.toolName === 'progress_update'
+				part.type === "tool_result" && part.toolName === "progress_update"
 					? index
 					: lastIndex,
 			-1,
@@ -49,24 +49,24 @@ export const AssistantMessageGroup = memo(
 			latestProgressUpdateIndex >= 0 ? parts[latestProgressUpdateIndex] : null;
 		const hasVisibleNonProgressParts = parts.some(
 			(part) =>
-				!(part.type === 'tool_result' && part.toolName === 'progress_update'),
+				!(part.type === "tool_result" && part.toolName === "progress_update"),
 		);
 		const firstVisiblePartIndex = parts.findIndex(
 			(part) =>
-				!(part.type === 'tool_result' && part.toolName === 'progress_update'),
+				!(part.type === "tool_result" && part.toolName === "progress_update"),
 		);
 		const shouldShowProgressUpdate =
-			message.status === 'pending' &&
+			message.status === "pending" &&
 			!hasFinish &&
 			Boolean(latestProgressUpdatePart);
 		const shouldShowLoadingFallback =
-			message.status === 'pending' && !hasFinish && !latestProgressUpdatePart;
+			message.status === "pending" && !hasFinish && !latestProgressUpdatePart;
 		const formatTime = (ts?: number) => {
-			if (!ts) return '';
+			if (!ts) return "";
 			const date = new Date(ts);
 			return date.toLocaleTimeString([], {
-				hour: '2-digit',
-				minute: '2-digit',
+				hour: "2-digit",
+				minute: "2-digit",
 			});
 		};
 
@@ -117,10 +117,10 @@ export const AssistantMessageGroup = memo(
 					{parts.map((part, index) => {
 						const isLastPart = index === parts.length - 1;
 						const showLine = !isLastPart || hasNextAssistantMessage;
-						const isLastToolCall = part.type === 'tool_call' && isLastPart;
+						const isLastToolCall = part.type === "tool_call" && isLastPart;
 						const isProgressUpdate =
-							part.type === 'tool_result' &&
-							part.toolName === 'progress_update';
+							part.type === "tool_result" &&
+							part.toolName === "progress_update";
 
 						if (isProgressUpdate) {
 							return null;

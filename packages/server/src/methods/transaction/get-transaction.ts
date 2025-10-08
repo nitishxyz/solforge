@@ -220,11 +220,15 @@ export const getTransaction: RpcMethodHandler = async (id, params, context) => {
 							: i < (header?.numRequiredSignatures ?? 0),
 				}));
 				// Collect token balance hints: (mint, decimals) pairs to help identify mint when keys are missing
-				const preTbs = ((result as unknown as { meta?: { preTokenBalances?: unknown[] } })?.meta?.preTokenBalances || []) as Array<{
+				const preTbs = ((
+					result as unknown as { meta?: { preTokenBalances?: unknown[] } }
+				)?.meta?.preTokenBalances || []) as Array<{
 					mint?: string;
 					uiTokenAmount?: { decimals?: number };
 				}>;
-				const postTbs = ((result as unknown as { meta?: { postTokenBalances?: unknown[] } })?.meta?.postTokenBalances || []) as Array<{
+				const postTbs = ((
+					result as unknown as { meta?: { postTokenBalances?: unknown[] } }
+				)?.meta?.postTokenBalances || []) as Array<{
 					mint?: string;
 					uiTokenAmount?: { decimals?: number };
 				}>;

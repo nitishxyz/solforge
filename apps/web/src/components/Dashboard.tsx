@@ -44,9 +44,13 @@ export function Dashboard() {
 						description: `Transaction: ${sig.slice(0, 8)}...${sig.slice(-8)}`,
 						action: {
 							label: "View Details",
-							onClick: () => navigate({ to: "/transactions/$signature", params: { signature: sig } }),
+							onClick: () =>
+								navigate({
+									to: "/transactions/$signature",
+									params: { signature: sig },
+								}),
 						},
-					}
+					},
 				);
 			}
 		},
@@ -72,9 +76,13 @@ export function Dashboard() {
 						description: `Transaction: ${sig.slice(0, 8)}...${sig.slice(-8)}`,
 						action: {
 							label: "View Details",
-							onClick: () => navigate({ to: "/transactions/$signature", params: { signature: sig } }),
+							onClick: () =>
+								navigate({
+									to: "/transactions/$signature",
+									params: { signature: sig },
+								}),
 						},
-					}
+					},
 				);
 			}
 		},
@@ -136,6 +144,7 @@ export function Dashboard() {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"

@@ -1,8 +1,8 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 export function TreeRenderer({
 	contentJson,
@@ -11,8 +11,8 @@ export function TreeRenderer({
 	onToggle,
 }: RendererProps) {
 	const result = contentJson.result || {};
-	const tree = String(result.tree || '');
-	const lines = tree.split('\n').length;
+	const tree = String(result.tree || "");
+	const lines = tree.split("\n").length;
 	const timeStr = formatDuration(toolDurationMs);
 
 	return (
@@ -30,7 +30,7 @@ export function TreeRenderer({
 				<span className="font-medium">tree</span>
 				<span className="text-muted-foreground/70">·</span>
 				<span className="text-foreground/70">
-					{lines} {lines === 1 ? 'line' : 'lines'}
+					{lines} {lines === 1 ? "line" : "lines"}
 				</span>
 				<span className="text-muted-foreground/80">· {timeStr}</span>
 			</button>
@@ -42,11 +42,11 @@ export function TreeRenderer({
 							style={vscDarkPlus}
 							customStyle={{
 								margin: 0,
-								padding: '0.75rem',
-								fontSize: '0.75rem',
-								lineHeight: '1.5',
-								background: 'transparent',
-								maxWidth: '100%',
+								padding: "0.75rem",
+								fontSize: "0.75rem",
+								lineHeight: "1.5",
+								background: "transparent",
+								maxWidth: "100%",
 							}}
 							wrapLines
 							wrapLongLines

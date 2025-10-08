@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 interface SearchResult {
 	title: string;
@@ -39,7 +39,7 @@ export function WebSearchRenderer({
 	};
 
 	// Check if it's a search query or URL fetch
-	const isSearch = 'results' in result;
+	const isSearch = "results" in result;
 	const searchResults = (result.results as SearchResult[]) || [];
 	const webContent = result as WebContent;
 
@@ -61,8 +61,8 @@ export function WebSearchRenderer({
 					<span className="font-medium">web search</span>
 					<span className="text-muted-foreground/70">·</span>
 					<span className="text-foreground/70">
-						{searchResults.length}{' '}
-						{searchResults.length === 1 ? 'result' : 'results'}
+						{searchResults.length}{" "}
+						{searchResults.length === 1 ? "result" : "results"}
 					</span>
 					<span className="text-muted-foreground/80">· {timeStr}</span>
 				</button>

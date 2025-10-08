@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import type { ContentJson } from './types';
-import { ReadRenderer } from './ReadRenderer';
-import { WriteRenderer } from './WriteRenderer';
-import { EditRenderer } from './EditRenderer';
-import { BashRenderer } from './BashRenderer';
-import { GitStatusRenderer } from './GitStatusRenderer';
-import { GitDiffRenderer } from './GitDiffRenderer';
-import { GitCommitRenderer } from './GitCommitRenderer';
-import { ApplyPatchRenderer } from './ApplyPatchRenderer';
-import { ListRenderer } from './ListRenderer';
-import { TreeRenderer } from './TreeRenderer';
-import { SearchRenderer } from './SearchRenderer';
-import { FinishRenderer } from './FinishRenderer';
-import { GenericRenderer } from './GenericRenderer';
-import { DebugRenderer } from './DebugRenderer';
-import { UpdatePlanRenderer } from './UpdatePlanRenderer';
-import { ProgressUpdateRenderer } from './ProgressUpdateRenderer';
-import { WebSearchRenderer } from './WebSearchRenderer';
-import { ErrorRenderer } from './ErrorRenderer';
+import { useState } from "react";
+import type { ContentJson } from "./types";
+import { ReadRenderer } from "./ReadRenderer";
+import { WriteRenderer } from "./WriteRenderer";
+import { EditRenderer } from "./EditRenderer";
+import { BashRenderer } from "./BashRenderer";
+import { GitStatusRenderer } from "./GitStatusRenderer";
+import { GitDiffRenderer } from "./GitDiffRenderer";
+import { GitCommitRenderer } from "./GitCommitRenderer";
+import { ApplyPatchRenderer } from "./ApplyPatchRenderer";
+import { ListRenderer } from "./ListRenderer";
+import { TreeRenderer } from "./TreeRenderer";
+import { SearchRenderer } from "./SearchRenderer";
+import { FinishRenderer } from "./FinishRenderer";
+import { GenericRenderer } from "./GenericRenderer";
+import { DebugRenderer } from "./DebugRenderer";
+import { UpdatePlanRenderer } from "./UpdatePlanRenderer";
+import { ProgressUpdateRenderer } from "./ProgressUpdateRenderer";
+import { WebSearchRenderer } from "./WebSearchRenderer";
+import { ErrorRenderer } from "./ErrorRenderer";
 
 interface ToolResultRendererProps {
 	toolName: string;
@@ -46,43 +46,43 @@ export function ToolResultRenderer({
 	}
 
 	switch (toolName) {
-		case 'read':
+		case "read":
 			return <ReadRenderer {...props} />;
-		case 'write':
+		case "write":
 			return <WriteRenderer {...props} />;
-		case 'edit':
+		case "edit":
 			return <EditRenderer {...props} />;
-		case 'bash':
+		case "bash":
 			return <BashRenderer {...props} />;
-		case 'git_status':
+		case "git_status":
 			return <GitStatusRenderer {...props} />;
-		case 'git_diff':
+		case "git_diff":
 			return <GitDiffRenderer {...props} />;
-		case 'git_commit':
+		case "git_commit":
 			return <GitCommitRenderer {...props} />;
-		case 'apply_patch':
+		case "apply_patch":
 			return <ApplyPatchRenderer {...props} />;
-		case 'ls':
+		case "ls":
 			return <ListRenderer {...props} />;
-		case 'tree':
+		case "tree":
 			return <TreeRenderer {...props} />;
-		case 'ripgrep':
-		case 'grep':
-		case 'glob':
+		case "ripgrep":
+		case "grep":
+		case "glob":
 			return <SearchRenderer {...props} />;
-		case 'websearch':
+		case "websearch":
 			return <WebSearchRenderer {...props} />;
-		case 'finish':
+		case "finish":
 			return <FinishRenderer {...props} />;
-		case 'update_plan':
+		case "update_plan":
 			return <UpdatePlanRenderer {...props} />;
-		case 'progress_update':
+		case "progress_update":
 			return <ProgressUpdateRenderer {...props} />;
-		case 'error':
+		case "error":
 			return <ErrorRenderer {...props} />;
 		default:
 			return <GenericRenderer {...props} toolName={toolName} />;
 	}
 }
 
-export * from './types';
+export * from "./types";

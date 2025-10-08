@@ -18,6 +18,7 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -30,7 +31,8 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 					<div>
 						<h2 className="text-xl font-bold text-foreground">Programs</h2>
 						<p className="text-xs text-muted-foreground">
-							{programs.length} deployed program{programs.length !== 1 ? "s" : ""}
+							{programs.length} deployed program
+							{programs.length !== 1 ? "s" : ""}
 						</p>
 					</div>
 				</div>
@@ -46,6 +48,7 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -56,12 +59,17 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 						</svg>
 						<span>{loading ? "Refreshing" : "Refresh"}</span>
 					</button>
-					<button type="button" onClick={onAdd} className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+					<button
+						type="button"
+						onClick={onAdd}
+						className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+					>
 						<svg
 							className="w-4 h-4"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -84,6 +92,7 @@ export function ProgramsPanel({ programs, loading, onRefresh, onAdd }: Props) {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"

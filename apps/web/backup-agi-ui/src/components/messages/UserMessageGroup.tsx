@@ -1,8 +1,8 @@
-import { memo } from 'react';
-import { User } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { Message } from '../../types/api';
+import { memo } from "react";
+import { User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Message } from "../../types/api";
 
 interface UserMessageGroupProps {
 	message: Message;
@@ -17,22 +17,22 @@ export const UserMessageGroup = memo(
 
 		if (!firstPart) return null;
 
-		let content = '';
+		let content = "";
 		const data = firstPart.contentJson || firstPart.content;
-		if (data && typeof data === 'object' && 'text' in data) {
+		if (data && typeof data === "object" && "text" in data) {
 			content = String(data.text);
-		} else if (typeof data === 'string') {
+		} else if (typeof data === "string") {
 			content = data;
 		} else if (data) {
 			content = JSON.stringify(data, null, 2);
 		}
 
 		const formatTime = (ts?: number) => {
-			if (!ts) return '';
+			if (!ts) return "";
 			const date = new Date(ts);
 			return date.toLocaleTimeString([], {
-				hour: '2-digit',
-				minute: '2-digit',
+				hour: "2-digit",
+				minute: "2-digit",
 			});
 		};
 

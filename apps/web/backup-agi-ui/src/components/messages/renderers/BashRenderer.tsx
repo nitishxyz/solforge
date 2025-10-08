@@ -1,9 +1,9 @@
-import { ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
-import { ToolErrorDisplay } from './ToolErrorDisplay';
+import { ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
+import { ToolErrorDisplay } from "./ToolErrorDisplay";
 
 export function BashRenderer({
 	contentJson,
@@ -13,23 +13,23 @@ export function BashRenderer({
 }: RendererProps) {
 	const result = contentJson.result || {};
 	const args = contentJson.args || {};
-	
+
 	// Check for tool execution error (ok: false)
 	const hasToolError =
-		typeof result === 'object' && 'ok' in result && result.ok === false;
+		typeof result === "object" && "ok" in result && result.ok === false;
 	const errorMessage =
-		hasToolError && 'error' in result && typeof result.error === 'string'
+		hasToolError && "error" in result && typeof result.error === "string"
 			? result.error
 			: null;
 	const errorStack =
-		hasToolError && 'stack' in result && typeof result.stack === 'string'
+		hasToolError && "stack" in result && typeof result.stack === "string"
 			? result.stack
 			: undefined;
 
-	const stdout = String(result.stdout || '');
-	const stderr = String(result.stderr || '');
+	const stdout = String(result.stdout || "");
+	const stderr = String(result.stderr || "");
 	const exitCode = Number(result.exitCode ?? 0);
-	const cmd = String(args.cmd || '');
+	const cmd = String(args.cmd || "");
 	const timeStr = formatDuration(toolDurationMs);
 
 	const hasOutput = stdout.length > 0 || stderr.length > 0;
@@ -43,10 +43,10 @@ export function BashRenderer({
 				onClick={() => canExpand && onToggle()}
 				className={`flex items-center gap-2 transition-colors w-full min-w-0 ${
 					hasToolError
-						? 'text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200'
+						? "text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
 						: canExpand
-							? 'text-muted-foreground hover:text-foreground'
-							: 'text-muted-foreground'
+							? "text-muted-foreground hover:text-foreground"
+							: "text-muted-foreground"
 				}`}
 			>
 				{canExpand &&
@@ -60,7 +60,7 @@ export function BashRenderer({
 					<AlertCircle className="h-3 w-3 flex-shrink-0 text-red-600 dark:text-red-400" />
 				)}
 				<span className="font-medium flex-shrink-0">
-					bash{hasToolError ? ' error' : ''}
+					bash{hasToolError ? " error" : ""}
 				</span>
 				<span className="text-muted-foreground/70 flex-shrink-0">·</span>
 				<span className="text-foreground/70 truncate min-w-0" title={cmd}>
@@ -70,8 +70,8 @@ export function BashRenderer({
 					<span
 						className={`flex-shrink-0 whitespace-nowrap ${
 							exitCode === 0
-								? 'text-emerald-600 dark:text-emerald-400'
-								: 'text-red-600 dark:text-red-400'
+								? "text-emerald-600 dark:text-emerald-400"
+								: "text-red-600 dark:text-red-400"
 						}`}
 					>
 						· exit {exitCode} · {timeStr}
@@ -99,11 +99,11 @@ export function BashRenderer({
 									style={vscDarkPlus}
 									customStyle={{
 										margin: 0,
-										padding: '0.75rem',
-										fontSize: '0.75rem',
-										lineHeight: '1.5',
-										background: 'transparent',
-										maxWidth: '100%',
+										padding: "0.75rem",
+										fontSize: "0.75rem",
+										lineHeight: "1.5",
+										background: "transparent",
+										maxWidth: "100%",
 									}}
 									wrapLines
 									wrapLongLines
@@ -122,11 +122,11 @@ export function BashRenderer({
 									style={vscDarkPlus}
 									customStyle={{
 										margin: 0,
-										padding: '0.75rem',
-										fontSize: '0.75rem',
-										lineHeight: '1.5',
-										background: 'transparent',
-										maxWidth: '100%',
+										padding: "0.75rem",
+										fontSize: "0.75rem",
+										lineHeight: "1.5",
+										background: "transparent",
+										maxWidth: "100%",
 									}}
 									wrapLines
 									wrapLongLines

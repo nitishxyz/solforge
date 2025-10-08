@@ -1,11 +1,11 @@
-import { ChevronRight } from 'lucide-react';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import { ChevronRight } from "lucide-react";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 interface StatusLine {
 	status: string;
 	file: string;
-	type: 'staged' | 'unstaged' | 'untracked' | 'both';
+	type: "staged" | "unstaged" | "untracked" | "both";
 }
 
 function parseStatusLine(line: string): StatusLine | null {
@@ -14,36 +14,36 @@ function parseStatusLine(line: string): StatusLine | null {
 	const y = line[1];
 	const file = line.slice(3);
 
-	if (x === '?' && y === '?') {
-		return { status: '??', file, type: 'untracked' };
+	if (x === "?" && y === "?") {
+		return { status: "??", file, type: "untracked" };
 	}
 
-	let type: StatusLine['type'] = 'unstaged';
-	if (x !== ' ' && y !== ' ') type = 'both';
-	else if (x !== ' ') type = 'staged';
+	let type: StatusLine["type"] = "unstaged";
+	if (x !== " " && y !== " ") type = "both";
+	else if (x !== " ") type = "staged";
 
 	return { status: `${x}${y}`, file, type };
 }
 
 function getStatusIcon(status: string): string {
-	if (status === '??') return '?';
-	if (status[0] === 'A' || status[1] === 'A') return '+';
-	if (status[0] === 'M' || status[1] === 'M') return '~';
-	if (status[0] === 'D' || status[1] === 'D') return '-';
-	if (status[0] === 'R' || status[1] === 'R') return '→';
+	if (status === "??") return "?";
+	if (status[0] === "A" || status[1] === "A") return "+";
+	if (status[0] === "M" || status[1] === "M") return "~";
+	if (status[0] === "D" || status[1] === "D") return "-";
+	if (status[0] === "R" || status[1] === "R") return "→";
 	return status;
 }
 
-function getStatusColor(type: StatusLine['type']): string {
+function getStatusColor(type: StatusLine["type"]): string {
 	switch (type) {
-		case 'staged':
-			return 'text-emerald-600 dark:text-emerald-400';
-		case 'unstaged':
-			return 'text-amber-600 dark:text-amber-400';
-		case 'untracked':
-			return 'text-muted-foreground/60';
-		case 'both':
-			return 'text-blue-600 dark:text-blue-400';
+		case "staged":
+			return "text-emerald-600 dark:text-emerald-400";
+		case "unstaged":
+			return "text-amber-600 dark:text-amber-400";
+		case "untracked":
+			return "text-muted-foreground/60";
+		case "both":
+			return "text-blue-600 dark:text-blue-400";
 	}
 }
 
@@ -57,7 +57,7 @@ export function GitStatusRenderer({
 	const staged = Number(result.staged || 0);
 	const unstaged = Number(result.unstaged || 0);
 	const raw = (result.raw || []) as string[];
-	const summary = String(result.summary || '');
+	const summary = String(result.summary || "");
 	const timeStr = formatDuration(toolDurationMs);
 
 	const statusLines = raw.map(parseStatusLine).filter(Boolean) as StatusLine[];
@@ -71,7 +71,7 @@ export function GitStatusRenderer({
 				className="flex items-center gap-2 text-blue-700 dark:text-blue-300 transition-colors hover:text-blue-600 dark:hover:text-blue-200 w-full"
 			>
 				<ChevronRight
-					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
 				/>
 				<span className="font-medium flex-shrink-0">git status</span>
 				<span className="text-muted-foreground/70 flex-shrink-0">·</span>

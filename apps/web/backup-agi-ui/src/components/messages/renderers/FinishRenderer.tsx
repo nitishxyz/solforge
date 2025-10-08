@@ -1,5 +1,5 @@
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 export function FinishRenderer({ toolDurationMs }: RendererProps) {
 	const timeStr = formatDuration(toolDurationMs);

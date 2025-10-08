@@ -1,6 +1,6 @@
-import { StopCircle } from 'lucide-react';
-import { useState } from 'react';
-import { apiClient } from '../../lib/api-client';
+import { StopCircle } from "lucide-react";
+import { useState } from "react";
+import { apiClient } from "../../lib/api-client";
 
 interface StopButtonProps {
 	sessionId: string;
@@ -19,7 +19,7 @@ export function StopButton({ sessionId, onStop, disabled }: StopButtonProps) {
 			await apiClient.abortSession(sessionId);
 			onStop?.();
 		} catch (error) {
-			console.error('Failed to abort stream:', error);
+			console.error("Failed to abort stream:", error);
 		} finally {
 			// Keep button disabled for a bit to prevent double-clicks
 			setTimeout(() => setIsAborting(false), 1000);
@@ -35,7 +35,7 @@ export function StopButton({ sessionId, onStop, disabled }: StopButtonProps) {
 			title="Stop generation"
 		>
 			<StopCircle className="w-4 h-4" />
-			<span className="font-medium">{isAborting ? 'Stopping...' : 'Stop'}</span>
+			<span className="font-medium">{isAborting ? "Stopping..." : "Stop"}</span>
 		</button>
 	);
 }

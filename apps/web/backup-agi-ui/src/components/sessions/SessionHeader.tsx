@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import type { Session } from '../../types/api';
-import { Clock, DollarSign, Hash } from 'lucide-react';
+import { useMemo } from "react";
+import type { Session } from "../../types/api";
+import { Clock, DollarSign, Hash } from "lucide-react";
 
 interface SessionHeaderProps {
 	session: Session;
@@ -35,7 +35,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 
 	// Format time duration
 	const formatDuration = (ms: number | null) => {
-		if (!ms) return '0s';
+		if (!ms) return "0s";
 
 		const seconds = Math.floor(ms / 1000);
 		const minutes = Math.floor(seconds / 60);
@@ -54,7 +54,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 
 	// Format number with commas
 	const formatNumber = (num: number) => {
-		return num.toLocaleString('en-US');
+		return num.toLocaleString("en-US");
 	};
 
 	return (
@@ -62,7 +62,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 			<div className="max-w-3xl mx-auto px-6 py-6">
 				{/* Title */}
 				<h1 className="text-2xl font-semibold text-foreground mb-4">
-					{session.title || 'Untitled Session'}
+					{session.title || "Untitled Session"}
 				</h1>
 
 				{/* Session Stats */}
@@ -79,7 +79,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 							</span>
 							{(session.totalInputTokens || session.totalOutputTokens) && (
 								<span className="text-xs opacity-60">
-									{formatNumber(session.totalInputTokens || 0)} in /{' '}
+									{formatNumber(session.totalInputTokens || 0)} in /{" "}
 									{formatNumber(session.totalOutputTokens || 0)} out
 								</span>
 							)}

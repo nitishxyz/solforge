@@ -65,12 +65,13 @@ export class APIServer {
 		// Get status (slot, epoch, blockhash, faucet)
 		router.get("/status", async (_req, res) => {
 			try {
-				const [slot, blockHeight, latestBlockhash, epochInfo] = await Promise.all([
-					this.connection.getSlot(),
-					this.connection.getBlockHeight(),
-					this.connection.getLatestBlockhash().then(r => r.blockhash),
-					this.connection.getEpochInfo(),
-				]);
+				const [slot, blockHeight, latestBlockhash, epochInfo] =
+					await Promise.all([
+						this.connection.getSlot(),
+						this.connection.getBlockHeight(),
+						this.connection.getLatestBlockhash().then((r) => r.blockhash),
+						this.connection.getEpochInfo(),
+					]);
 
 				console.log("[api-server] epochInfo:", epochInfo);
 

@@ -1,9 +1,9 @@
-import { CheckCircle2, Circle, ArrowRight } from 'lucide-react';
-import type { RendererProps } from './types';
+import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
+import type { RendererProps } from "./types";
 
 interface PlanItem {
 	step: string;
-	status: 'pending' | 'in_progress' | 'completed';
+	status: "pending" | "in_progress" | "completed";
 }
 
 interface UpdatePlanResult {
@@ -27,22 +27,22 @@ export function UpdatePlanRenderer({ contentJson }: RendererProps) {
 				<div className="space-y-1.5">
 					{items.map((item, idx) => (
 						<div key={`${item.step}-${idx}`} className="flex items-start gap-2">
-							{item.status === 'completed' && (
+							{item.status === "completed" && (
 								<CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-300 flex-shrink-0 mt-0.5" />
 							)}
-							{item.status === 'in_progress' && (
+							{item.status === "in_progress" && (
 								<ArrowRight className="h-4 w-4 text-blue-700 dark:text-blue-300 flex-shrink-0 mt-0.5 animate-pulse" />
 							)}
-							{item.status === 'pending' && (
+							{item.status === "pending" && (
 								<Circle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
 							)}
 							<span
 								className={`text-sm ${
-									item.status === 'completed'
-										? 'text-muted-foreground line-through'
-										: item.status === 'in_progress'
-											? 'text-foreground'
-											: 'text-muted-foreground/80'
+									item.status === "completed"
+										? "text-muted-foreground line-through"
+										: item.status === "in_progress"
+											? "text-foreground"
+											: "text-muted-foreground/80"
 								}`}
 							>
 								{item.step}

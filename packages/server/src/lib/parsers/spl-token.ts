@@ -1,49 +1,49 @@
 import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import {
-    decodeMintToCheckedInstruction,
-    decodeTransferInstruction,
-    decodeTransferCheckedInstruction,
-    decodeInitializeAccount3Instruction,
-    decodeInitializeImmutableOwnerInstruction,
-    decodeTransferCheckedInstructionUnchecked,
-    decodeTransferInstructionUnchecked,
-    decodeInitializeAccount3InstructionUnchecked,
-    decodeInitializeImmutableOwnerInstructionUnchecked,
-    // Additional core instruction decoders
-    decodeApproveInstruction,
-    decodeApproveCheckedInstruction,
-    decodeRevokeInstruction,
-    decodeSetAuthorityInstruction,
-    decodeMintToInstruction,
-    decodeBurnInstruction,
-    decodeBurnCheckedInstruction,
-    decodeCloseAccountInstruction,
-    decodeFreezeAccountInstruction,
-    decodeThawAccountInstruction,
-    decodeInitializeAccountInstruction,
-    decodeInitializeAccount2Instruction,
-    decodeInitializeMintInstruction,
-    decodeInitializeMint2Instruction,
-    decodeInitializeMultisigInstruction,
-    decodeSyncNativeInstruction,
-    decodeInitializeMintCloseAuthorityInstruction,
-    decodeInitializePermanentDelegateInstruction,
-    decodeAmountToUiAmountInstruction,
-    decodeUiAmountToAmountInstruction,
-    // Transfer Fee extension decoders
-    decodeInitializeTransferFeeConfigInstructionUnchecked,
-    decodeTransferCheckedWithFeeInstructionUnchecked,
-    decodeWithdrawWithheldTokensFromMintInstructionUnchecked,
-    decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked,
-    decodeHarvestWithheldTokensToMintInstructionUnchecked,
-    decodeSetTransferFeeInstructionUnchecked,
+	decodeMintToCheckedInstruction,
+	decodeTransferInstruction,
+	decodeTransferCheckedInstruction,
+	decodeInitializeAccount3Instruction,
+	decodeInitializeImmutableOwnerInstruction,
+	decodeTransferCheckedInstructionUnchecked,
+	decodeTransferInstructionUnchecked,
+	decodeInitializeAccount3InstructionUnchecked,
+	decodeInitializeImmutableOwnerInstructionUnchecked,
+	// Additional core instruction decoders
+	decodeApproveInstruction,
+	decodeApproveCheckedInstruction,
+	decodeRevokeInstruction,
+	decodeSetAuthorityInstruction,
+	decodeMintToInstruction,
+	decodeBurnInstruction,
+	decodeBurnCheckedInstruction,
+	decodeCloseAccountInstruction,
+	decodeFreezeAccountInstruction,
+	decodeThawAccountInstruction,
+	decodeInitializeAccountInstruction,
+	decodeInitializeAccount2Instruction,
+	decodeInitializeMintInstruction,
+	decodeInitializeMint2Instruction,
+	decodeInitializeMultisigInstruction,
+	decodeSyncNativeInstruction,
+	decodeInitializeMintCloseAuthorityInstruction,
+	decodeInitializePermanentDelegateInstruction,
+	decodeAmountToUiAmountInstruction,
+	decodeUiAmountToAmountInstruction,
+	// Transfer Fee extension decoders
+	decodeInitializeTransferFeeConfigInstructionUnchecked,
+	decodeTransferCheckedWithFeeInstructionUnchecked,
+	decodeWithdrawWithheldTokensFromMintInstructionUnchecked,
+	decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked,
+	decodeHarvestWithheldTokensToMintInstructionUnchecked,
+	decodeSetTransferFeeInstructionUnchecked,
 } from "@solana/spl-token";
 import { u8 } from "@solana/buffer-layout";
 import { PublicKey as PK } from "@solana/web3.js";
 import {
-    TOKEN_PROGRAM_ID as TOKEN_PROGRAM_V1,
-    TOKEN_2022_PROGRAM_ID as TOKEN_PROGRAM_2022,
-    getAssociatedTokenAddressSync,
+	TOKEN_PROGRAM_ID as TOKEN_PROGRAM_V1,
+	TOKEN_2022_PROGRAM_ID as TOKEN_PROGRAM_2022,
+	getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 
 // Keep shape compatible with instruction-parser
@@ -56,9 +56,12 @@ export type ParsedInstruction =
 	| { programId: string; accounts: string[]; data: string };
 
 function ok(programId: string, type: string, info: unknown): ParsedInstruction {
-    // Use different labels for SPL Token v1 and Token-2022 for better UI compatibility
-    const program = programId === TOKEN_PROGRAM_2022.toBase58() ? "spl-token-2022" : "spl-token";
-    return { program, programId, parsed: { type, info } };
+	// Use different labels for SPL Token v1 and Token-2022 for better UI compatibility
+	const program =
+		programId === TOKEN_PROGRAM_2022.toBase58()
+			? "spl-token-2022"
+			: "spl-token";
+	return { program, programId, parsed: { type, info } };
 }
 
 function asBase58(pk: PublicKey | undefined): string | undefined {
@@ -70,11 +73,11 @@ function asBase58(pk: PublicKey | undefined): string | undefined {
 }
 
 export function tryParseSplToken(
-    ix: TransactionInstruction,
-    programIdStr: string,
-    _accountKeys: string[],
-    dataBase58: string,
-    tokenBalanceHints?: Array<{ mint: string; decimals: number }>,
+	ix: TransactionInstruction,
+	programIdStr: string,
+	_accountKeys: string[],
+	dataBase58: string,
+	tokenBalanceHints?: Array<{ mint: string; decimals: number }>,
 ): ParsedInstruction | null {
 	try {
 		// Accept both SPL Token and Token-2022 program ids
@@ -145,7 +148,8 @@ export function tryParseSplToken(
 				delegate: asBase58(a.keys.delegate.pubkey),
 				owner: asBase58(a.keys.owner.pubkey),
 				tokenAmount: {
-					amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+					amount:
+						typeof amount === "bigint" ? amount.toString() : String(amount),
 					decimals,
 				},
 			});
@@ -172,8 +176,12 @@ export function tryParseSplToken(
 			return ok(programIdStr, "setAuthority", {
 				account: asBase58(s.keys.account.pubkey),
 				currentAuthority: asBase58(s.keys.currentAuthority.pubkey),
-				newAuthority: s.data.newAuthority ? s.data.newAuthority.toBase58() : null,
-				authorityType: authorityTypeMap[s.data.authorityType] || String(s.data.authorityType),
+				newAuthority: s.data.newAuthority
+					? s.data.newAuthority.toBase58()
+					: null,
+				authorityType:
+					authorityTypeMap[s.data.authorityType] ||
+					String(s.data.authorityType),
 			});
 		} catch {}
 
@@ -199,7 +207,8 @@ export function tryParseSplToken(
 				mint: asBase58(b.keys.mint.pubkey),
 				authority: asBase58(b.keys.owner.pubkey),
 				tokenAmount: {
-					amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+					amount:
+						typeof amount === "bigint" ? amount.toString() : String(amount),
 					decimals,
 				},
 			});
@@ -264,7 +273,9 @@ export function tryParseSplToken(
 				mint: asBase58(i.keys.mint.pubkey),
 				decimals: i.data.decimals,
 				mintAuthority: i.data.mintAuthority.toBase58(),
-				freezeAuthority: i.data.freezeAuthority ? i.data.freezeAuthority.toBase58() : null,
+				freezeAuthority: i.data.freezeAuthority
+					? i.data.freezeAuthority.toBase58()
+					: null,
 				rentSysvar: asBase58(i.keys.rent.pubkey),
 			});
 		} catch {}
@@ -276,7 +287,9 @@ export function tryParseSplToken(
 				mint: asBase58(i.keys.mint.pubkey),
 				decimals: i.data.decimals,
 				mintAuthority: i.data.mintAuthority.toBase58(),
-				freezeAuthority: i.data.freezeAuthority ? i.data.freezeAuthority.toBase58() : null,
+				freezeAuthority: i.data.freezeAuthority
+					? i.data.freezeAuthority.toBase58()
+					: null,
 			});
 		} catch {}
 
@@ -306,7 +319,9 @@ export function tryParseSplToken(
 			const i = decodeInitializeMintCloseAuthorityInstruction(ix, programPk);
 			return ok(programIdStr, "initializeMintCloseAuthority", {
 				mint: asBase58(i.keys.mint.pubkey),
-				closeAuthority: i.data.closeAuthority ? i.data.closeAuthority.toBase58() : null,
+				closeAuthority: i.data.closeAuthority
+					? i.data.closeAuthority.toBase58()
+					: null,
 			});
 		} catch {}
 
@@ -327,7 +342,10 @@ export function tryParseSplToken(
 			const a = decodeAmountToUiAmountInstruction(ix, programPk);
 			return ok(programIdStr, "amountToUiAmount", {
 				mint: asBase58(a.keys.mint.pubkey),
-				amount: typeof a.data.amount === "bigint" ? a.data.amount.toString() : String(a.data.amount),
+				amount:
+					typeof a.data.amount === "bigint"
+						? a.data.amount.toString()
+						: String(a.data.amount),
 			});
 		} catch {}
 
@@ -436,79 +454,79 @@ export function tryParseSplToken(
 				});
 			}
 			// TransferChecked
-            if (op === 12) {
-                const t = decodeTransferCheckedInstructionUnchecked(ix);
-                const amt = t.data.amount;
-                const decimals = t.data.decimals;
-                const hintMint = (() => {
-                    try {
-                        const dec = Number(decimals);
-                        const candidates = (tokenBalanceHints || []).filter(
-                            (h) => Number(h.decimals) === dec,
-                        );
-                        if (candidates.length === 1) return candidates[0].mint;
-                        // Prefer non-zero decimals over 0 (filters out native 4uQe mint in many cases)
-                        const nonZero = candidates.filter((c) => c.decimals > 0);
-                        if (nonZero.length === 1) return nonZero[0].mint;
-                        // Fall back to first candidate if multiple
-                        return candidates[0]?.mint;
-                    } catch {
-                        return undefined;
-                    }
-                })();
-                return ok(programIdStr, "transferChecked", {
-                    tokenAmount: {
-                        amount: typeof amt === "bigint" ? amt.toString() : String(amt),
-                        decimals,
-                    },
-                    source: asBase58(t.keys.source?.pubkey),
-                    destination: asBase58(t.keys.destination?.pubkey),
-                    authority: asBase58(t.keys.owner?.pubkey),
-                    mint: asBase58(t.keys.mint?.pubkey) || hintMint,
-                });
-            }
+			if (op === 12) {
+				const t = decodeTransferCheckedInstructionUnchecked(ix);
+				const amt = t.data.amount;
+				const decimals = t.data.decimals;
+				const hintMint = (() => {
+					try {
+						const dec = Number(decimals);
+						const candidates = (tokenBalanceHints || []).filter(
+							(h) => Number(h.decimals) === dec,
+						);
+						if (candidates.length === 1) return candidates[0].mint;
+						// Prefer non-zero decimals over 0 (filters out native 4uQe mint in many cases)
+						const nonZero = candidates.filter((c) => c.decimals > 0);
+						if (nonZero.length === 1) return nonZero[0].mint;
+						// Fall back to first candidate if multiple
+						return candidates[0]?.mint;
+					} catch {
+						return undefined;
+					}
+				})();
+				return ok(programIdStr, "transferChecked", {
+					tokenAmount: {
+						amount: typeof amt === "bigint" ? amt.toString() : String(amt),
+						decimals,
+					},
+					source: asBase58(t.keys.source?.pubkey),
+					destination: asBase58(t.keys.destination?.pubkey),
+					authority: asBase58(t.keys.owner?.pubkey),
+					mint: asBase58(t.keys.mint?.pubkey) || hintMint,
+				});
+			}
 			// InitializeAccount3
-            if (op === 18) {
-                const a = decodeInitializeAccount3InstructionUnchecked(ix);
-                const hintMint = (() => {
-                    try {
-                        // Prefer single non-zero-decimals mint in this tx
-                        const nonZero = (tokenBalanceHints || []).filter(
-                            (h) => h.decimals > 0,
-                        );
-                        if (nonZero.length === 1) return nonZero[0].mint;
-                        // Fall back to first available mint
-                        return (tokenBalanceHints || [])[0]?.mint;
-                    } catch {
-                        return undefined;
-                    }
-                })();
-                const ownerStr = asBase58(a.data.owner);
-                const mintStr = asBase58(a.keys.mint?.pubkey) || hintMint;
-                let accountStr = asBase58(a.keys.account?.pubkey);
-                try {
-                    if (!accountStr && ownerStr && mintStr) {
-                        const ownerPk = new PK(ownerStr);
-                        const mintPk = new PK(mintStr);
-                        const programId =
-                            programIdStr === TOKEN_PROGRAM_2022.toBase58()
-                                ? TOKEN_PROGRAM_2022
-                                : TOKEN_PROGRAM_V1;
-                        const ata = getAssociatedTokenAddressSync(
-                            mintPk,
-                            ownerPk,
-                            true,
-                            programId,
-                        );
-                        accountStr = ata.toBase58();
-                    }
-                } catch {}
-                return ok(programIdStr, "initializeAccount3", {
-                    account: accountStr,
-                    mint: mintStr,
-                    owner: ownerStr,
-                });
-            }
+			if (op === 18) {
+				const a = decodeInitializeAccount3InstructionUnchecked(ix);
+				const hintMint = (() => {
+					try {
+						// Prefer single non-zero-decimals mint in this tx
+						const nonZero = (tokenBalanceHints || []).filter(
+							(h) => h.decimals > 0,
+						);
+						if (nonZero.length === 1) return nonZero[0].mint;
+						// Fall back to first available mint
+						return (tokenBalanceHints || [])[0]?.mint;
+					} catch {
+						return undefined;
+					}
+				})();
+				const ownerStr = asBase58(a.data.owner);
+				const mintStr = asBase58(a.keys.mint?.pubkey) || hintMint;
+				let accountStr = asBase58(a.keys.account?.pubkey);
+				try {
+					if (!accountStr && ownerStr && mintStr) {
+						const ownerPk = new PK(ownerStr);
+						const mintPk = new PK(mintStr);
+						const programId =
+							programIdStr === TOKEN_PROGRAM_2022.toBase58()
+								? TOKEN_PROGRAM_2022
+								: TOKEN_PROGRAM_V1;
+						const ata = getAssociatedTokenAddressSync(
+							mintPk,
+							ownerPk,
+							true,
+							programId,
+						);
+						accountStr = ata.toBase58();
+					}
+				} catch {}
+				return ok(programIdStr, "initializeAccount3", {
+					account: accountStr,
+					mint: mintStr,
+					owner: ownerStr,
+				});
+			}
 			// InitializeImmutableOwner
 			if (op === 22) {
 				const im = decodeInitializeImmutableOwnerInstructionUnchecked(ix);
@@ -524,11 +542,16 @@ export function tryParseSplToken(
 			try {
 				// InitializeTransferFeeConfig (sub-opcode 0)
 				if (subOp === 0) {
-					const decoded = decodeInitializeTransferFeeConfigInstructionUnchecked(ix);
+					const decoded =
+						decodeInitializeTransferFeeConfigInstructionUnchecked(ix);
 					return ok(programIdStr, "initializeTransferFeeConfig", {
 						mint: asBase58(decoded.keys.mint?.pubkey),
-						transferFeeConfigAuthority: asBase58(decoded.data.transferFeeConfigAuthority || undefined),
-						withdrawWithheldAuthority: asBase58(decoded.data.withdrawWithheldAuthority || undefined),
+						transferFeeConfigAuthority: asBase58(
+							decoded.data.transferFeeConfigAuthority || undefined,
+						),
+						withdrawWithheldAuthority: asBase58(
+							decoded.data.withdrawWithheldAuthority || undefined,
+						),
 						transferFeeBasisPoints: decoded.data.transferFeeBasisPoints,
 						maximumFee: decoded.data.maximumFee.toString(),
 					});
@@ -544,7 +567,10 @@ export function tryParseSplToken(
 					const base = BigInt(10) ** BigInt(decimals);
 					const whole = BigInt(amtStr) / base;
 					const frac = BigInt(amtStr) % base;
-					const fracStr = frac.toString().padStart(decimals, "0").replace(/0+$/, "");
+					const fracStr = frac
+						.toString()
+						.padStart(decimals, "0")
+						.replace(/0+$/, "");
 					const uiStr = fracStr.length ? `${whole}.${fracStr}` : `${whole}`;
 					return ok(programIdStr, "transferCheckedWithFee", {
 						source: asBase58(decoded.keys.source.pubkey),
@@ -562,7 +588,8 @@ export function tryParseSplToken(
 				}
 				// WithdrawWithheldTokensFromMint (sub-opcode 2)
 				if (subOp === 2) {
-					const decoded = decodeWithdrawWithheldTokensFromMintInstructionUnchecked(ix);
+					const decoded =
+						decodeWithdrawWithheldTokensFromMintInstructionUnchecked(ix);
 					return ok(programIdStr, "withdrawWithheldTokensFromMint", {
 						mint: asBase58(decoded.keys.mint.pubkey),
 						destination: asBase58(decoded.keys.destination.pubkey),
@@ -571,21 +598,23 @@ export function tryParseSplToken(
 				}
 				// WithdrawWithheldTokensFromAccounts (sub-opcode 3)
 				if (subOp === 3) {
-					const decoded = decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked(ix);
+					const decoded =
+						decodeWithdrawWithheldTokensFromAccountsInstructionUnchecked(ix);
 					return ok(programIdStr, "withdrawWithheldTokensFromAccounts", {
 						mint: asBase58(decoded.keys.mint.pubkey),
 						destination: asBase58(decoded.keys.destination.pubkey),
 						authority: asBase58(decoded.keys.authority.pubkey),
 						numTokenAccounts: decoded.data.numTokenAccounts,
-						sources: decoded.keys.sources?.map(k => asBase58(k.pubkey)) || [],
+						sources: decoded.keys.sources?.map((k) => asBase58(k.pubkey)) || [],
 					});
 				}
 				// HarvestWithheldTokensToMint (sub-opcode 4)
 				if (subOp === 4) {
-					const decoded = decodeHarvestWithheldTokensToMintInstructionUnchecked(ix);
+					const decoded =
+						decodeHarvestWithheldTokensToMintInstructionUnchecked(ix);
 					return ok(programIdStr, "harvestWithheldTokensToMint", {
 						mint: asBase58(decoded.keys.mint.pubkey),
-						sources: decoded.keys.sources?.map(k => asBase58(k.pubkey)) || [],
+						sources: decoded.keys.sources?.map((k) => asBase58(k.pubkey)) || [],
 					});
 				}
 				// SetTransferFee (sub-opcode 5)
@@ -608,7 +637,11 @@ export function tryParseSplToken(
 				if (subOp === 0) {
 					// Initialize - has account state byte at position 2
 					const accountState = ix.data[2]; // 0=Uninitialized, 1=Initialized, 2=Frozen
-					const stateMap: Record<number, string> = { 0: "uninitialized", 1: "initialized", 2: "frozen" };
+					const stateMap: Record<number, string> = {
+						0: "uninitialized",
+						1: "initialized",
+						2: "frozen",
+					};
 					return ok(programIdStr, "initializeDefaultAccountState", {
 						mint: asBase58(ix.keys[0]?.pubkey),
 						accountState: stateMap[accountState] || String(accountState),
@@ -617,7 +650,11 @@ export function tryParseSplToken(
 				if (subOp === 1) {
 					// Update
 					const accountState = ix.data[2];
-					const stateMap: Record<number, string> = { 0: "uninitialized", 1: "initialized", 2: "frozen" };
+					const stateMap: Record<number, string> = {
+						0: "uninitialized",
+						1: "initialized",
+						2: "frozen",
+					};
 					return ok(programIdStr, "updateDefaultAccountState", {
 						mint: asBase58(ix.keys[0]?.pubkey),
 						freezeAuthority: asBase58(ix.keys[1]?.pubkey),

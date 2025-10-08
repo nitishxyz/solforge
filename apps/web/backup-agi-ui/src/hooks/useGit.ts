@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../lib/api-client';
-import { useGitStore } from '../stores/gitStore';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../lib/api-client";
+import { useGitStore } from "../stores/gitStore";
 
 export function useGitStatus() {
 	const isExpanded = useGitStore((state) => state.isExpanded);
 
 	return useQuery({
-		queryKey: ['git', 'status'],
+		queryKey: ["git", "status"],
 		queryFn: () => apiClient.getGitStatus(),
 		// Only poll when sidebar is expanded to reduce unnecessary requests
 		// Disabled during active generation to prevent interference
@@ -19,7 +19,7 @@ export function useGitStatus() {
 
 export function useGitDiff(file: string | null, staged = false) {
 	return useQuery({
-		queryKey: ['git', 'diff', file, staged],
+		queryKey: ["git", "diff", file, staged],
 		queryFn: () => (file ? apiClient.getGitDiff(file, staged) : null),
 		enabled: !!file,
 		retry: 1,
@@ -32,7 +32,7 @@ export function useGitBranch() {
 	const isExpanded = useGitStore((state) => state.isExpanded);
 
 	return useQuery({
-		queryKey: ['git', 'branch'],
+		queryKey: ["git", "branch"],
 		queryFn: () => apiClient.getGitBranch(),
 		// Only poll when sidebar is expanded
 		refetchInterval: isExpanded ? 10000 : false, // Poll every 10 seconds
@@ -53,7 +53,7 @@ export function useStageFiles() {
 	return useMutation({
 		mutationFn: (files: string[]) => apiClient.stageFiles(files),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['git', 'status'] });
+			queryClient.invalidateQueries({ queryKey: ["git", "status"] });
 		},
 	});
 }
@@ -64,7 +64,7 @@ export function useUnstageFiles() {
 	return useMutation({
 		mutationFn: (files: string[]) => apiClient.unstageFiles(files),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['git', 'status'] });
+			queryClient.invalidateQueries({ queryKey: ["git", "status"] });
 		},
 	});
 }
@@ -75,8 +75,8 @@ export function useCommitChanges() {
 	return useMutation({
 		mutationFn: (message: string) => apiClient.commitChanges(message),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['git', 'status'] });
-			queryClient.invalidateQueries({ queryKey: ['git', 'branch'] });
+			queryClient.invalidateQueries({ queryKey: ["git", "status"] });
+			queryClient.invalidateQueries({ queryKey: ["git", "branch"] });
 		},
 	});
 }

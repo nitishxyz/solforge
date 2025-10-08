@@ -16,8 +16,8 @@ export interface Session {
 export interface Message {
 	id: string;
 	sessionId: string;
-	role: 'system' | 'user' | 'assistant' | 'tool';
-	status: 'pending' | 'complete' | 'error';
+	role: "system" | "user" | "assistant" | "tool";
+	status: "pending" | "complete" | "error";
 	agent: string;
 	provider: string;
 	model: string;
@@ -36,7 +36,7 @@ export interface MessagePart {
 	messageId: string;
 	index: number;
 	stepIndex: number | null;
-	type: 'text' | 'tool_call' | 'tool_result' | 'image' | 'error';
+	type: "text" | "tool_call" | "tool_result" | "image" | "error";
 	content: string;
 	contentJson?: Record<string, unknown>;
 	agent: string;
@@ -77,7 +77,7 @@ export interface SendMessageResponse {
 // Git-related types
 export interface GitFileStatus {
 	path: string;
-	status: 'modified' | 'added' | 'deleted' | 'renamed' | 'untracked';
+	status: "modified" | "added" | "deleted" | "renamed" | "untracked";
 	staged: boolean;
 	insertions?: number;
 	deletions?: number;

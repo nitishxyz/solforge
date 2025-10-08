@@ -92,6 +92,7 @@ export function TransactionDetailsPage() {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -156,6 +157,7 @@ export function TransactionDetailsPage() {
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -170,6 +172,7 @@ export function TransactionDetailsPage() {
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -188,8 +191,19 @@ export function TransactionDetailsPage() {
 							rel="noopener noreferrer"
 							className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded transition-colors"
 						>
-							<svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+							<svg
+								className="h-3.5 w-3.5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+								/>
 							</svg>
 							View on Solscan
 						</a>
@@ -199,8 +213,19 @@ export function TransactionDetailsPage() {
 							rel="noopener noreferrer"
 							className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded transition-colors"
 						>
-							<svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+							<svg
+								className="h-3.5 w-3.5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+								/>
 							</svg>
 							View on Explorer
 						</a>
@@ -255,6 +280,7 @@ export function TransactionDetailsPage() {
 											fill="none"
 											stroke="currentColor"
 											viewBox="0 0 24 24"
+											aria-hidden="true"
 										>
 											<path
 												strokeLinecap="round"
@@ -269,6 +295,7 @@ export function TransactionDetailsPage() {
 											fill="none"
 											stroke="currentColor"
 											viewBox="0 0 24 24"
+											aria-hidden="true"
 										>
 											<path
 												strokeLinecap="round"
@@ -310,6 +337,7 @@ export function TransactionDetailsPage() {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -323,7 +351,7 @@ export function TransactionDetailsPage() {
 							<div className="px-4 pb-4 space-y-2">
 								{accountKeys.map((key, idx) => (
 									<div
-										key={idx}
+										key={`${key}-${idx}`}
 										className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/30 rounded text-xs"
 									>
 										<div className="flex items-center gap-2 min-w-0 flex-1">
@@ -345,7 +373,9 @@ export function TransactionDetailsPage() {
 											)}
 											<button
 												type="button"
-												onClick={() => copyToClipboard(key.pubkey, `account-${idx}`)}
+												onClick={() =>
+													copyToClipboard(key.pubkey, `account-${idx}`)
+												}
 												className="p-1 hover:bg-muted rounded"
 												title="Copy account key"
 											>
@@ -355,6 +385,7 @@ export function TransactionDetailsPage() {
 														fill="none"
 														stroke="currentColor"
 														viewBox="0 0 24 24"
+														aria-hidden="true"
 													>
 														<path
 															strokeLinecap="round"
@@ -369,6 +400,7 @@ export function TransactionDetailsPage() {
 														fill="none"
 														stroke="currentColor"
 														viewBox="0 0 24 24"
+														aria-hidden="true"
 													>
 														<path
 															strokeLinecap="round"
@@ -402,6 +434,7 @@ export function TransactionDetailsPage() {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -415,7 +448,7 @@ export function TransactionDetailsPage() {
 						<div className="px-4 pb-4 space-y-3">
 							{instructions.map((ix, idx) => (
 								<InstructionCard
-									key={idx}
+									key={`instruction-${idx}`}
 									instruction={ix}
 									index={idx}
 									copyToClipboard={copyToClipboard}
@@ -427,55 +460,65 @@ export function TransactionDetailsPage() {
 				</div>
 
 				{/* Inner Instructions */}
-				{innerInstructions.length > 0 && innerInstructions.reduce((acc, group) => acc + group.instructions.length, 0) > 0 && (
-					<div className="border-border/50 border rounded-lg bg-card">
-						<button
-							type="button"
-							onClick={() => toggleSection("innerInstructions")}
-							className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
-						>
-							<h3 className="text-sm font-semibold">
-								Inner Instructions ({innerInstructions.reduce((acc, group) => acc + group.instructions.length, 0)})
-							</h3>
-							<svg
-								className={`h-5 w-5 transition-transform ${expandedSections.innerInstructions ? "rotate-180" : ""}`}
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
+				{innerInstructions.length > 0 &&
+					innerInstructions.reduce(
+						(acc, group) => acc + group.instructions.length,
+						0,
+					) > 0 && (
+						<div className="border-border/50 border rounded-lg bg-card">
+							<button
+								type="button"
+								onClick={() => toggleSection("innerInstructions")}
+								className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M19 9l-7 7-7-7"
-								/>
-							</svg>
-						</button>
-						{expandedSections.innerInstructions && (
-							<div className="px-4 pb-4 space-y-4">
-								{innerInstructions.map((group) => (
-									<div key={group.index} className="space-y-2">
-										<div className="text-xs font-medium text-muted-foreground bg-muted/30 px-2 py-1 rounded">
-											From Instruction #{group.index + 1}
+								<h3 className="text-sm font-semibold">
+									Inner Instructions (
+									{innerInstructions.reduce(
+										(acc, group) => acc + group.instructions.length,
+										0,
+									)}
+									)
+								</h3>
+								<svg
+									className={`h-5 w-5 transition-transform ${expandedSections.innerInstructions ? "rotate-180" : ""}`}
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M19 9l-7 7-7-7"
+									/>
+								</svg>
+							</button>
+							{expandedSections.innerInstructions && (
+								<div className="px-4 pb-4 space-y-4">
+									{innerInstructions.map((group) => (
+										<div key={group.index} className="space-y-2">
+											<div className="text-xs font-medium text-muted-foreground bg-muted/30 px-2 py-1 rounded">
+												From Instruction #{group.index + 1}
+											</div>
+											<div className="pl-4 space-y-3 border-l-2 border-border/40">
+												{group.instructions.map((ix, idx) => (
+													<InstructionCard
+														key={`inner-instruction-${idx}`}
+														instruction={ix}
+														index={idx}
+														copyToClipboard={copyToClipboard}
+														copiedField={copiedField}
+														isInner
+													/>
+												))}
+											</div>
 										</div>
-										<div className="pl-4 space-y-3 border-l-2 border-border/40">
-											{group.instructions.map((ix, idx) => (
-												<InstructionCard
-													key={idx}
-													instruction={ix}
-													index={idx}
-													copyToClipboard={copyToClipboard}
-													copiedField={copiedField}
-													isInner
-												/>
-											))}
-										</div>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				)}
+									))}
+								</div>
+							)}
+						</div>
+					)}
 
 				{/* Logs */}
 				{logs.length > 0 && (
@@ -491,6 +534,7 @@ export function TransactionDetailsPage() {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -505,7 +549,7 @@ export function TransactionDetailsPage() {
 								<div className="bg-black/40 rounded p-3 font-mono text-xs space-y-1 max-h-96 overflow-auto">
 									{logs.map((log, idx) => (
 										<div
-											key={idx}
+											key={`log-${idx}`}
 											className={`${
 												log.includes("failed") || log.includes("error")
 													? "text-red-400"
@@ -540,6 +584,7 @@ export function TransactionDetailsPage() {
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -558,7 +603,7 @@ export function TransactionDetailsPage() {
 
 										return (
 											<div
-												key={idx}
+												key={`balance-${idx}`}
 												className="flex items-center justify-between gap-2 p-2 bg-muted/30 rounded text-sm"
 											>
 												<div className="flex items-center gap-2 min-w-0 flex-1">
@@ -588,8 +633,10 @@ export function TransactionDetailsPage() {
 					)}
 
 				{/* Token Balance Changes */}
-				{tx.meta.preTokenBalances && tx.meta.postTokenBalances && 
-					(tx.meta.preTokenBalances.length > 0 || tx.meta.postTokenBalances.length > 0) && (
+				{tx.meta.preTokenBalances &&
+					tx.meta.postTokenBalances &&
+					(tx.meta.preTokenBalances.length > 0 ||
+						tx.meta.postTokenBalances.length > 0) && (
 						<div className="border-border/50 border rounded-lg bg-card">
 							<button
 								type="button"
@@ -602,6 +649,7 @@ export function TransactionDetailsPage() {
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -614,107 +662,141 @@ export function TransactionDetailsPage() {
 							{expandedSections.tokenBalances && (
 								<div className="px-4 pb-4 space-y-2">
 									{(() => {
-										const changes = new Map<number, { pre?: any; post?: any }>();
-										
-										(tx.meta.preTokenBalances as any[] || []).forEach((bal: any) => {
+										interface TokenBalance {
+											accountIndex: number;
+											mint: string;
+											uiTokenAmount?: {
+												amount: string;
+												decimals: number;
+												uiAmount: number;
+												uiAmountString: string;
+											};
+										}
+
+										const changes = new Map<
+											number,
+											{ pre?: TokenBalance; post?: TokenBalance }
+										>();
+
+										(
+											(tx.meta.preTokenBalances as TokenBalance[]) || []
+										).forEach((bal) => {
 											const idx = bal.accountIndex;
-											if (typeof idx === 'number') {
+											if (typeof idx === "number") {
 												if (!changes.has(idx)) changes.set(idx, {});
-												changes.get(idx)!.pre = bal;
+												const entry = changes.get(idx);
+												if (entry) entry.pre = bal;
 											}
 										});
-										
-										(tx.meta.postTokenBalances as any[] || []).forEach((bal: any) => {
+
+										(
+											(tx.meta.postTokenBalances as TokenBalance[]) || []
+										).forEach((bal) => {
 											const idx = bal.accountIndex;
-											if (typeof idx === 'number') {
+											if (typeof idx === "number") {
 												if (!changes.has(idx)) changes.set(idx, {});
-												changes.get(idx)!.post = bal;
+												const entry = changes.get(idx);
+												if (entry) entry.post = bal;
 											}
 										});
 
-										return Array.from(changes.entries()).sort((a, b) => a[0] - b[0]).map(([idx, { pre, post }]) => {
-											const preAmount = pre?.uiTokenAmount?.uiAmountString || pre?.uiTokenAmount?.uiAmount?.toString() || "0";
-											const postAmount = post?.uiTokenAmount?.uiAmountString || post?.uiTokenAmount?.uiAmount?.toString() || "0";
-											const mint = pre?.mint || post?.mint || "Unknown";
+										return Array.from(changes.entries())
+											.sort((a, b) => a[0] - b[0])
+											.map(([idx, { pre, post }]) => {
+												const preAmount =
+													pre?.uiTokenAmount?.uiAmountString ||
+													pre?.uiTokenAmount?.uiAmount?.toString() ||
+													"0";
+												const postAmount =
+													post?.uiTokenAmount?.uiAmountString ||
+													post?.uiTokenAmount?.uiAmount?.toString() ||
+													"0";
+												const mint = pre?.mint || post?.mint || "Unknown";
 
-											const preNum = parseFloat(preAmount);
-											const postNum = parseFloat(postAmount);
-											const change = postNum - preNum;
+												const preNum = parseFloat(preAmount);
+												const postNum = parseFloat(postAmount);
+												const change = postNum - preNum;
 
-											return (
-												<div
-													key={idx}
-													className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/30 rounded text-sm"
-												>
-													<div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-														<span className="text-muted-foreground font-mono text-xs shrink-0">
-															#{idx}
-														</span>
-														{accountKeys[idx] && (
-															<code className="text-xs font-mono truncate">
-																{truncate(accountKeys[idx].pubkey, 16)}
-															</code>
-														)}
-														<div className="flex items-center gap-1 shrink-0">
-															<code className="text-xs font-mono bg-muted/50 px-1.5 py-0.5 rounded">
-																{truncate(mint, 12)}
-															</code>
-															<button
-																type="button"
-																onClick={() => copyToClipboard(mint, `mint-${idx}`)}
-																className="p-1 hover:bg-muted rounded"
-																title="Copy mint"
-															>
-																{copiedField === `mint-${idx}` ? (
-																	<svg
-																		className="h-3 w-3 text-green-500"
-																		fill="none"
-																		stroke="currentColor"
-																		viewBox="0 0 24 24"
-																	>
-																		<path
-																			strokeLinecap="round"
-																			strokeLinejoin="round"
-																			strokeWidth={2}
-																			d="M5 13l4 4L19 7"
-																		/>
-																	</svg>
-																) : (
-																	<svg
-																		className="h-3 w-3"
-																		fill="none"
-																		stroke="currentColor"
-																		viewBox="0 0 24 24"
-																	>
-																		<path
-																			strokeLinecap="round"
-																			strokeLinejoin="round"
-																			strokeWidth={2}
-																			d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-																		/>
-																	</svg>
-																)}
-															</button>
-														</div>
-													</div>
-													<div className="flex items-center gap-3 shrink-0">
-														<div className="text-xs text-muted-foreground font-mono whitespace-nowrap">
-															{preAmount} → {postAmount}
-														</div>
-														{change !== 0 && (
-															<div
-																className={`font-mono text-sm font-medium min-w-[80px] text-right ${
-																	change > 0 ? "text-green-400" : "text-red-400"
-																}`}
-															>
-																{change > 0 ? "+" : ""}
-																{change.toLocaleString()}
+												return (
+													<div
+														key={idx}
+														className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/30 rounded text-sm"
+													>
+														<div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+															<span className="text-muted-foreground font-mono text-xs shrink-0">
+																#{idx}
+															</span>
+															{accountKeys[idx] && (
+																<code className="text-xs font-mono truncate">
+																	{truncate(accountKeys[idx].pubkey, 16)}
+																</code>
+															)}
+															<div className="flex items-center gap-1 shrink-0">
+																<code className="text-xs font-mono bg-muted/50 px-1.5 py-0.5 rounded">
+																	{truncate(mint, 12)}
+																</code>
+																<button
+																	type="button"
+																	onClick={() =>
+																		copyToClipboard(mint, `mint-${idx}`)
+																	}
+																	className="p-1 hover:bg-muted rounded"
+																	title="Copy mint"
+																>
+																	{copiedField === `mint-${idx}` ? (
+																		<svg
+																			className="h-3 w-3 text-green-500"
+																			fill="none"
+																			stroke="currentColor"
+																			viewBox="0 0 24 24"
+																			aria-hidden="true"
+																		>
+																			<path
+																				strokeLinecap="round"
+																				strokeLinejoin="round"
+																				strokeWidth={2}
+																				d="M5 13l4 4L19 7"
+																			/>
+																		</svg>
+																	) : (
+																		<svg
+																			className="h-3 w-3"
+																			fill="none"
+																			stroke="currentColor"
+																			viewBox="0 0 24 24"
+																			aria-hidden="true"
+																		>
+																			<path
+																				strokeLinecap="round"
+																				strokeLinejoin="round"
+																				strokeWidth={2}
+																				d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+																			/>
+																		</svg>
+																	)}
+																</button>
 															</div>
-														)}
+														</div>
+														<div className="flex items-center gap-3 shrink-0">
+															<div className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+																{preAmount} → {postAmount}
+															</div>
+															{change !== 0 && (
+																<div
+																	className={`font-mono text-sm font-medium min-w-[80px] text-right ${
+																		change > 0
+																			? "text-green-400"
+																			: "text-red-400"
+																	}`}
+																>
+																	{change > 0 ? "+" : ""}
+																	{change.toLocaleString()}
+																</div>
+															)}
+														</div>
 													</div>
-												</div>
-											);
-										});
+												);
+											});
 									})()}
 								</div>
 							)}
@@ -780,6 +862,7 @@ function InstructionCard({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -794,6 +877,7 @@ function InstructionCard({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -828,7 +912,7 @@ function InstructionCard({
 					<div className="space-y-1">
 						{instruction.accounts.map((account, accIdx) => (
 							<code
-								key={accIdx}
+								key={`account-${accIdx}-${account}`}
 								className="block font-mono text-xs bg-muted/50 px-2 py-1 rounded"
 							>
 								{accIdx}. {account}

@@ -1,8 +1,8 @@
-import type { RendererProps } from './types';
+import type { RendererProps } from "./types";
 
 export function ProgressUpdateRenderer({ contentJson }: RendererProps) {
 	const result = contentJson.result || {};
-	const message = String(result.message || 'Processing...');
+	const message = String(result.message || "Processing...");
 	const stage = result.stage ? String(result.stage) : undefined;
 	const pct = result.pct ? Number(result.pct) : undefined;
 

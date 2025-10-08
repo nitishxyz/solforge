@@ -1,9 +1,9 @@
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
 	oneLight,
 	vscDarkPlus,
-} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { GitDiffResponse } from '../../types/api';
+} from "react-syntax-highlighter/dist/esm/styles/prism";
+import type { GitDiffResponse } from "../../types/api";
 
 interface GitDiffViewerProps {
 	diff: GitDiffResponse;
@@ -14,24 +14,22 @@ interface DiffLine {
 	newLineNumber: number | null;
 	content: string;
 	codeContent: string; // Content without +/- prefix
-	type: 'header' | 'hunk' | 'add' | 'delete' | 'context' | 'meta';
+	type: "header" | "hunk" | "add" | "delete" | "context" | "meta";
 }
 
 export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 	// Parse the diff into lines with line numbers
-	const lines = diff.diff.split('\n');
+	const lines = diff.diff.split("\n");
 	const diffLines: DiffLine[] = [];
-	const syntaxTheme =
-		typeof document !== 'undefined' &&
-		document.documentElement.classList.contains('dark')
-			? vscDarkPlus
-			: oneLight;
+	const syntaxTheme = document?.documentElement.classList.contains("dark")
+		? vscDarkPlus
+		: oneLight;
 
 	let oldLineNum = 0;
 	let newLineNum = 0;
 
 	for (const line of lines) {
-		if (line.startsWith('@@')) {
+		if (line.startsWith("@@")) {
 			// Parse hunk header to get starting line numbers
 			const match = line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
 			if (match) {
@@ -43,37 +41,37 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 				newLineNumber: null,
 				content: line,
 				codeContent: line,
-				type: 'hunk',
+				type: "hunk",
 			});
 		} else if (
-			line.startsWith('diff') ||
-			line.startsWith('index') ||
-			line.startsWith('---') ||
-			line.startsWith('+++')
+			line.startsWith("diff") ||
+			line.startsWith("index") ||
+			line.startsWith("---") ||
+			line.startsWith("+++")
 		) {
 			diffLines.push({
 				oldLineNumber: null,
 				newLineNumber: null,
 				content: line,
 				codeContent: line,
-				type: 'meta',
+				type: "meta",
 			});
-		} else if (line.startsWith('+')) {
+		} else if (line.startsWith("+")) {
 			diffLines.push({
 				oldLineNumber: null,
 				newLineNumber: newLineNum,
 				content: line,
 				codeContent: line.slice(1), // Remove + prefix for syntax highlighting
-				type: 'add',
+				type: "add",
 			});
 			newLineNum++;
-		} else if (line.startsWith('-')) {
+		} else if (line.startsWith("-")) {
 			diffLines.push({
 				oldLineNumber: oldLineNum,
 				newLineNumber: null,
 				content: line,
 				codeContent: line.slice(1), // Remove - prefix for syntax highlighting
-				type: 'delete',
+				type: "delete",
 			});
 			oldLineNum++;
 		} else {
@@ -83,7 +81,7 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 				newLineNumber: newLineNum,
 				content: line,
 				codeContent: line,
-				type: 'context',
+				type: "context",
 			});
 			oldLineNum++;
 			newLineNum++;
@@ -92,45 +90,45 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 
 	// Render a single diff line with syntax highlighting
 	const renderLine = (diffLine: DiffLine, index: number) => {
-		let rowClassName = 'flex hover:bg-muted/20';
+		let rowClassName = "flex hover:bg-muted/20";
 		let lineNumberClassName =
-			'flex-shrink-0 w-20 px-2 py-0.5 text-xs font-mono select-none border-r border-border';
+			"flex-shrink-0 w-20 px-2 py-0.5 text-xs font-mono select-none border-r border-border";
 		let contentClassName =
-			'flex-1 px-4 py-0.5 font-mono text-xs overflow-x-auto';
+			"flex-1 px-4 py-0.5 font-mono text-xs overflow-x-auto";
 
 		// Apply background colors for add/delete/hunk
-		if (diffLine.type === 'hunk') {
-			rowClassName += ' bg-blue-500/10';
-			lineNumberClassName += ' text-blue-600 dark:text-blue-400';
-			contentClassName += ' text-blue-600 dark:text-blue-400 font-semibold';
-		} else if (diffLine.type === 'add') {
-			rowClassName += ' bg-green-500/10';
-			lineNumberClassName += ' text-green-700 dark:text-green-400';
-			contentClassName += ' text-green-700 dark:text-green-400';
-		} else if (diffLine.type === 'delete') {
-			rowClassName += ' bg-red-500/10';
-			lineNumberClassName += ' text-red-600 dark:text-red-400';
-			contentClassName += ' text-red-600 dark:text-red-400';
-		} else if (diffLine.type === 'meta') {
-			contentClassName += ' text-muted-foreground';
-			lineNumberClassName += ' text-muted-foreground';
+		if (diffLine.type === "hunk") {
+			rowClassName += " bg-blue-500/10";
+			lineNumberClassName += " text-blue-600 dark:text-blue-400";
+			contentClassName += " text-blue-600 dark:text-blue-400 font-semibold";
+		} else if (diffLine.type === "add") {
+			rowClassName += " bg-green-500/10";
+			lineNumberClassName += " text-green-700 dark:text-green-400";
+			contentClassName += " text-green-700 dark:text-green-400";
+		} else if (diffLine.type === "delete") {
+			rowClassName += " bg-red-500/10";
+			lineNumberClassName += " text-red-600 dark:text-red-400";
+			contentClassName += " text-red-600 dark:text-red-400";
+		} else if (diffLine.type === "meta") {
+			contentClassName += " text-muted-foreground";
+			lineNumberClassName += " text-muted-foreground";
 		} else {
-			contentClassName += ' text-foreground/80';
-			lineNumberClassName += ' text-muted-foreground';
+			contentClassName += " text-foreground/80";
+			lineNumberClassName += " text-muted-foreground";
 		}
 
 		const oldNum =
-			diffLine.oldLineNumber !== null ? diffLine.oldLineNumber.toString() : '';
+			diffLine.oldLineNumber !== null ? diffLine.oldLineNumber.toString() : "";
 		const newNum =
-			diffLine.newLineNumber !== null ? diffLine.newLineNumber.toString() : '';
+			diffLine.newLineNumber !== null ? diffLine.newLineNumber.toString() : "";
 
 		// For code lines (not meta/hunk), apply syntax highlighting
-		let renderedContent: React.ReactNode = diffLine.content || ' ';
+		let renderedContent: React.ReactNode = diffLine.content || " ";
 
 		if (
-			diffLine.type !== 'meta' &&
-			diffLine.type !== 'hunk' &&
-			diff.language !== 'plaintext' &&
+			diffLine.type !== "meta" &&
+			diffLine.type !== "hunk" &&
+			diff.language !== "plaintext" &&
 			diffLine.codeContent.trim()
 		) {
 			renderedContent = (
@@ -140,15 +138,15 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 					customStyle={{
 						margin: 0,
 						padding: 0,
-						background: 'transparent',
-						display: 'inline',
-						fontSize: 'inherit',
-						lineHeight: 'inherit',
+						background: "transparent",
+						display: "inline",
+						fontSize: "inherit",
+						lineHeight: "inherit",
 					}}
 					codeTagProps={{
 						style: {
-							fontFamily: 'inherit',
-							background: 'transparent',
+							fontFamily: "inherit",
+							background: "transparent",
 						},
 					}}
 					PreTag="span"
@@ -158,14 +156,14 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 			);
 
 			// Add back the +/- prefix if it was an add/delete
-			if (diffLine.type === 'add') {
+			if (diffLine.type === "add") {
 				renderedContent = (
 					<>
 						<span className="select-none">+</span>
 						{renderedContent}
 					</>
 				);
-			} else if (diffLine.type === 'delete') {
+			} else if (diffLine.type === "delete") {
 				renderedContent = (
 					<>
 						<span className="select-none">-</span>
@@ -222,7 +220,7 @@ export function GitDiffViewer({ diff }: GitDiffViewerProps) {
 					<div className="p-4 text-sm text-muted-foreground">
 						Binary file - cannot display diff
 					</div>
-				) : diff.diff.trim() === '' ? (
+				) : diff.diff.trim() === "" ? (
 					<div className="p-4 text-sm text-muted-foreground">
 						No changes to display
 					</div>

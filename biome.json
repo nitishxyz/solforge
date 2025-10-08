@@ -16,9 +16,14 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"a11y": {
+				"noSvgWithoutTitle": "warn"
+			},
 			"suspicious": {
-				"noUnknownAtRules": "off"
-			}
+			"noUnknownAtRules": "off",
+			"noArrayIndexKey": "off",
+			 "noExplicitAny": "warn"
+		}
 		}
 	},
 	"javascript": {

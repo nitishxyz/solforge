@@ -177,8 +177,7 @@ export const solforgeListTransactions: RpcMethodHandler = async (
 	try {
 		const limit = params?.[0] ? Number(params[0]) : 50;
 		const store = context.store;
-		if (!store)
-			throw new Error("Transaction store not available");
+		if (!store) throw new Error("Transaction store not available");
 
 		const rows = await store.getRecentTransactions(limit);
 		const transactions = rows.map((row) => ({

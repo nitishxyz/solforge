@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import type { Session } from '../../types/api';
-import { Hash, DollarSign } from 'lucide-react';
-import { StopButton } from '../chat/StopButton';
+import { useMemo } from "react";
+import type { Session } from "../../types/api";
+import { Hash, DollarSign } from "lucide-react";
+import { StopButton } from "../chat/StopButton";
 
 interface LeanHeaderProps {
 	session: Session;
@@ -37,13 +37,13 @@ export function LeanHeader({
 
 	// Format number with commas
 	const formatNumber = (num: number) => {
-		return num.toLocaleString('en-US');
+		return num.toLocaleString("en-US");
 	};
 
 	return (
 		<div
 			className={`absolute top-0 left-0 right-0 h-14 border-b border-border bg-background/95 backdrop-blur-sm z-30 transition-transform duration-200 ${
-				isVisible ? 'translate-y-0' : '-translate-y-full'
+				isVisible ? "translate-y-0" : "-translate-y-full"
 			}`}
 		>
 			<div className="h-full px-6 flex items-center justify-between gap-6 text-sm">

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../lib/config';
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../lib/config";
 
 interface WindowWithAgiServerUrl extends Window {
 	AGI_SERVER_URL?: string;
@@ -20,12 +20,12 @@ export function useWorkingDirectory() {
 				const baseUrl = win.AGI_SERVER_URL || API_BASE_URL;
 				const url = `${baseUrl}/v1/config/cwd`;
 
-				console.log('[useWorkingDirectory] Fetching from:', url);
+				console.log("[useWorkingDirectory] Fetching from:", url);
 
 				const response = await fetch(url);
 				if (!response.ok) {
 					console.error(
-						'[useWorkingDirectory] Failed:',
+						"[useWorkingDirectory] Failed:",
 						response.status,
 						response.statusText,
 					);
@@ -35,16 +35,16 @@ export function useWorkingDirectory() {
 				}
 
 				const data: WorkingDirectoryInfo = await response.json();
-				console.log('[useWorkingDirectory] Success:', data);
+				console.log("[useWorkingDirectory] Success:", data);
 
 				if (data.dirName) {
-					console.log('[useWorkingDirectory] Setting title to:', data.dirName);
+					console.log("[useWorkingDirectory] Setting title to:", data.dirName);
 					setDirName(data.dirName);
 					document.title = data.dirName;
 				}
 			} catch (error) {
-				console.error('[useWorkingDirectory] Error:', error);
-				document.title = 'AGI'; // Fallback title
+				console.error("[useWorkingDirectory] Error:", error);
+				document.title = "AGI"; // Fallback title
 			}
 		};
 

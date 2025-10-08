@@ -1,14 +1,14 @@
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
 
 export function GitCommitRenderer({
 	contentJson,
 	toolDurationMs,
 }: RendererProps) {
 	const result = contentJson.result || {};
-	const message = String(result.message || '');
+	const message = String(result.message || "");
 	const timeStr = formatDuration(toolDurationMs);
 
 	return (
@@ -28,11 +28,11 @@ export function GitCommitRenderer({
 							style={vscDarkPlus}
 							customStyle={{
 								margin: 0,
-								padding: '0.75rem',
-								fontSize: '0.75rem',
-								lineHeight: '1.5',
-								background: 'transparent',
-								maxWidth: '100%',
+								padding: "0.75rem",
+								fontSize: "0.75rem",
+								lineHeight: "1.5",
+								background: "transparent",
+								maxWidth: "100%",
 							}}
 							wrapLines
 							wrapLongLines

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useMemo, memo } from 'react';
-import { ArrowDown } from 'lucide-react';
-import type { Message, Session } from '../../types/api';
-import { AssistantMessageGroup } from './AssistantMessageGroup';
-import { UserMessageGroup } from './UserMessageGroup';
-import { SessionHeader } from '../sessions/SessionHeader';
-import { LeanHeader } from '../sessions/LeanHeader';
+import { useEffect, useRef, useState, useMemo, memo } from "react";
+import { ArrowDown } from "lucide-react";
+import type { Message, Session } from "../../types/api";
+import { AssistantMessageGroup } from "./AssistantMessageGroup";
+import { UserMessageGroup } from "./UserMessageGroup";
+import { SessionHeader } from "../sessions/SessionHeader";
+import { LeanHeader } from "../sessions/LeanHeader";
 
 interface MessageThreadProps {
 	messages: Message[];
@@ -69,7 +69,7 @@ export const MessageThread = memo(function MessageThread({
 			const isNewContent = scrollHeight !== lastScrollHeightRef.current;
 
 			// Use instant scroll during rapid updates, smooth for new messages
-			const behavior = isNewContent ? 'smooth' : 'instant';
+			const behavior = isNewContent ? "smooth" : "instant";
 
 			bottomRef.current.scrollIntoView({
 				behavior: behavior as ScrollBehavior,
@@ -80,12 +80,12 @@ export const MessageThread = memo(function MessageThread({
 
 	const scrollToBottom = () => {
 		setAutoScroll(true);
-		bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
 	// Memoize filtered messages to avoid recalculating on every render
 	const filteredMessages = useMemo(() => {
-		return messages.filter((message) => message.role !== 'system');
+		return messages.filter((message) => message.role !== "system");
 	}, [messages]);
 
 	if (messages.length === 0) {
@@ -125,7 +125,7 @@ export const MessageThread = memo(function MessageThread({
 							const nextMessage = filteredMessages[idx + 1];
 							const isLastMessage = idx === filteredMessages.length - 1;
 
-							if (message.role === 'user') {
+							if (message.role === "user") {
 								return (
 									<UserMessageGroup
 										key={message.id}
@@ -135,11 +135,11 @@ export const MessageThread = memo(function MessageThread({
 								);
 							}
 
-							if (message.role === 'assistant') {
+							if (message.role === "assistant") {
 								const showHeader =
-									!prevMessage || prevMessage.role !== 'assistant';
+									!prevMessage || prevMessage.role !== "assistant";
 								const nextIsAssistant =
-									nextMessage && nextMessage.role === 'assistant';
+									nextMessage && nextMessage.role === "assistant";
 
 								return (
 									<AssistantMessageGroup

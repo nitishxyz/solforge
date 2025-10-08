@@ -83,6 +83,7 @@ export function CloneTokenModal({
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -105,6 +106,7 @@ export function CloneTokenModal({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -231,6 +233,7 @@ export function CloneTokenModal({
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -246,7 +249,9 @@ export function CloneTokenModal({
 
 				<div className="p-6 border-t border-border">
 					<div className="flex justify-between items-center">
-						<div className="text-xs text-muted-foreground">Clone SPL tokens from mainnet</div>
+						<div className="text-xs text-muted-foreground">
+							Clone SPL tokens from mainnet
+						</div>
 						<div className="flex gap-3">
 							<button
 								type="button"
@@ -268,6 +273,7 @@ export function CloneTokenModal({
 											className="animate-spin w-4 h-4"
 											fill="none"
 											viewBox="0 0 24 24"
+											aria-hidden="true"
 										>
 											<circle
 												className="opacity-25"

@@ -8,7 +8,7 @@
  * formatDuration(5678) // "5.7s"
  */
 export function formatDuration(ms: number | undefined): string {
-	if (!ms) return '';
+	if (!ms) return "";
 	if (ms >= 1000) {
 		return `${(ms / 1000).toFixed(1)}s`;
 	}

@@ -1,10 +1,10 @@
-import { useEffect, memo } from 'react';
-import { X } from 'lucide-react';
-import { useGitStore } from '../../stores/gitStore';
-import { useSidebarStore } from '../../stores/sidebarStore';
-import { useGitDiff } from '../../hooks/useGit';
-import { Button } from '../ui/Button';
-import { GitDiffViewer } from './GitDiffViewer';
+import { useEffect, memo } from "react";
+import { X } from "lucide-react";
+import { useGitStore } from "../../stores/gitStore";
+import { useSidebarStore } from "../../stores/sidebarStore";
+import { useGitDiff } from "../../hooks/useGit";
+import { Button } from "../ui/Button";
+import { GitDiffViewer } from "./GitDiffViewer";
 
 export const GitDiffPanel = memo(function GitDiffPanel() {
 	// Use selectors to only subscribe to needed state
@@ -49,20 +49,20 @@ export const GitDiffPanel = memo(function GitDiffPanel() {
 	// Handle ESC key
 	useEffect(() => {
 		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === 'Escape' && isDiffOpen) {
+			if (e.key === "Escape" && isDiffOpen) {
 				closeDiff();
 			}
 		};
 
-		document.addEventListener('keydown', handleEscape);
-		return () => document.removeEventListener('keydown', handleEscape);
+		document.addEventListener("keydown", handleEscape);
+		return () => document.removeEventListener("keydown", handleEscape);
 	}, [isDiffOpen, closeDiff]);
 
 	if (!isDiffOpen || !selectedFile) return null;
 
 	// Format file path to show "../dir/dir/filename.tsx" format
 	const formatFilePath = (path: string) => {
-		const pathParts = path.split('/');
+		const pathParts = path.split("/");
 
 		if (pathParts.length === 1) {
 			// Just a filename
@@ -76,7 +76,7 @@ export const GitDiffPanel = memo(function GitDiffPanel() {
 
 		// Show last 2 directories + filename
 		const fileName = pathParts[pathParts.length - 1];
-		const dirs = pathParts.slice(-3, -1).join('/');
+		const dirs = pathParts.slice(-3, -1).join("/");
 		return `.../${dirs}/${fileName}`;
 	};
 

@@ -1,4 +1,4 @@
-import type { SSEEvent } from '../types/api';
+import type { SSEEvent } from "../types/api";
 
 export type SSEEventHandler = (event: SSEEvent) => void;
 
@@ -17,45 +17,45 @@ export class SSEClient {
 
 		try {
 			const response = await fetch(url, {
-				headers: { Accept: 'text/event-stream' },
+				headers: { Accept: "text/event-stream" },
 				signal: this.abortController.signal,
 			});
 
 			if (!response.ok) {
-				console.error('[SSE] Connection failed:', response.status);
+				console.error("[SSE] Connection failed:", response.status);
 				return;
 			}
 
 			const reader = response.body?.getReader();
 			if (!reader) {
-				console.error('[SSE] No response body');
+				console.error("[SSE] No response body");
 				return;
 			}
 
 			const decoder = new TextDecoder();
-			let buffer = '';
+			let buffer = "";
 
 			while (this.running) {
 				const { done, value } = await reader.read();
 				if (done) break;
 
 				buffer += decoder.decode(value, { stream: true });
-				let idx = buffer.indexOf('\n\n');
+				let idx = buffer.indexOf("\n\n");
 
 				while (idx !== -1) {
 					const raw = buffer.slice(0, idx);
 					buffer = buffer.slice(idx + 2);
-					const lines = raw.split('\n');
+					const lines = raw.split("\n");
 
-					let eventType = 'message';
-					let data = '';
+					let eventType = "message";
+					let data = "";
 
 					for (const line of lines) {
-						if (line.startsWith('event: ')) {
+						if (line.startsWith("event: ")) {
 							eventType = line.slice(7).trim();
-						} else if (line.startsWith('data: ')) {
-							data += (data ? '\n' : '') + line.slice(6);
-						} else if (line.startsWith(':')) {
+						} else if (line.startsWith("data: ")) {
+							data += (data ? "\n" : "") + line.slice(6);
+						} else if (line.startsWith(":")) {
 						}
 					}
 
@@ -68,14 +68,14 @@ export class SSEClient {
 						}
 					}
 
-					idx = buffer.indexOf('\n\n');
+					idx = buffer.indexOf("\n\n");
 				}
 			}
 		} catch (error) {
-			if (error instanceof Error && error.name === 'AbortError') {
+			if (error instanceof Error && error.name === "AbortError") {
 				// Connection was intentionally aborted, don't log
 			} else {
-				console.error('[SSE] Connection error:', error);
+				console.error("[SSE] Connection error:", error);
 			}
 		}
 	}
@@ -117,7 +117,7 @@ export class SSEClient {
 			}
 		}
 
-		const allHandlers = this.handlers.get('*');
+		const allHandlers = this.handlers.get("*");
 		if (allHandlers) {
 			for (const handler of allHandlers) {
 				handler(event);

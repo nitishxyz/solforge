@@ -1,9 +1,9 @@
-import { GitCommit, CheckSquare } from 'lucide-react';
-import type { GitStatusResponse } from '../../types/api';
-import { Button } from '../ui/Button';
-import { GitFileItem } from './GitFileItem';
-import { useGitStore } from '../../stores/gitStore';
-import { useStageFiles } from '../../hooks/useGit';
+import { GitCommit, CheckSquare } from "lucide-react";
+import type { GitStatusResponse } from "../../types/api";
+import { Button } from "../ui/Button";
+import { GitFileItem } from "./GitFileItem";
+import { useGitStore } from "../../stores/gitStore";
+import { useStageFiles } from "../../hooks/useGit";
 
 interface GitFileListProps {
 	status: GitStatusResponse;

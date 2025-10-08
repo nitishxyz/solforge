@@ -1,15 +1,15 @@
-import { useState, useId } from 'react';
-import { X, GitCommit, Sparkles, Loader2 } from 'lucide-react';
-import { useGitStore } from '../../stores/gitStore';
-import { useCommitChanges, useGenerateCommitMessage } from '../../hooks/useGit';
-import { Button } from '../ui/Button';
-import { Textarea } from '../ui/Textarea';
+import { useState, useId } from "react";
+import { X, GitCommit, Sparkles, Loader2 } from "lucide-react";
+import { useGitStore } from "../../stores/gitStore";
+import { useCommitChanges, useGenerateCommitMessage } from "../../hooks/useGit";
+import { Button } from "../ui/Button";
+import { Textarea } from "../ui/Textarea";
 
 export function GitCommitModal() {
 	const { isCommitModalOpen, closeCommitModal } = useGitStore();
 	const commitChanges = useCommitChanges();
 	const generateMessage = useGenerateCommitMessage();
-	const [message, setMessage] = useState('');
+	const [message, setMessage] = useState("");
 	const messageId = useId();
 
 	if (!isCommitModalOpen) return null;
@@ -19,15 +19,15 @@ export function GitCommitModal() {
 
 		try {
 			await commitChanges.mutateAsync(message);
-			setMessage('');
+			setMessage("");
 			closeCommitModal();
 		} catch (error) {
-			console.error('Failed to commit:', error);
+			console.error("Failed to commit:", error);
 		}
 	};
 
 	const handleClose = () => {
-		setMessage('');
+		setMessage("");
 		closeCommitModal();
 	};
 
@@ -36,7 +36,7 @@ export function GitCommitModal() {
 			const result = await generateMessage.mutateAsync();
 			setMessage(result.message);
 		} catch (error) {
-			console.error('Failed to generate commit message:', error);
+			console.error("Failed to generate commit message:", error);
 		}
 	};
 
@@ -100,7 +100,7 @@ export function GitCommitModal() {
 					{generateMessage.isError && (
 						<div className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
 							{generateMessage.error?.message ||
-								'Failed to generate commit message'}
+								"Failed to generate commit message"}
 						</div>
 					)}
 				</div>
@@ -129,7 +129,7 @@ export function GitCommitModal() {
 				{commitChanges.isError && (
 					<div className="px-6 pb-4">
 						<div className="text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
-							{commitChanges.error?.message || 'Failed to commit changes'}
+							{commitChanges.error?.message || "Failed to commit changes"}
 						</div>
 					</div>
 				)}

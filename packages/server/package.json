@@ -1,14 +1,14 @@
 {
-  "name": "@solforge/server",
-  "version": "0.2.17",
-  "private": true,
-  "type": "module",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "types": "./src/index.ts",
-  "dependencies": {
-    "@solana/spl-token": "^0.4.14"
-  }
+	"name": "@solforge/server",
+	"version": "0.2.17",
+	"private": true,
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"types": "./src/index.ts",
+	"dependencies": {
+		"@solana/spl-token": "^0.4.14"
+	}
 }

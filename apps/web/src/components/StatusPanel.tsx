@@ -20,6 +20,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -30,8 +31,12 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 						</svg>
 					</div>
 					<div>
-						<h2 className="text-xl font-bold text-foreground">Network Status</h2>
-						<p className="text-xs text-muted-foreground">Real-time blockchain metrics</p>
+						<h2 className="text-xl font-bold text-foreground">
+							Network Status
+						</h2>
+						<p className="text-xs text-muted-foreground">
+							Real-time blockchain metrics
+						</p>
 					</div>
 				</div>
 				<button
@@ -45,6 +50,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
+						aria-hidden="true"
 					>
 						<path
 							strokeLinecap="round"
@@ -99,6 +105,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
+										aria-hidden="true"
 									>
 										<path
 											strokeLinecap="round"
@@ -112,7 +119,8 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 									</span>
 								</div>
 								<span className="text-xs text-muted-foreground">
-									{formatter.format(status.epoch.slotIndex)} / {formatter.format(status.epoch.slotsInEpoch)} slots
+									{formatter.format(status.epoch.slotIndex)} /{" "}
+									{formatter.format(status.epoch.slotsInEpoch)} slots
 								</span>
 							</div>
 							<div className="relative h-2 bg-muted-foreground/20 rounded-full overflow-hidden">
@@ -124,7 +132,11 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 								/>
 							</div>
 							<p className="mt-2 text-xs text-muted-foreground">
-								{((status.epoch.slotIndex / status.epoch.slotsInEpoch) * 100).toFixed(2)}% complete
+								{(
+									(status.epoch.slotIndex / status.epoch.slotsInEpoch) *
+									100
+								).toFixed(2)}
+								% complete
 							</p>
 						</div>
 					)}
@@ -137,6 +149,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
@@ -163,6 +176,7 @@ export function StatusPanel({ status, loading, onRefresh }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"

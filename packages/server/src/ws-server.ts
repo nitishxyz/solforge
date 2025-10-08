@@ -3,7 +3,11 @@ import type { LiteSVMRpcServer } from "./rpc-server";
 
 type Sub =
 	| { id: number; type: "signature"; signature: string }
-	| { id: number; type: "logs"; filter: "all" | "allWithVotes" | { mentions: string[] } }
+	| {
+			id: number;
+			type: "logs";
+			filter: "all" | "allWithVotes" | { mentions: string[] };
+	  }
 	| { id: number; type: "slot" }
 	| { id: number; type: "program"; programId: string }
 	| { id: number; type: "block" };
@@ -217,14 +221,23 @@ export function createLiteSVMWebSocketServer(
 					if (method === "logsSubscribe") {
 						const [filter] = params;
 						const subId = nextSubId++;
-						
-						let parsedFilter: "all" | "allWithVotes" | { mentions: string[] } = "all";
+
+						let parsedFilter: "all" | "allWithVotes" | { mentions: string[] } =
+							"all";
 						if (typeof filter === "string") {
 							parsedFilter = filter as "all" | "allWithVotes";
-						} else if (filter && typeof filter === "object" && "mentions" in filter) {
-							parsedFilter = { mentions: Array.isArray(filter.mentions) ? filter.mentions : [filter.mentions] };
+						} else if (
+							filter &&
+							typeof filter === "object" &&
+							"mentions" in filter
+						) {
+							parsedFilter = {
+								mentions: Array.isArray(filter.mentions)
+									? filter.mentions
+									: [filter.mentions],
+							};
 						}
-						
+
 						subs.set(subId, { id: subId, type: "logs", filter: parsedFilter });
 						ws.send(JSON.stringify({ jsonrpc: "2.0", id, result: subId }));
 						return;
@@ -248,10 +261,7 @@ export function createLiteSVMWebSocketServer(
 						return;
 					}
 					// Stub other subs (program, block) to succeed without notifications
-					if (
-						method === "programSubscribe" ||
-						method === "blockSubscribe"
-					) {
+					if (method === "programSubscribe" || method === "blockSubscribe") {
 						const subId = nextSubId++;
 						ws.send(JSON.stringify({ jsonrpc: "2.0", id, result: subId }));
 						return;

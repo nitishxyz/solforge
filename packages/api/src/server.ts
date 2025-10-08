@@ -283,7 +283,12 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 				if (pathname.startsWith("/api/transaction/")) {
 					const signature = pathname.replace("/api/transaction/", "");
 					if (signature) {
-						return wrap(() => callRpc("getTransaction", [signature, { encoding: "jsonParsed" }]))(req);
+						return wrap(() =>
+							callRpc("getTransaction", [
+								signature,
+								{ encoding: "jsonParsed" },
+							]),
+						)(req);
 					}
 				}
 
@@ -297,7 +302,7 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 
 			// Handle web assets if available
 			if (webAssets) {
-				let assetPath = pathname === "/" ? "/index.html" : pathname;
+				const assetPath = pathname === "/" ? "/index.html" : pathname;
 
 				const asset = webAssets.getAsset(assetPath);
 				if (asset) {

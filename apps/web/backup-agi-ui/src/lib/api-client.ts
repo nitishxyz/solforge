@@ -14,8 +14,8 @@ import type {
 	GitCommitResponse,
 	GitGenerateCommitMessageResponse,
 	GitBranchInfo,
-} from '../types/api';
-import { API_BASE_URL } from './config';
+} from "../types/api";
+import { API_BASE_URL } from "./config";
 
 interface WindowWithAgiServerUrl extends Window {
 	AGI_SERVER_URL?: string;
@@ -39,7 +39,7 @@ class ApiClient {
 		const response = await fetch(url, {
 			...options,
 			headers: {
-				'Content-Type': 'application/json',
+				"Content-Type": "application/json",
 				...options?.headers,
 			},
 		});
@@ -47,7 +47,7 @@ class ApiClient {
 		if (!response.ok) {
 			const error = await response
 				.json()
-				.catch(() => ({ error: 'Unknown error' }));
+				.catch(() => ({ error: "Unknown error" }));
 			throw new Error(error.error || `HTTP ${response.status}`);
 		}
 
@@ -56,12 +56,12 @@ class ApiClient {
 
 	// Session methods
 	async getSessions(): Promise<Session[]> {
-		return this.request<Session[]>('/v1/sessions');
+		return this.request<Session[]>("/v1/sessions");
 	}
 
 	async createSession(data: CreateSessionRequest): Promise<Session> {
-		return this.request<Session>('/v1/sessions', {
-			method: 'POST',
+		return this.request<Session>("/v1/sessions", {
+			method: "POST",
 			body: JSON.stringify(data),
 		});
 	}
@@ -70,7 +70,7 @@ class ApiClient {
 		return this.request<{ success: boolean }>(
 			`/v1/sessions/${sessionId}/abort`,
 			{
-				method: 'DELETE',
+				method: "DELETE",
 			},
 		);
 	}
@@ -86,7 +86,7 @@ class ApiClient {
 		return this.request<SendMessageResponse>(
 			`/v1/sessions/${sessionId}/messages`,
 			{
-				method: 'POST',
+				method: "POST",
 				body: JSON.stringify(data),
 			},
 		);
@@ -102,7 +102,7 @@ class ApiClient {
 		providers: string[];
 		defaults: { agent: string; provider: string; model: string };
 	}> {
-		return this.request('/v1/config');
+		return this.request("/v1/config");
 	}
 
 	async getModels(providerId: string): Promise<{
@@ -115,7 +115,7 @@ class ApiClient {
 	// Git methods
 	async getGitStatus(): Promise<GitStatusResponse> {
 		const response = await this.request<{ data: GitStatusResponse }>(
-			'/v1/git/status',
+			"/v1/git/status",
 		);
 		return response.data;
 	}
@@ -137,8 +137,8 @@ class ApiClient {
 	async generateCommitMessage(): Promise<GitGenerateCommitMessageResponse> {
 		const response = await this.request<{
 			data: GitGenerateCommitMessageResponse;
-		}>('/v1/git/generate-commit-message', {
-			method: 'POST',
+		}>("/v1/git/generate-commit-message", {
+			method: "POST",
 			body: JSON.stringify({}),
 		});
 		return response.data;
@@ -146,9 +146,9 @@ class ApiClient {
 
 	async stageFiles(files: string[]): Promise<GitStageResponse> {
 		const response = await this.request<{ data: GitStageResponse }>(
-			'/v1/git/stage',
+			"/v1/git/stage",
 			{
-				method: 'POST',
+				method: "POST",
 				body: JSON.stringify({ files } satisfies GitStageRequest),
 			},
 		);
@@ -157,9 +157,9 @@ class ApiClient {
 
 	async unstageFiles(files: string[]): Promise<GitUnstageResponse> {
 		const response = await this.request<{ data: GitUnstageResponse }>(
-			'/v1/git/unstage',
+			"/v1/git/unstage",
 			{
-				method: 'POST',
+				method: "POST",
 				body: JSON.stringify({ files } satisfies GitUnstageRequest),
 			},
 		);
@@ -168,9 +168,9 @@ class ApiClient {
 
 	async commitChanges(message: string): Promise<GitCommitResponse> {
 		const response = await this.request<{ data: GitCommitResponse }>(
-			'/v1/git/commit',
+			"/v1/git/commit",
 			{
-				method: 'POST',
+				method: "POST",
 				body: JSON.stringify({ message } satisfies GitCommitRequest),
 			},
 		);
@@ -179,7 +179,7 @@ class ApiClient {
 
 	async getGitBranch(): Promise<GitBranchInfo> {
 		const response = await this.request<{ data: GitBranchInfo }>(
-			'/v1/git/branch',
+			"/v1/git/branch",
 		);
 		return response.data;
 	}

@@ -34,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -61,6 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -86,6 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<path
 									strokeLinecap="round"
@@ -112,9 +115,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 			{/* Mobile overlay */}
 			{sidebarOpen && (
-				<div
-					className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+				<button
+					type="button"
+					className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden cursor-default"
 					onClick={() => setSidebarOpen(false)}
+					aria-label="Close sidebar"
 				/>
 			)}
 
@@ -132,6 +137,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"

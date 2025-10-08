@@ -1,4 +1,4 @@
-import type { RendererProps } from './types';
+import type { RendererProps } from "./types";
 
 export function DebugRenderer({
 	contentJson,

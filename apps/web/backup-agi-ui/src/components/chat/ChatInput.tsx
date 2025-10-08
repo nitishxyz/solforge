@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import type { KeyboardEvent, ChangeEvent } from 'react';
-import { ArrowUp, MoreVertical } from 'lucide-react';
-import { Textarea } from '../ui/Textarea';
+import { useState, useRef, useEffect, useCallback, memo } from "react";
+import type { KeyboardEvent, ChangeEvent } from "react";
+import { ArrowUp, MoreVertical } from "lucide-react";
+import { Textarea } from "../ui/Textarea";
 
 interface ChatInputProps {
 	onSend: (message: string) => void;
@@ -14,7 +14,7 @@ export const ChatInput = memo(function ChatInput({
 	disabled,
 	onConfigClick,
 }: ChatInputProps) {
-	const [message, setMessage] = useState('');
+	const [message, setMessage] = useState("");
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	useEffect(() => {
@@ -26,7 +26,7 @@ export const ChatInput = memo(function ChatInput({
 		const textarea = textareaRef.current;
 		if (textarea) {
 			// Reset height to auto to get the correct scrollHeight
-			textarea.style.height = 'auto';
+			textarea.style.height = "auto";
 			// Set height to scrollHeight (content height)
 			textarea.style.height = `${textarea.scrollHeight}px`;
 		}
@@ -34,15 +34,15 @@ export const ChatInput = memo(function ChatInput({
 
 	useEffect(() => {
 		adjustTextareaHeight();
-	}, [adjustTextareaHeight, message]);
+	}, [adjustTextareaHeight]);
 
 	const handleSend = useCallback(() => {
 		if (message.trim() && !disabled) {
 			onSend(message);
-			setMessage('');
+			setMessage("");
 			// Reset textarea height after sending
 			if (textareaRef.current) {
-				textareaRef.current.style.height = 'auto';
+				textareaRef.current.style.height = "auto";
 			}
 			textareaRef.current?.focus();
 		}
@@ -54,7 +54,7 @@ export const ChatInput = memo(function ChatInput({
 
 	const handleKeyDown = useCallback(
 		(e: KeyboardEvent<HTMLTextAreaElement>) => {
-			if (e.key === 'Enter' && !e.shiftKey) {
+			if (e.key === "Enter" && !e.shiftKey) {
 				e.preventDefault();
 				handleSend();
 			}
@@ -84,7 +84,7 @@ export const ChatInput = memo(function ChatInput({
 						disabled={disabled}
 						rows={1}
 						className="border-0 bg-transparent pl-1 pr-2 py-2 max-h-[200px] overflow-y-auto leading-normal resize-none scrollbar-hide text-base"
-						style={{ height: '2.5rem' }}
+						style={{ height: "2.5rem" }}
 					/>
 					<button
 						type="button"
@@ -92,8 +92,8 @@ export const ChatInput = memo(function ChatInput({
 						disabled={disabled || !message.trim()}
 						className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors flex-shrink-0 touch-manipulation ${
 							message.trim()
-								? 'bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-foreground'
-								: 'bg-transparent text-muted-foreground'
+								? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-foreground"
+								: "bg-transparent text-muted-foreground"
 						}`}
 					>
 						<ArrowUp className="w-4 h-4" />

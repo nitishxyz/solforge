@@ -1,7 +1,7 @@
-import { ChevronRight } from 'lucide-react';
-import type { RendererProps } from './types';
-import { DiffView } from './DiffView';
-import { formatDuration } from './utils';
+import { ChevronRight } from "lucide-react";
+import type { RendererProps } from "./types";
+import { DiffView } from "./DiffView";
+import { formatDuration } from "./utils";
 
 export function EditRenderer({
 	contentJson,
@@ -15,7 +15,7 @@ export function EditRenderer({
 	const files = Number(summary.files || 0);
 	const additions = Number(summary.additions || 0);
 	const deletions = Number(summary.deletions || 0);
-	const patch = artifact?.patch ? String(artifact.patch) : '';
+	const patch = artifact?.patch ? String(artifact.patch) : "";
 
 	return (
 		<div className="text-xs">
@@ -25,12 +25,12 @@ export function EditRenderer({
 				className="flex items-center gap-2 text-purple-700 dark:text-purple-300 transition-colors hover:text-purple-600 dark:hover:text-purple-200 w-full"
 			>
 				<ChevronRight
-					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
 				/>
 				<span className="font-medium flex-shrink-0">edit</span>
 				<span className="text-muted-foreground/70 flex-shrink-0">·</span>
 				<span className="text-foreground/70 flex-shrink-0">
-					{files} {files === 1 ? 'file' : 'files'}
+					{files} {files === 1 ? "file" : "files"}
 				</span>
 				<span className="text-emerald-600 dark:text-emerald-400 flex-shrink-0">
 					+{additions}

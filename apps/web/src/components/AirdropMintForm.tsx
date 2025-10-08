@@ -1,4 +1,10 @@
-import { type ChangeEvent, type FormEvent, useId, useMemo, useState } from "react";
+import {
+	type ChangeEvent,
+	type FormEvent,
+	useId,
+	useMemo,
+	useState,
+} from "react";
 import type { TokenSummary } from "../api/types";
 
 interface Props {
@@ -95,7 +101,10 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card text-card-foreground p-6">
+		<form
+			onSubmit={handleSubmit}
+			className="rounded-lg border border-border bg-card text-card-foreground p-6"
+		>
 			<div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
 				<div className="flex items-center gap-3">
 					<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
@@ -104,6 +113,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -115,7 +125,9 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 					</div>
 					<div>
 						<h2 className="text-xl font-bold text-foreground">Quick Actions</h2>
-						<p className="text-xs text-muted-foreground">Airdrop SOL or mint tokens</p>
+						<p className="text-xs text-muted-foreground">
+							Airdrop SOL or mint tokens
+						</p>
 					</div>
 				</div>
 			</div>
@@ -199,6 +211,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 								className="animate-spin w-4 h-4"
 								fill="none"
 								viewBox="0 0 24 24"
+								aria-hidden="true"
 							>
 								<circle
 									className="opacity-25"
@@ -217,7 +230,9 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 							<span>Processing</span>
 						</>
 					) : (
-						<span>{asset === SOL_OPTION.value ? "Airdrop SOL" : "Mint Tokens"}</span>
+						<span>
+							{asset === SOL_OPTION.value ? "Airdrop SOL" : "Mint Tokens"}
+						</span>
 					)}
 				</button>
 
@@ -228,6 +243,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"
@@ -247,6 +263,7 @@ export function AirdropMintForm({ tokens, onAirdrop, onMint }: Props) {
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								strokeLinecap="round"

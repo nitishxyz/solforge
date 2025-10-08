@@ -13,22 +13,22 @@ import {
 	List,
 	AlertCircle,
 	XOctagon,
-} from 'lucide-react';
-import { Fragment, memo, type ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { MessagePart } from '../../types/api';
-import { ToolResultRenderer, type ContentJson } from './renderers';
+} from "lucide-react";
+import { Fragment, memo, type ReactNode } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { MessagePart } from "../../types/api";
+import { ToolResultRenderer, type ContentJson } from "./renderers";
 
 function getToolCallPayload(part: MessagePart): Record<string, unknown> | null {
 	const fromJson = part.contentJson;
-	if (fromJson && typeof fromJson === 'object') {
+	if (fromJson && typeof fromJson === "object") {
 		return fromJson;
 	}
 	try {
 		if (part.content) {
 			const parsed = JSON.parse(part.content);
-			if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+			if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
 				return parsed as Record<string, unknown>;
 			}
 		}
@@ -44,7 +44,7 @@ function getToolCallArgs(
 
 	// The args should be nested under an 'args' key
 	const args = (payload as { args?: unknown }).args;
-	if (args && typeof args === 'object' && !Array.isArray(args)) {
+	if (args && typeof args === "object" && !Array.isArray(args)) {
 		return args as Record<string, unknown>;
 	}
 
@@ -56,10 +56,10 @@ function getPrimaryCommand(
 	args: Record<string, unknown> | undefined,
 ): string | null {
 	if (!args) return null;
-	const candidates = ['cmd', 'command', 'script', 'input'];
+	const candidates = ["cmd", "command", "script", "input"];
 	for (const key of candidates) {
 		const value = args[key];
-		if (typeof value === 'string' && value.trim().length > 0) {
+		if (typeof value === "string" && value.trim().length > 0) {
 			return value.trim();
 		}
 	}
@@ -72,25 +72,25 @@ function normalizeToolTarget(
 ): { key: string; value: string } | null {
 	if (!args) return null;
 	const candidates = [
-		{ key: 'path', match: true },
-		{ key: 'file', match: true },
-		{ key: 'target', match: true },
-		{ key: 'cwd', match: true },
-		{ key: 'query', match: true },
-		{ key: 'pattern', match: true },
-		{ key: 'glob', match: true },
-		{ key: 'dir', match: true },
+		{ key: "path", match: true },
+		{ key: "file", match: true },
+		{ key: "target", match: true },
+		{ key: "cwd", match: true },
+		{ key: "query", match: true },
+		{ key: "pattern", match: true },
+		{ key: "glob", match: true },
+		{ key: "dir", match: true },
 	];
 	for (const { key } of candidates) {
 		const value = args[key];
-		if (typeof value === 'string' && value.trim().length > 0) {
+		if (typeof value === "string" && value.trim().length > 0) {
 			return { key, value: value.trim() };
 		}
 	}
-	if (toolName === 'bash') {
+	if (toolName === "bash") {
 		const command = args.command;
-		if (typeof command === 'string' && command.trim().length > 0) {
-			return { key: 'command', value: command.trim() };
+		if (typeof command === "string" && command.trim().length > 0) {
+			return { key: "command", value: command.trim() };
 		}
 	}
 	return null;
@@ -104,14 +104,14 @@ function formatArgsPreview(
 	const pieces: string[] = [];
 	for (const [key, value] of Object.entries(args)) {
 		if (skipKey && key === skipKey) continue;
-		if (typeof value === 'string' || typeof value === 'number') {
+		if (typeof value === "string" || typeof value === "number") {
 			const rendered = `${key}=${String(value)}`;
 			pieces.push(rendered);
 		}
 		if (pieces.length >= 3) break;
 	}
 	if (!pieces.length) return null;
-	const joined = pieces.join('  ');
+	const joined = pieces.join("  ");
 	return joined.length > 120 ? `${joined.slice(0, 117)}…` : joined;
 }
 
@@ -131,26 +131,26 @@ export const MessagePartItem = memo(
 		isLastToolCall,
 		isLastProgressUpdate,
 	}: MessagePartItemProps) {
-		if (part.type === 'tool_call' && !isLastToolCall) {
+		if (part.type === "tool_call" && !isLastToolCall) {
 			return null;
 		}
 
 		// Hide progress_update unless it's the latest one (before finish)
 		if (
-			part.type === 'tool_result' &&
-			part.toolName === 'progress_update' &&
+			part.type === "tool_result" &&
+			part.toolName === "progress_update" &&
 			!isLastProgressUpdate
 		) {
 			return null;
 		}
 
 		// Hide empty text parts
-		if (part.type === 'text') {
+		if (part.type === "text") {
 			const data = part.contentJson || part.content;
-			let content = '';
-			if (data && typeof data === 'object' && 'text' in data) {
+			let content = "";
+			if (data && typeof data === "object" && "text" in data) {
 				content = String(data.text);
-			} else if (typeof data === 'string') {
+			} else if (typeof data === "string") {
 				content = data;
 			}
 			if (!content || !content.trim()) {
@@ -159,30 +159,30 @@ export const MessagePartItem = memo(
 		}
 
 		const isToolMessage =
-			part.type === 'tool_call' || part.type === 'tool_result';
+			part.type === "tool_call" || part.type === "tool_result";
 
-		const contentClasses = ['flex-1', 'min-w-0', 'max-w-full'];
+		const contentClasses = ["flex-1", "min-w-0", "max-w-full"];
 
 		if (isToolMessage) {
-			contentClasses.push('pt-0.5', 'mt-[1px]');
+			contentClasses.push("pt-0.5", "mt-[1px]");
 		} else {
-			contentClasses.push('pt-0');
+			contentClasses.push("pt-0");
 		}
 
-		if (part.type === 'text') {
-			contentClasses.push('-mt-0.5');
+		if (part.type === "text") {
+			contentClasses.push("-mt-0.5");
 		}
 
-		const contentClassName = contentClasses.join(' ');
+		const contentClassName = contentClasses.join(" ");
 
 		const renderIcon = () => {
-			if (part.type === 'tool_call') {
+			if (part.type === "tool_call") {
 				return (
 					<Loader2 className="h-4 w-4 text-amber-600 dark:text-amber-300 animate-spin" />
 				);
 			}
 
-			if (part.type === 'error') {
+			if (part.type === "error") {
 				// Check if it's an abort
 				const payload = getToolCallPayload(part);
 				const isAborted = payload?.isAborted === true;
@@ -193,53 +193,53 @@ export const MessagePartItem = memo(
 				);
 			}
 
-			if (part.type === 'tool_result') {
-				const toolName = part.toolName || '';
-				if (toolName === 'read')
+			if (part.type === "tool_result") {
+				const toolName = part.toolName || "";
+				if (toolName === "read")
 					return (
 						<FileText className="h-4 w-4 text-blue-600 dark:text-blue-300" />
 					);
-				if (toolName === 'write')
+				if (toolName === "write")
 					return (
 						<FileEdit className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
 					);
-				if (toolName === 'edit')
+				if (toolName === "edit")
 					return (
 						<FileEdit className="h-4 w-4 text-purple-600 dark:text-purple-300" />
 					);
-				if (toolName === 'ls')
+				if (toolName === "ls")
 					return <List className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />;
-				if (toolName === 'tree')
+				if (toolName === "tree")
 					return (
 						<FolderTree className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
 					);
-				if (toolName === 'bash')
+				if (toolName === "bash")
 					return <Terminal className="h-4 w-4 text-muted-foreground" />;
 				if (
-					toolName === 'ripgrep' ||
-					toolName === 'grep' ||
-					toolName === 'glob'
+					toolName === "ripgrep" ||
+					toolName === "grep" ||
+					toolName === "glob"
 				)
 					return (
 						<Search className="h-4 w-4 text-amber-600 dark:text-amber-300" />
 					);
-				if (toolName === 'apply_patch')
+				if (toolName === "apply_patch")
 					return (
 						<Diff className="h-4 w-4 text-purple-600 dark:text-purple-300" />
 					);
-				if (toolName === 'git_status')
+				if (toolName === "git_status")
 					return (
 						<GitBranch className="h-4 w-4 text-blue-600 dark:text-blue-300" />
 					);
-				if (toolName === 'git_diff')
+				if (toolName === "git_diff")
 					return (
 						<Diff className="h-4 w-4 text-purple-600 dark:text-purple-300" />
 					);
-				if (toolName === 'git_commit')
+				if (toolName === "git_commit")
 					return (
 						<GitCommit className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
 					);
-				if (toolName === 'finish')
+				if (toolName === "finish")
 					return (
 						<Check className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
 					);
@@ -252,13 +252,13 @@ export const MessagePartItem = memo(
 		};
 
 		const renderToolResult = () => {
-			const toolName = part.toolName || '';
+			const toolName = part.toolName || "";
 
 			let contentJson: ContentJson;
 			try {
-				if (part.contentJson && typeof part.contentJson === 'object') {
+				if (part.contentJson && typeof part.contentJson === "object") {
 					contentJson = part.contentJson as ContentJson;
-				} else if (typeof part.content === 'string') {
+				} else if (typeof part.content === "string") {
 					contentJson = JSON.parse(part.content);
 				} else {
 					contentJson = {};
@@ -278,12 +278,12 @@ export const MessagePartItem = memo(
 		};
 
 		const renderContent = () => {
-			if (part.type === 'text') {
-				let content = '';
+			if (part.type === "text") {
+				let content = "";
 				const data = part.contentJson || part.content;
-				if (data && typeof data === 'object' && 'text' in data) {
+				if (data && typeof data === "object" && "text" in data) {
 					content = String(data.text);
-				} else if (typeof data === 'string') {
+				} else if (typeof data === "string") {
 					content = data;
 				} else if (data) {
 					content = JSON.stringify(data, null, 2);
@@ -296,20 +296,20 @@ export const MessagePartItem = memo(
 				);
 			}
 
-			if (part.type === 'error') {
+			if (part.type === "error") {
 				// Render error using ToolResultRenderer with 'error' as toolName
 				let contentJson: ContentJson;
 				try {
-					if (part.contentJson && typeof part.contentJson === 'object') {
+					if (part.contentJson && typeof part.contentJson === "object") {
 						contentJson = part.contentJson as ContentJson;
-					} else if (typeof part.content === 'string') {
+					} else if (typeof part.content === "string") {
 						contentJson = JSON.parse(part.content);
 					} else {
 						contentJson = {};
 					}
 				} catch {
 					contentJson = {
-						message: part.content || 'Unknown error',
+						message: part.content || "Unknown error",
 					} as ContentJson;
 				}
 
@@ -323,22 +323,22 @@ export const MessagePartItem = memo(
 				);
 			}
 
-			if (part.type === 'tool_call') {
+			if (part.type === "tool_call") {
 				const payload = getToolCallPayload(part);
 				const rawToolName =
 					part.toolName ||
-					(typeof (payload as { name?: unknown })?.name === 'string'
+					(typeof (payload as { name?: unknown })?.name === "string"
 						? ((payload as { name?: unknown }).name as string)
-						: 'tool');
-				const toolLabel = rawToolName.replace(/_/g, ' ');
+						: "tool");
+				const toolLabel = rawToolName.replace(/_/g, " ");
 				const args = getToolCallArgs(part);
 				const primary = normalizeToolTarget(rawToolName, args);
 				const argsPreview = formatArgsPreview(args, primary?.key);
-				const command = rawToolName === 'bash' ? getPrimaryCommand(args) : null;
+				const command = rawToolName === "bash" ? getPrimaryCommand(args) : null;
 				const segments: Array<{ key: string; node: ReactNode }> = [];
 				if (command) {
 					segments.push({
-						key: 'cmd',
+						key: "cmd",
 						node: (
 							<code className="font-mono text-foreground/90 truncate max-w-xs">
 								{command}
@@ -347,7 +347,7 @@ export const MessagePartItem = memo(
 					});
 				} else if (primary) {
 					segments.push({
-						key: 'primary',
+						key: "primary",
 						node: (
 							<code className="font-mono text-foreground/85 truncate max-w-xs">
 								{primary.value}
@@ -357,7 +357,7 @@ export const MessagePartItem = memo(
 				}
 				if (argsPreview) {
 					segments.push({
-						key: 'args',
+						key: "args",
 						node: (
 							<span className="text-muted-foreground/80 truncate max-w-xs">
 								{argsPreview}
@@ -370,17 +370,17 @@ export const MessagePartItem = memo(
 				// show "running…"
 				if (segments.length === 0) {
 					segments.push({
-						key: 'running',
+						key: "running",
 						node: <span className="text-muted-foreground/75">running…</span>,
 					});
 				}
 
 				const containerClasses = [
-					'flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/80 max-w-full',
+					"flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground/80 max-w-full",
 				];
-				if (part.ephemeral) containerClasses.push('animate-pulse');
+				if (part.ephemeral) containerClasses.push("animate-pulse");
 				return (
-					<div className={containerClasses.join(' ')}>
+					<div className={containerClasses.join(" ")}>
 						<span className="font-medium text-foreground">{toolLabel}</span>
 						{segments.map((segment) => (
 							<Fragment key={segment.key}>
@@ -392,7 +392,7 @@ export const MessagePartItem = memo(
 				);
 			}
 
-			if (part.type === 'tool_result') {
+			if (part.type === "tool_result") {
 				return renderToolResult();
 			}
 
@@ -410,7 +410,7 @@ export const MessagePartItem = memo(
 					{showLine && (
 						<div
 							className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-border z-0"
-							style={{ top: '1.25rem', bottom: '-0.5rem' }}
+							style={{ top: "1.25rem", bottom: "-0.5rem" }}
 						/>
 					)}
 				</div>

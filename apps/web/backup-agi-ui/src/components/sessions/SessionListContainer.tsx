@@ -1,7 +1,7 @@
-import { memo, useMemo, useCallback } from 'react';
-import { useSessions } from '../../hooks/useSessions';
-import { SessionItem } from './SessionItem';
-import { useSidebarStore } from '../../stores/sidebarStore';
+import { memo, useMemo, useCallback } from "react";
+import { useSessions } from "../../hooks/useSessions";
+import { SessionItem } from "./SessionItem";
+import { useSidebarStore } from "../../stores/sidebarStore";
 
 interface SessionListContainerProps {
 	activeSessionId?: string;

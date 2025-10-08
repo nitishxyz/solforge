@@ -1,12 +1,12 @@
-import { memo } from 'react';
-import type { ReactNode } from 'react';
-import type { Theme } from '../../hooks/useTheme';
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
-import { GitSidebarToggle } from '../git/GitSidebarToggle';
-import { GitSidebar } from '../git/GitSidebar';
-import { GitDiffPanel } from '../git/GitDiffPanel';
-import { GitCommitModal } from '../git/GitCommitModal';
+import { memo } from "react";
+import type { ReactNode } from "react";
+import type { Theme } from "../../hooks/useTheme";
+import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
+import { GitSidebarToggle } from "../git/GitSidebarToggle";
+import { GitSidebar } from "../git/GitSidebar";
+import { GitDiffPanel } from "../git/GitDiffPanel";
+import { GitCommitModal } from "../git/GitCommitModal";
 
 interface AppLayoutProps {
 	sidebar: ReactNode;

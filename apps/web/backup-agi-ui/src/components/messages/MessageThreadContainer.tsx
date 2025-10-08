@@ -1,8 +1,8 @@
-import { memo, useMemo } from 'react';
-import { useMessages } from '../../hooks/useMessages';
-import { useSessionStream } from '../../hooks/useSessionStream';
-import { useSessions } from '../../hooks/useSessions';
-import { MessageThread } from './MessageThread';
+import { memo, useMemo } from "react";
+import { useMessages } from "../../hooks/useMessages";
+import { useSessionStream } from "../../hooks/useSessionStream";
+import { useSessions } from "../../hooks/useSessions";
+import { MessageThread } from "./MessageThread";
 
 interface MessageThreadContainerProps {
 	sessionId: string;
@@ -23,7 +23,7 @@ export const MessageThreadContainer = memo(function MessageThreadContainer({
 
 	const isGenerating = useMemo(
 		() =>
-			messages.some((m) => m.role === 'assistant' && m.status === 'pending'),
+			messages.some((m) => m.role === "assistant" && m.status === "pending"),
 		[messages],
 	);
 

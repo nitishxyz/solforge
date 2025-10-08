@@ -1,6 +1,6 @@
-import { memo } from 'react';
-import { MessageSquare } from 'lucide-react';
-import type { Session } from '../../types/api';
+import { memo } from "react";
+import { MessageSquare } from "lucide-react";
+import type { Session } from "../../types/api";
 
 interface SessionItemProps {
 	session: Session;
@@ -21,7 +21,7 @@ export const SessionItem = memo(function SessionItem({
 		const diffHours = Math.floor(diffMins / 60);
 		const diffDays = Math.floor(diffHours / 24);
 
-		if (diffMins < 1) return 'just now';
+		if (diffMins < 1) return "just now";
 		if (diffMins < 60) return `${diffMins}m ago`;
 		if (diffHours < 24) return `${diffHours}h ago`;
 		if (diffDays < 7) return `${diffDays}d ago`;
@@ -29,9 +29,9 @@ export const SessionItem = memo(function SessionItem({
 	};
 
 	const baseStyles =
-		'group w-full rounded-lg px-3 py-3 text-left transition-colors duration-150';
-	const activeStyles = 'bg-primary/10';
-	const inactiveStyles = 'hover:bg-muted/20';
+		"group w-full rounded-lg px-3 py-3 text-left transition-colors duration-150";
+	const activeStyles = "bg-primary/10";
+	const inactiveStyles = "hover:bg-muted/20";
 
 	return (
 		<button
@@ -41,7 +41,7 @@ export const SessionItem = memo(function SessionItem({
 		>
 			<div className="flex items-start gap-3">
 				<MessageSquare
-					className={`h-4 w-4 shrink-0 mt-1 text-muted-foreground ${isActive ? 'text-primary' : ''}`}
+					className={`h-4 w-4 shrink-0 mt-1 text-muted-foreground ${isActive ? "text-primary" : ""}`}
 				/>
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-2">

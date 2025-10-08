@@ -54,27 +54,27 @@ function ok(
 }
 
 export function parseInstruction(
-    programId: string,
-    accounts: number[],
-    dataBase58: string,
-    accountKeys: string[],
-    tokenBalanceHints?: Array<{ mint: string; decimals: number }>,
+	programId: string,
+	accounts: number[],
+	dataBase58: string,
+	accountKeys: string[],
+	tokenBalanceHints?: Array<{ mint: string; decimals: number }>,
 ): ParsedInstruction {
 	try {
 		const pid = new PublicKey(programId);
 		const ix = makeIx(programId, accountKeys, accounts, dataBase58);
 
 		// SPL Token (legacy) and Token-2022
-        if (pid.equals(TOKEN_PROGRAM_ID) || pid.equals(TOKEN_2022_PROGRAM_ID)) {
-            const parsed = tryParseSplToken(
-                ix,
-                programId,
-                accountKeys,
-                dataBase58,
-                tokenBalanceHints,
-            );
-            if (parsed) return parsed;
-        }
+		if (pid.equals(TOKEN_PROGRAM_ID) || pid.equals(TOKEN_2022_PROGRAM_ID)) {
+			const parsed = tryParseSplToken(
+				ix,
+				programId,
+				accountKeys,
+				dataBase58,
+				tokenBalanceHints,
+			);
+			if (parsed) return parsed;
+		}
 
 		// Associated Token Account
 		if (pid.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) {

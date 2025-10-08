@@ -31,7 +31,7 @@ function isInWorkspace() {
 function findBinaryInPath() {
 	const pathDirs = (process.env.PATH || "").split(path.delimiter);
 	const ext = process.platform === "win32" ? ".exe" : "";
-	const binName = "solforge" + ext;
+	const binName = `solforge${ext}`;
 
 	for (const dir of pathDirs) {
 		const binPath = path.join(dir, binName);
@@ -44,7 +44,7 @@ function findBinaryInPath() {
 						return binPath;
 					}
 				}
-			} catch (err) {}
+			} catch (_err) {}
 		}
 	}
 	return null;
@@ -144,7 +144,7 @@ function updateShellProfile(userBin) {
 		fs.appendFileSync(configFile, `\n${pathExport}\n`);
 		console.log(`✓ Added ${userBin} to PATH in ${configFile}`);
 		console.log(`✓ Restart your ${shellType} or run: source ${configFile}`);
-	} catch (error) {
+	} catch (_error) {
 		console.log(`⚠️  Could not automatically update ${configFile}`);
 	}
 }
@@ -158,7 +158,7 @@ async function install() {
 			);
 		}
 
-		const { version, repository } = pkg();
+		const { repository } = pkg();
 		const repo =
 			process.env.SOLFORGE_REPO ||
 			(repository &&

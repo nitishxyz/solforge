@@ -1,8 +1,8 @@
-import { memo } from 'react';
-import { Moon, Sun, Menu } from 'lucide-react';
-import { Button } from '../ui/Button';
-import type { Theme } from '../../hooks/useTheme';
-import { useSidebarStore } from '../../stores/sidebarStore';
+import { memo } from "react";
+import { Moon, Sun, Menu } from "lucide-react";
+import { Button } from "../ui/Button";
+import type { Theme } from "../../hooks/useTheme";
+import { useSidebarStore } from "../../stores/sidebarStore";
 
 interface HeaderProps {
 	theme: Theme;
@@ -35,11 +35,11 @@ export const Header = memo(function Header({
 					variant="ghost"
 					size="icon"
 					onClick={onToggleTheme}
-					title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-					aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+					title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+					aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
 					className="touch-manipulation"
 				>
-					{theme === 'dark' ? (
+					{theme === "dark" ? (
 						<Sun className="w-4 h-4" />
 					) : (
 						<Moon className="w-4 h-4" />

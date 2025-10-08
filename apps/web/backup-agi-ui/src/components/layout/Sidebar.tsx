@@ -1,9 +1,9 @@
-import { memo, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { ChevronRight, Plus } from 'lucide-react';
-import { useGitStore } from '../../stores/gitStore';
-import { useSidebarStore } from '../../stores/sidebarStore';
-import { Button } from '../ui/Button';
+import { memo, useEffect } from "react";
+import type { ReactNode } from "react";
+import { ChevronRight, Plus } from "lucide-react";
+import { useGitStore } from "../../stores/gitStore";
+import { useSidebarStore } from "../../stores/sidebarStore";
+import { Button } from "../ui/Button";
 
 interface SidebarProps {
 	children: ReactNode;
@@ -20,12 +20,12 @@ export const Sidebar = memo(function Sidebar({
 
 	useEffect(() => {
 		if (!isCollapsed) {
-			document.body.style.overflow = 'hidden';
+			document.body.style.overflow = "hidden";
 		} else {
-			document.body.style.overflow = '';
+			document.body.style.overflow = "";
 		}
 		return () => {
-			document.body.style.overflow = '';
+			document.body.style.overflow = "";
 		};
 	}, [isCollapsed]);
 
@@ -48,7 +48,7 @@ export const Sidebar = memo(function Sidebar({
 					type="button"
 					className="flex-1 cursor-pointer hover:bg-muted/50 transition-colors touch-manipulation"
 					onClick={!isDiffOpen ? toggleCollapse : undefined}
-					title={!isDiffOpen ? 'Expand sidebar' : undefined}
+					title={!isDiffOpen ? "Expand sidebar" : undefined}
 					aria-label="Expand sidebar"
 				/>
 

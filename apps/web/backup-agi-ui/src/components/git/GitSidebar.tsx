@@ -1,10 +1,10 @@
-import { memo, useEffect } from 'react';
-import { ChevronRight, GitBranch, RefreshCw } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useGitStore } from '../../stores/gitStore';
-import { useGitStatus } from '../../hooks/useGit';
-import { Button } from '../ui/Button';
-import { GitFileList } from './GitFileList';
+import { memo, useEffect } from "react";
+import { ChevronRight, GitBranch, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGitStore } from "../../stores/gitStore";
+import { useGitStatus } from "../../hooks/useGit";
+import { Button } from "../ui/Button";
+import { GitFileList } from "./GitFileList";
 
 export const GitSidebar = memo(function GitSidebar() {
 	// Use selectors to only subscribe to needed state
@@ -17,7 +17,7 @@ export const GitSidebar = memo(function GitSidebar() {
 	useEffect(() => {
 		if (isExpanded) {
 			// Fetch immediately when opening
-			queryClient.invalidateQueries({ queryKey: ['git', 'status'] });
+			queryClient.invalidateQueries({ queryKey: ["git", "status"] });
 		}
 	}, [isExpanded, queryClient]);
 
@@ -73,7 +73,7 @@ export const GitSidebar = memo(function GitSidebar() {
 							<span className="text-orange-500">
 								{error instanceof Error
 									? error.message
-									: 'Failed to load git status'}
+									: "Failed to load git status"}
 							</span>
 							<Button variant="secondary" size="sm" onClick={handleRefresh}>
 								Retry
@@ -111,7 +111,7 @@ export const GitSidebar = memo(function GitSidebar() {
 						disabled={isLoading}
 					>
 						<RefreshCw
-							className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`}
+							className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`}
 						/>
 					</Button>
 				</div>

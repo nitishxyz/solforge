@@ -1,6 +1,6 @@
-import { useEffect, useId } from 'react';
-import { X } from 'lucide-react';
-import { useConfig, useModels } from '../../hooks/useConfig';
+import { useEffect, useId } from "react";
+import { X } from "lucide-react";
+import { useConfig, useModels } from "../../hooks/useConfig";
 
 interface ConfigModalProps {
 	isOpen: boolean;
@@ -67,7 +67,7 @@ export function ConfigModal({
 	};
 
 	const handleBackdropKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-		if (e.key === 'Escape') {
+		if (e.key === "Escape") {
 			onClose();
 		}
 	};

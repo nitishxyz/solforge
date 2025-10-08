@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { Settings } from 'lucide-react';
-import { useConfig, useModels } from '../../hooks/useConfig';
+import { useEffect } from "react";
+import { Settings } from "lucide-react";
+import { useConfig, useModels } from "../../hooks/useConfig";
 
 interface ConfigSelectorProps {
 	agent: string;
@@ -22,7 +22,7 @@ export function ConfigSelector({
 	const { data: config, isLoading: configLoading } = useConfig();
 	const { data: modelsData, isLoading: modelsLoading } = useModels(provider);
 
-	console.log('ConfigSelector rendered', {
+	console.log("ConfigSelector rendered", {
 		config,
 		configLoading,
 		agent,

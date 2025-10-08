@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface SidebarState {
 	isCollapsed: boolean;
@@ -21,7 +21,7 @@ export const useSidebarStore = create<SidebarState>()(
 				set({ wasCollapsedBeforeDiff: state }),
 		}),
 		{
-			name: 'sidebar-storage',
+			name: "sidebar-storage",
 			// Don't persist wasCollapsedBeforeDiff - it's only for runtime state
 			partialize: (state) => ({
 				isCollapsed: state.isCollapsed,

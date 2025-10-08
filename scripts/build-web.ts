@@ -4,27 +4,27 @@
  * Also generates a manifest of all assets for embedding
  */
 
-import { $ } from 'bun';
-import { join, relative } from 'node:path';
-import { readdirSync, statSync } from 'node:fs';
+import { $ } from "bun";
+import { join, relative } from "node:path";
+import { readdirSync, statSync } from "node:fs";
 
-const ROOT = import.meta.dir.replace('/scripts', '');
-const WEB_DIR = join(ROOT, 'apps/web');
-const CLI_DIR = join(ROOT, 'apps/cli');
-const WEB_DIST = join(WEB_DIR, 'dist');
-const CLI_WEB_DIST = join(CLI_DIR, 'src/web-dist');
+const ROOT = import.meta.dir.replace("/scripts", "");
+const WEB_DIR = join(ROOT, "apps/web");
+const CLI_DIR = join(ROOT, "apps/cli");
+const WEB_DIST = join(WEB_DIR, "dist");
+const CLI_WEB_DIST = join(CLI_DIR, "src/web-dist");
 
-console.log('🔨 Building web UI...');
+console.log("🔨 Building web UI...");
 await $`cd ${WEB_DIR} && bun run build`;
-console.log('✅ Web UI built successfully');
+console.log("✅ Web UI built successfully");
 
-console.log('📦 Copying web UI to CLI...');
+console.log("📦 Copying web UI to CLI...");
 await $`rm -rf ${CLI_WEB_DIST}`;
 await $`cp -r ${WEB_DIST} ${CLI_WEB_DIST}`;
-console.log('✅ Web UI copied to CLI');
+console.log("✅ Web UI copied to CLI");
 
 // Generate manifest of all files
-console.log('📝 Generating asset manifest...');
+console.log("📝 Generating asset manifest...");
 
 interface Manifest {
 	html: string;
@@ -61,7 +61,7 @@ const allFiles = scanDirectory(CLI_WEB_DIST);
 const assetData = new Map<string, string>();
 
 const manifest: Manifest = {
-	html: '/index.html',
+	html: "/index.html",
 	assets: {
 		js: [],
 		css: [],
@@ -74,15 +74,15 @@ for (const file of allFiles) {
 	const urlPath = `/${file}`;
 	const filePath = join(CLI_WEB_DIST, file);
 	const fileBuffer = await Bun.file(filePath).arrayBuffer();
-	const base64 = Buffer.from(fileBuffer).toString('base64');
+	const base64 = Buffer.from(fileBuffer).toString("base64");
 	assetData.set(urlPath, base64);
 
-	if (file.endsWith('.html')) {
-	} else if (file.endsWith('.js')) {
+	if (file.endsWith(".html")) {
+	} else if (file.endsWith(".js")) {
 		manifest.assets.js.push(urlPath);
-	} else if (file.endsWith('.css')) {
+	} else if (file.endsWith(".css")) {
 		manifest.assets.css.push(urlPath);
-	} else if (!file.endsWith('.map')) {
+	} else if (!file.endsWith(".map")) {
 		// Skip source maps
 		manifest.assets.other.push(urlPath);
 	}
@@ -94,30 +94,30 @@ function formatBase64Literal(base64: string): string {
 
 const embeddedAssetsEntries = Array.from(assetData.entries())
 	.map(([path, base64]) => `\t['${path}', ${formatBase64Literal(base64)}],`)
-	.join('\n');
+	.join("\n");
 
 // Write manifest
-const manifestPath = join(CLI_WEB_DIST, 'manifest.json');
+const manifestPath = join(CLI_WEB_DIST, "manifest.json");
 await Bun.write(manifestPath, JSON.stringify(manifest, null, 2));
-console.log('✅ Manifest generated');
-console.log('📋 Manifest contents:', manifest);
+console.log("✅ Manifest generated");
+console.log("📋 Manifest contents:", manifest);
 
 // Generate TypeScript file with asset paths
 // Expose helper URLs that work both in dev (filesystem) and in the compiled bundle
-console.log('📝 Generating imports file...');
+console.log("📝 Generating imports file...");
 
 function normalizePath(path: string): string {
-	return path.replace(/^\//, '');
+	return path.replace(/^\//, "");
 }
 
 function formatAssetArray(files: string[]): string {
 	if (files.length === 0) {
-		return '[]';
+		return "[]";
 	}
 
 	const items = files
 		.map((file) => `\t\tresolveAsset('${normalizePath(file)}')`)
-		.join(',\n');
+		.join(",\n");
 
 	return `[
 ${items}
@@ -192,8 +192,8 @@ export function getEmbeddedAsset(path: string): Uint8Array | undefined {
 }
 `;
 
-const importsFilePath = join(CLI_DIR, 'src/web-assets.ts');
+const importsFilePath = join(CLI_DIR, "src/web-assets.ts");
 await Bun.write(importsFilePath, importsFile);
-console.log('✅ Imports file generated');
+console.log("✅ Imports file generated");
 
-console.log('🎉 Web UI build complete!');
+console.log("🎉 Web UI build complete!");

@@ -1,8 +1,8 @@
-import { FileIcon, FilePlus, FileX, Check, AlertCircle } from 'lucide-react';
-import type { GitFileStatus } from '../../types/api';
-import { useStageFiles, useUnstageFiles } from '../../hooks/useGit';
-import { useGitStore } from '../../stores/gitStore';
-import { useState } from 'react';
+import { FileIcon, FilePlus, FileX, Check, AlertCircle } from "lucide-react";
+import type { GitFileStatus } from "../../types/api";
+import { useStageFiles, useUnstageFiles } from "../../hooks/useGit";
+import { useGitStore } from "../../stores/gitStore";
+import { useState } from "react";
 
 interface GitFileItemProps {
 	file: GitFileStatus;
@@ -34,7 +34,7 @@ export function GitFileItem({
 		} catch (error) {
 			// Revert on error
 			setIsChecked(!checked);
-			console.error('Failed to stage/unstage file:', error);
+			console.error("Failed to stage/unstage file:", error);
 		}
 	};
 
@@ -45,41 +45,41 @@ export function GitFileItem({
 	// Status colors and icons
 	const getStatusConfig = () => {
 		switch (file.status) {
-			case 'added':
-			case 'untracked':
+			case "added":
+			case "untracked":
 				return {
 					icon: FilePlus,
-					color: 'text-green-500',
-					label: 'A',
-					labelColor: 'text-green-500',
+					color: "text-green-500",
+					label: "A",
+					labelColor: "text-green-500",
 				};
-			case 'deleted':
+			case "deleted":
 				return {
 					icon: FileX,
-					color: 'text-red-500',
-					label: 'D',
-					labelColor: 'text-red-500',
+					color: "text-red-500",
+					label: "D",
+					labelColor: "text-red-500",
 				};
-			case 'modified':
+			case "modified":
 				return {
 					icon: FileIcon,
-					color: 'text-blue-500',
-					label: 'M',
-					labelColor: 'text-blue-500',
+					color: "text-blue-500",
+					label: "M",
+					labelColor: "text-blue-500",
 				};
-			case 'renamed':
+			case "renamed":
 				return {
 					icon: FileIcon,
-					color: 'text-purple-500',
-					label: 'R',
-					labelColor: 'text-purple-500',
+					color: "text-purple-500",
+					label: "R",
+					labelColor: "text-purple-500",
 				};
 			default:
 				return {
 					icon: FileIcon,
-					color: 'text-muted-foreground',
-					label: '?',
-					labelColor: 'text-muted-foreground',
+					color: "text-muted-foreground",
+					label: "?",
+					labelColor: "text-muted-foreground",
 				};
 		}
 	};
@@ -89,7 +89,7 @@ export function GitFileItem({
 
 	// Format file path to show "../dir/filename.tsx" format
 	const formatFilePath = (path: string) => {
-		const pathParts = path.split('/');
+		const pathParts = path.split("/");
 		const fileName = pathParts[pathParts.length - 1];
 
 		if (pathParts.length === 1) {
@@ -116,7 +116,7 @@ export function GitFileItem({
 				onChange={handleCheckChange}
 				onClick={(e) => e.stopPropagation()}
 				className="w-4 h-4 rounded border-border"
-				aria-label={`${isChecked ? 'Unstage' : 'Stage'} ${file.path}`}
+				aria-label={`${isChecked ? "Unstage" : "Stage"} ${file.path}`}
 			/>
 
 			<div className="flex items-center gap-2 flex-1 min-w-0">

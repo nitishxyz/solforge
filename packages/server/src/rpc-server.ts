@@ -105,7 +105,7 @@ export class LiteSVMRpcServer {
 		this.heartbeat = new Heartbeat(this.svm, () => {
 			this.slot += 1n;
 			this.blockHeight += 1n;
-			
+
 			// Notify slot listeners for WebSocket
 			for (const cb of this.slotListeners) {
 				try {
@@ -222,7 +222,7 @@ export class LiteSVMRpcServer {
 							return String(k);
 						}
 					});
-					
+
 					for (const cb of this.logsListeners) {
 						cb({
 							signature,
@@ -473,11 +473,11 @@ export class LiteSVMRpcServer {
 				this.slot += 1n;
 				this.blockHeight += 1n;
 				this.txCount += 1n;
-				
+
 				// Warp SVM to new slot and expire blockhash to get a new one
 				this.svm.warpToSlot(this.slot);
 				this.svm.expireBlockhash();
-				
+
 				// Notify slot listeners for WebSocket
 				for (const cb of this.slotListeners) {
 					try {

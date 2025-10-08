@@ -1,9 +1,9 @@
-import { ChevronRight, AlertCircle } from 'lucide-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { GenericRendererProps } from './types';
-import { formatDuration } from './utils';
-import { ToolErrorDisplay } from './ToolErrorDisplay';
+import { ChevronRight, AlertCircle } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import type { GenericRendererProps } from "./types";
+import { formatDuration } from "./utils";
+import { ToolErrorDisplay } from "./ToolErrorDisplay";
 
 export function GenericRenderer({
 	toolName,
@@ -19,15 +19,24 @@ export function GenericRenderer({
 	// Check for errors
 	const hasError =
 		contentJson.error ||
-		(result && typeof result === 'object' && 'ok' in result && result.ok === false);
+		(result &&
+			typeof result === "object" &&
+			"ok" in result &&
+			result.ok === false);
 	const errorMessage =
-		typeof contentJson.error === 'string'
+		typeof contentJson.error === "string"
 			? contentJson.error
-			: result && typeof result === 'object' && 'error' in result && typeof result.error === 'string'
+			: result &&
+					typeof result === "object" &&
+					"error" in result &&
+					typeof result.error === "string"
 				? result.error
 				: null;
 	const errorStack =
-		result && typeof result === 'object' && 'stack' in result && typeof result.stack === 'string'
+		result &&
+		typeof result === "object" &&
+		"stack" in result &&
+		typeof result.stack === "string"
 			? result.stack
 			: undefined;
 
@@ -38,19 +47,19 @@ export function GenericRenderer({
 				onClick={onToggle}
 				className={`flex items-center gap-2 transition-colors w-full ${
 					hasError
-						? 'text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200'
-						: 'text-foreground hover:text-foreground/80'
+						? "text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
+						: "text-foreground hover:text-foreground/80"
 				}`}
 			>
 				<ChevronRight
-					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+					className={`h-3 w-3 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
 				/>
 				{hasError && (
 					<AlertCircle className="h-3 w-3 flex-shrink-0 text-red-600 dark:text-red-400" />
 				)}
 				<span className="font-medium flex-shrink-0">
 					{toolName}
-					{hasError ? ' error' : ''}
+					{hasError ? " error" : ""}
 				</span>
 				<span className="text-muted-foreground/70 flex-shrink-0">·</span>
 				<span className="text-muted-foreground/80 flex-shrink-0">
@@ -68,11 +77,11 @@ export function GenericRenderer({
 							style={vscDarkPlus}
 							customStyle={{
 								margin: 0,
-								padding: '0.75rem',
-								fontSize: '0.75rem',
-								lineHeight: '1.5',
-								background: 'transparent',
-								maxWidth: '100%',
+								padding: "0.75rem",
+								fontSize: "0.75rem",
+								lineHeight: "1.5",
+								background: "transparent",
+								maxWidth: "100%",
 							}}
 							wrapLines
 							wrapLongLines

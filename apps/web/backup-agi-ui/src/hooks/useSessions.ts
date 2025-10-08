@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../lib/api-client';
-import type { CreateSessionRequest } from '../types/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../lib/api-client";
+import type { CreateSessionRequest } from "../types/api";
 
 export function useSessions() {
 	return useQuery({
-		queryKey: ['sessions'],
+		queryKey: ["sessions"],
 		queryFn: () => apiClient.getSessions(),
 		refetchInterval: 5000,
 	});
@@ -16,7 +16,7 @@ export function useCreateSession() {
 	return useMutation({
 		mutationFn: (data: CreateSessionRequest) => apiClient.createSession(data),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['sessions'] });
+			queryClient.invalidateQueries({ queryKey: ["sessions"] });
 		},
 	});
 }

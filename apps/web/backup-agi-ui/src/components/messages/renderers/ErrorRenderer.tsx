@@ -1,7 +1,7 @@
-import type React from 'react';
-import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { ContentJson } from './types';
+import type React from "react";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import type { ContentJson } from "./types";
 
 interface ErrorRendererProps {
 	contentJson: ContentJson;
@@ -22,23 +22,23 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 	let isAborted = false;
 
 	// Check if we have the nested 'error' structure
-	if (contentJson.error && typeof contentJson.error === 'object') {
+	if (contentJson.error && typeof contentJson.error === "object") {
 		errorDetails = contentJson.error as Record<string, unknown>;
 		// Try to extract message from nested error
-		if (errorDetails.message && typeof errorDetails.message === 'string') {
+		if (errorDetails.message && typeof errorDetails.message === "string") {
 			errorMessage = errorDetails.message;
 		}
-		if (errorDetails.type && typeof errorDetails.type === 'string') {
+		if (errorDetails.type && typeof errorDetails.type === "string") {
 			errorType = errorDetails.type;
 		}
 	}
 	// Check if we have the toErrorPayload structure
-	else if (contentJson.details && typeof contentJson.details === 'object') {
+	else if (contentJson.details && typeof contentJson.details === "object") {
 		errorDetails = contentJson.details as Record<string, unknown>;
-		if (contentJson.message && typeof contentJson.message === 'string') {
+		if (contentJson.message && typeof contentJson.message === "string") {
 			errorMessage = contentJson.message;
 		}
-		if (contentJson.type && typeof contentJson.type === 'string') {
+		if (contentJson.type && typeof contentJson.type === "string") {
 			errorType = contentJson.type;
 		}
 		if (contentJson.isAborted === true) {
@@ -47,10 +47,10 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 	}
 	// Simple error structure
 	else {
-		if (contentJson.message && typeof contentJson.message === 'string') {
+		if (contentJson.message && typeof contentJson.message === "string") {
 			errorMessage = contentJson.message;
 		}
-		if (contentJson.type && typeof contentJson.type === 'string') {
+		if (contentJson.type && typeof contentJson.type === "string") {
 			errorType = contentJson.type;
 		}
 		if (contentJson.isAborted === true) {
@@ -64,18 +64,18 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 	let apiError: { type?: string; message?: string } | undefined;
 	if (
 		errorDetails?.responseBody &&
-		typeof errorDetails.responseBody === 'string'
+		typeof errorDetails.responseBody === "string"
 	) {
 		try {
 			const parsed = JSON.parse(errorDetails.responseBody);
-			if (parsed.error && typeof parsed.error === 'object') {
+			if (parsed.error && typeof parsed.error === "object") {
 				apiError = {
 					type:
-						typeof parsed.error.type === 'string'
+						typeof parsed.error.type === "string"
 							? parsed.error.type
 							: undefined,
 					message:
-						typeof parsed.error.message === 'string'
+						typeof parsed.error.message === "string"
 							? parsed.error.message
 							: undefined,
 				};
@@ -89,19 +89,19 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 		if (value === null || value === undefined) {
 			return <span className="text-muted-foreground">null</span>;
 		}
-		if (typeof value === 'boolean') {
+		if (typeof value === "boolean") {
 			return (
 				<span className="text-amber-600 dark:text-amber-400">
 					{String(value)}
 				</span>
 			);
 		}
-		if (typeof value === 'number') {
+		if (typeof value === "number") {
 			return <span className="text-blue-600 dark:text-blue-400">{value}</span>;
 		}
-		if (typeof value === 'string') {
+		if (typeof value === "string") {
 			// If it looks like JSON, try to format it
-			if (value.startsWith('{') || value.startsWith('[')) {
+			if (value.startsWith("{") || value.startsWith("[")) {
 				try {
 					const parsed = JSON.parse(value);
 					return (
@@ -115,7 +115,7 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 			}
 			return <span className="text-foreground">{value}</span>;
 		}
-		if (typeof value === 'object') {
+		if (typeof value === "object") {
 			return (
 				<pre className="mt-1 p-2 bg-muted/50 rounded text-xs overflow-x-auto">
 					<code>{JSON.stringify(value, null, 2)}</code>
@@ -126,12 +126,12 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 	};
 
 	const importantFields = [
-		'name',
-		'statusCode',
-		'url',
-		'model',
-		'isRetryable',
-		'cause',
+		"name",
+		"statusCode",
+		"url",
+		"model",
+		"isRetryable",
+		"cause",
 	];
 	const renderedFields = new Set<string>();
 
@@ -205,7 +205,7 @@ export function ErrorRenderer({ contentJson, debug }: ErrorRendererProps) {
 						) : (
 							<ChevronRight className="h-3 w-3" />
 						)}
-						{showRawDetails ? 'Hide' : 'View'} Raw Error Details
+						{showRawDetails ? "Hide" : "View"} Raw Error Details
 					</button>
 					{showRawDetails && (
 						<div className="mt-2">

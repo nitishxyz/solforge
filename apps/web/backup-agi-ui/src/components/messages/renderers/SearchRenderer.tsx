@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
-import type { RendererProps } from './types';
-import { formatDuration } from './utils';
-import { ToolErrorDisplay } from './ToolErrorDisplay';
+import { ChevronDown, ChevronRight, AlertCircle } from "lucide-react";
+import type { RendererProps } from "./types";
+import { formatDuration } from "./utils";
+import { ToolErrorDisplay } from "./ToolErrorDisplay";
 
 export function SearchRenderer({
 	contentJson,
@@ -17,22 +17,25 @@ export function SearchRenderer({
 	// Check for errors
 	const hasError =
 		contentJson.error ||
-		(result && typeof result === 'object' && 'ok' in result && result.ok === false) ||
-		(result && 'error' in result);
+		(result &&
+			typeof result === "object" &&
+			"ok" in result &&
+			result.ok === false) ||
+		(result && "error" in result);
 	const errorMessage =
-		typeof contentJson.error === 'string'
+		typeof contentJson.error === "string"
 			? contentJson.error
 			: result &&
-					typeof result === 'object' &&
-					'error' in result &&
-					typeof result.error === 'string'
+					typeof result === "object" &&
+					"error" in result &&
+					typeof result.error === "string"
 				? result.error
 				: null;
 	const errorStack =
 		result &&
-		typeof result === 'object' &&
-		'stack' in result &&
-		typeof result.stack === 'string'
+		typeof result === "object" &&
+		"stack" in result &&
+		typeof result.stack === "string"
 			? result.stack
 			: undefined;
 
@@ -41,21 +44,21 @@ export function SearchRenderer({
 	const itemLabel =
 		matches.length > 0
 			? matches.length === 1
-				? 'match'
-				: 'matches'
+				? "match"
+				: "matches"
 			: files.length === 1
-				? 'file'
-				: 'files';
+				? "file"
+				: "files";
 
 	// Extract search term from args
 	const searchTerm = (() => {
 		const args = contentJson.args as Record<string, unknown> | undefined;
-		if (args && typeof args === 'object') {
-			if (typeof args.pattern === 'string') return args.pattern;
-			if (typeof args.query === 'string') return args.query;
-			if (typeof args.filePattern === 'string') return args.filePattern;
+		if (args && typeof args === "object") {
+			if (typeof args.pattern === "string") return args.pattern;
+			if (typeof args.query === "string") return args.query;
+			if (typeof args.filePattern === "string") return args.filePattern;
 		}
-		return '';
+		return "";
 	})();
 
 	return (
@@ -65,8 +68,8 @@ export function SearchRenderer({
 				onClick={onToggle}
 				className={`flex items-center gap-2 transition-colors ${
 					hasError
-						? 'text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200'
-						: 'text-amber-700 dark:text-amber-300 hover:text-amber-600 dark:hover:text-amber-200'
+						? "text-red-700 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
+						: "text-amber-700 dark:text-amber-300 hover:text-amber-600 dark:hover:text-amber-200"
 				}`}
 			>
 				{isExpanded ? (
@@ -77,14 +80,14 @@ export function SearchRenderer({
 				{hasError && (
 					<AlertCircle className="h-3 w-3 flex-shrink-0 text-red-600 dark:text-red-400" />
 				)}
-				<span className="font-medium">search{hasError ? ' error' : ''}</span>
+				<span className="font-medium">search{hasError ? " error" : ""}</span>
 				{searchTerm && (
 					<>
 						<span className="text-muted-foreground/70">·</span>
 						<span className="font-mono text-foreground/90 text-[11px]">
 							"
 							{searchTerm.length > 30
-								? searchTerm.slice(0, 30) + '…'
+								? `${searchTerm.slice(0, 30)}…`
 								: searchTerm}
 							"
 						</span>
@@ -97,7 +100,7 @@ export function SearchRenderer({
 				<span className="text-muted-foreground/80">· {timeStr}</span>
 			</button>
 			{isExpanded && hasError && errorMessage && (
-			<ToolErrorDisplay error={errorMessage} stack={errorStack} showStack />
+				<ToolErrorDisplay error={errorMessage} stack={errorStack} showStack />
 			)}
 			{isExpanded && !hasError && matches.length > 0 && (
 				<div className="mt-2 ml-5 space-y-1 max-h-96 overflow-y-auto">

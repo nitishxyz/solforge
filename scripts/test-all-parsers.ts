@@ -2,11 +2,11 @@
 
 /**
  * Test All Instruction Parsers
- * 
+ *
  * This script creates transactions for every instruction type we've added parsers for.
  * Run the RPC server on 8899, then run this script to generate test transactions.
  * View the transactions in the Solana Explorer to verify parsing works correctly.
- * 
+ *
  * Usage:
  *   1. Start RPC server: bun run dev (in one terminal)
  *   2. Run this script: bun run scripts/test-all-parsers.ts (in another terminal)
@@ -16,7 +16,7 @@
 import {
 	Connection,
 	Keypair,
-	PublicKey,
+	type PublicKey,
 	SystemProgram,
 	Transaction,
 	sendAndConfirmTransaction,
@@ -47,12 +47,9 @@ import {
 	createInitializeMultisigInstruction,
 	AuthorityType,
 	NATIVE_MINT,
-	getOrCreateAssociatedTokenAccount,
 	createAssociatedTokenAccountInstruction,
 	getAssociatedTokenAddress,
 	ASSOCIATED_TOKEN_PROGRAM_ID,
-	getMint,
-	getAccount,
 	createInitializeTransferFeeConfigInstruction,
 	createTransferCheckedWithFeeInstruction,
 	createWithdrawWithheldTokensFromMintInstruction,
@@ -74,10 +71,15 @@ interface TestResult {
 
 const results: TestResult[] = [];
 
-function logResult(name: string, signature: string, success: boolean, error?: string) {
+function logResult(
+	name: string,
+	signature: string,
+	success: boolean,
+	error?: string,
+) {
 	const explorerUrl = `${EXPLORER_BASE_URL}/tx/${signature}`;
 	results.push({ name, signature, success, error, explorerUrl });
-	
+
 	if (success) {
 		console.log(`✅ ${name}`);
 		console.log(`   Signature: ${signature}`);
@@ -89,7 +91,11 @@ function logResult(name: string, signature: string, success: boolean, error?: st
 	}
 }
 
-async function airdrop(connection: Connection, publicKey: PublicKey, amount: number) {
+async function airdrop(
+	connection: Connection,
+	publicKey: PublicKey,
+	amount: number,
+) {
 	const sig = await connection.requestAirdrop(publicKey, amount);
 	await connection.confirmTransaction(sig);
 }
@@ -98,9 +104,9 @@ async function main() {
 	console.log("🚀 Testing All Instruction Parsers\n");
 	console.log(`📡 RPC: ${RPC_URL}`);
 	console.log(`🔍 Explorer: ${EXPLORER_BASE_URL}\n`);
-	
+
 	const connection = new Connection(RPC_URL, "confirmed");
-	
+
 	// Create test keypairs
 	const payer = Keypair.generate();
 	const mintAuthority = Keypair.generate();
@@ -108,30 +114,30 @@ async function main() {
 	const owner = Keypair.generate();
 	const delegate = Keypair.generate();
 	const recipient = Keypair.generate();
-	
+
 	console.log("💰 Funding accounts...\n");
 	await airdrop(connection, payer.publicKey, 10 * LAMPORTS_PER_SOL);
 	await airdrop(connection, owner.publicKey, 5 * LAMPORTS_PER_SOL);
 	await airdrop(connection, delegate.publicKey, 2 * LAMPORTS_PER_SOL);
-	
+
 	// Test accounts
 	const mint = Keypair.generate();
 	const mint2 = Keypair.generate();
 	const tokenAccount = Keypair.generate();
 	const tokenAccount2 = Keypair.generate();
 	const tokenAccount3 = Keypair.generate();
-	
+
 	console.log("📝 Test Accounts:");
 	console.log(`   Payer: ${payer.publicKey.toBase58()}`);
 	console.log(`   Owner: ${owner.publicKey.toBase58()}`);
 	console.log(`   Delegate: ${delegate.publicKey.toBase58()}\n`);
-	
+
 	// ===========================
 	// MINT INITIALIZATION TESTS
 	// ===========================
-	
+
 	console.log("🏭 Testing Mint Initialization Instructions...\n");
-	
+
 	// 1. InitializeMint (with rent sysvar)
 	try {
 		const lamports = await connection.getMinimumBalanceForRentExemption(82);
@@ -148,16 +154,21 @@ async function main() {
 				9,
 				mintAuthority.publicKey,
 				freezeAuthority.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, mint]);
 		logResult("InitializeMint", sig, true);
-	} catch (e: any) {
-		logResult("InitializeMint", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeMint",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 2. InitializeMint2 (without rent sysvar)
 	try {
 		const lamports = await connection.getMinimumBalanceForRentExemption(82);
@@ -174,22 +185,27 @@ async function main() {
 				6,
 				mintAuthority.publicKey,
 				freezeAuthority.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, mint2]);
 		logResult("InitializeMint2", sig, true);
-	} catch (e: any) {
-		logResult("InitializeMint2", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeMint2",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// ACCOUNT INITIALIZATION TESTS
 	// ===========================
-	
+
 	console.log("💼 Testing Account Initialization Instructions...\n");
-	
+
 	// 3. InitializeAccount (with rent sysvar)
 	try {
 		const lamports = await connection.getMinimumBalanceForRentExemption(165);
@@ -205,16 +221,24 @@ async function main() {
 				tokenAccount.publicKey,
 				mint.publicKey,
 				owner.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, tokenAccount]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			tokenAccount,
+		]);
 		logResult("InitializeAccount", sig, true);
-	} catch (e: any) {
-		logResult("InitializeAccount", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeAccount",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 4. InitializeAccount2
 	try {
 		const lamports = await connection.getMinimumBalanceForRentExemption(165);
@@ -230,16 +254,24 @@ async function main() {
 				tokenAccount2.publicKey,
 				mint.publicKey,
 				owner.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, tokenAccount2]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			tokenAccount2,
+		]);
 		logResult("InitializeAccount2", sig, true);
-	} catch (e: any) {
-		logResult("InitializeAccount2", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeAccount2",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 5. InitializeAccount3
 	try {
 		const lamports = await connection.getMinimumBalanceForRentExemption(165);
@@ -255,16 +287,24 @@ async function main() {
 				tokenAccount3.publicKey,
 				mint2.publicKey,
 				owner.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, tokenAccount3]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			tokenAccount3,
+		]);
 		logResult("InitializeAccount3", sig, true);
-	} catch (e: any) {
-		logResult("InitializeAccount3", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeAccount3",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 6. Associated Token Account (Create)
 	try {
 		const ata = await getAssociatedTokenAddress(
@@ -272,9 +312,9 @@ async function main() {
 			payer.publicKey,
 			false,
 			TOKEN_PROGRAM_ID,
-			ASSOCIATED_TOKEN_PROGRAM_ID
+			ASSOCIATED_TOKEN_PROGRAM_ID,
 		);
-		
+
 		const tx = new Transaction().add(
 			createAssociatedTokenAccountInstruction(
 				payer.publicKey,
@@ -282,22 +322,27 @@ async function main() {
 				payer.publicKey,
 				mint.publicKey,
 				TOKEN_PROGRAM_ID,
-				ASSOCIATED_TOKEN_PROGRAM_ID
-			)
+				ASSOCIATED_TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer]);
 		logResult("Create Associated Token Account", sig, true);
-	} catch (e: any) {
-		logResult("Create Associated Token Account", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"Create Associated Token Account",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// MINTING TESTS
 	// ===========================
-	
+
 	console.log("🪙 Testing Minting Instructions...\n");
-	
+
 	// 7. MintTo
 	try {
 		const tx = new Transaction().add(
@@ -307,16 +352,19 @@ async function main() {
 				mintAuthority.publicKey,
 				1_000_000_000n, // 1 token with 9 decimals
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, mintAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			mintAuthority,
+		]);
 		logResult("MintTo", sig, true);
-	} catch (e: any) {
-		logResult("MintTo", "", false, e.message);
+	} catch (e: unknown) {
+		logResult("MintTo", "", false, e instanceof Error ? e.message : String(e));
 	}
-	
+
 	// 8. MintToChecked
 	try {
 		const tx = new Transaction().add(
@@ -327,22 +375,30 @@ async function main() {
 				2_000_000_000n, // 2 tokens
 				9, // decimals
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, mintAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			mintAuthority,
+		]);
 		logResult("MintToChecked", sig, true);
-	} catch (e: any) {
-		logResult("MintToChecked", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"MintToChecked",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// TRANSFER TESTS
 	// ===========================
-	
+
 	console.log("💸 Testing Transfer Instructions...\n");
-	
+
 	// 9. Transfer
 	try {
 		const tx = new Transaction().add(
@@ -352,16 +408,21 @@ async function main() {
 				owner.publicKey,
 				100_000_000n, // 0.1 token
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("Transfer", sig, true);
-	} catch (e: any) {
-		logResult("Transfer", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"Transfer",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 10. TransferChecked
 	try {
 		const tx = new Transaction().add(
@@ -373,22 +434,27 @@ async function main() {
 				50_000_000n, // 0.05 token
 				9,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("TransferChecked", sig, true);
-	} catch (e: any) {
-		logResult("TransferChecked", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"TransferChecked",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// APPROVAL TESTS
 	// ===========================
-	
+
 	console.log("🔐 Testing Approval Instructions...\n");
-	
+
 	// 11. Approve
 	try {
 		const tx = new Transaction().add(
@@ -398,16 +464,16 @@ async function main() {
 				owner.publicKey,
 				500_000_000n, // 0.5 token
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("Approve", sig, true);
-	} catch (e: any) {
-		logResult("Approve", "", false, e.message);
+	} catch (e: unknown) {
+		logResult("Approve", "", false, e instanceof Error ? e.message : String(e));
 	}
-	
+
 	// 12. ApproveChecked
 	try {
 		const tx = new Transaction().add(
@@ -419,16 +485,21 @@ async function main() {
 				300_000_000n, // 0.3 token
 				9,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("ApproveChecked", sig, true);
-	} catch (e: any) {
-		logResult("ApproveChecked", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"ApproveChecked",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 13. Transfer by delegate
 	try {
 		const tx = new Transaction().add(
@@ -438,16 +509,24 @@ async function main() {
 				delegate.publicKey, // Delegate transferring
 				10_000_000n, // 0.01 token
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, delegate]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			delegate,
+		]);
 		logResult("Transfer (by delegate)", sig, true);
-	} catch (e: any) {
-		logResult("Transfer (by delegate)", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"Transfer (by delegate)",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 14. Revoke
 	try {
 		const tx = new Transaction().add(
@@ -455,22 +534,22 @@ async function main() {
 				tokenAccount.publicKey,
 				owner.publicKey,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("Revoke", sig, true);
-	} catch (e: any) {
-		logResult("Revoke", "", false, e.message);
+	} catch (e: unknown) {
+		logResult("Revoke", "", false, e instanceof Error ? e.message : String(e));
 	}
-	
+
 	// ===========================
 	// BURN TESTS
 	// ===========================
-	
+
 	console.log("🔥 Testing Burn Instructions...\n");
-	
+
 	// 15. Burn
 	try {
 		const tx = new Transaction().add(
@@ -480,16 +559,16 @@ async function main() {
 				owner.publicKey,
 				50_000_000n, // 0.05 token
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("Burn", sig, true);
-	} catch (e: any) {
-		logResult("Burn", "", false, e.message);
+	} catch (e: unknown) {
+		logResult("Burn", "", false, e instanceof Error ? e.message : String(e));
 	}
-	
+
 	// 16. BurnChecked
 	try {
 		const tx = new Transaction().add(
@@ -500,22 +579,27 @@ async function main() {
 				25_000_000n, // 0.025 token
 				9,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("BurnChecked", sig, true);
-	} catch (e: any) {
-		logResult("BurnChecked", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"BurnChecked",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// FREEZE/THAW TESTS
 	// ===========================
-	
+
 	console.log("❄️ Testing Freeze/Thaw Instructions...\n");
-	
+
 	// 17. FreezeAccount
 	try {
 		const tx = new Transaction().add(
@@ -524,16 +608,24 @@ async function main() {
 				mint.publicKey,
 				freezeAuthority.publicKey,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, freezeAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			freezeAuthority,
+		]);
 		logResult("FreezeAccount", sig, true);
-	} catch (e: any) {
-		logResult("FreezeAccount", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"FreezeAccount",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 18. ThawAccount
 	try {
 		const tx = new Transaction().add(
@@ -542,22 +634,30 @@ async function main() {
 				mint.publicKey,
 				freezeAuthority.publicKey,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, freezeAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			freezeAuthority,
+		]);
 		logResult("ThawAccount", sig, true);
-	} catch (e: any) {
-		logResult("ThawAccount", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"ThawAccount",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// AUTHORITY TESTS
 	// ===========================
-	
+
 	console.log("👑 Testing Authority Instructions...\n");
-	
+
 	// 19. SetAuthority (change mint authority)
 	try {
 		const newAuthority = Keypair.generate();
@@ -568,16 +668,24 @@ async function main() {
 				AuthorityType.MintTokens,
 				newAuthority.publicKey,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, mintAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			mintAuthority,
+		]);
 		logResult("SetAuthority (MintTokens)", sig, true);
-	} catch (e: any) {
-		logResult("SetAuthority (MintTokens)", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"SetAuthority (MintTokens)",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// 20. SetAuthority (disable freeze)
 	try {
 		const tx = new Transaction().add(
@@ -587,29 +695,37 @@ async function main() {
 				AuthorityType.FreezeAccount,
 				null, // Disable freeze
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, freezeAuthority]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			freezeAuthority,
+		]);
 		logResult("SetAuthority (Disable Freeze)", sig, true);
-	} catch (e: any) {
-		logResult("SetAuthority (Disable Freeze)", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"SetAuthority (Disable Freeze)",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// MULTISIG TESTS
 	// ===========================
-	
+
 	console.log("👥 Testing Multisig Instructions...\n");
-	
+
 	// 21. InitializeMultisig
 	try {
 		const multisig = Keypair.generate();
 		const signer1 = Keypair.generate();
 		const signer2 = Keypair.generate();
 		const signer3 = Keypair.generate();
-		
+
 		const lamports = await connection.getMinimumBalanceForRentExemption(355);
 		const tx = new Transaction().add(
 			SystemProgram.createAccount({
@@ -623,30 +739,38 @@ async function main() {
 				multisig.publicKey,
 				[signer1.publicKey, signer2.publicKey, signer3.publicKey],
 				2, // 2 of 3
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, multisig]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			multisig,
+		]);
 		logResult("InitializeMultisig", sig, true);
-	} catch (e: any) {
-		logResult("InitializeMultisig", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeMultisig",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// Note: InitializeMultisig2 skipped - no create function in SDK yet
-	
+
 	// ===========================
 	// WRAPPED SOL TEST
 	// ===========================
-	
+
 	console.log("🌯 Testing Wrapped SOL Instructions...\n");
-	
+
 	// 23. SyncNative
 	try {
 		// Create wrapped SOL account
 		const wrappedSolAccount = Keypair.generate();
 		const lamports = await connection.getMinimumBalanceForRentExemption(165);
-		
+
 		const createTx = new Transaction().add(
 			SystemProgram.createAccount({
 				fromPubkey: payer.publicKey,
@@ -659,32 +783,40 @@ async function main() {
 				wrappedSolAccount.publicKey,
 				NATIVE_MINT,
 				owner.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
-		await sendAndConfirmTransaction(connection, createTx, [payer, wrappedSolAccount]);
-		
+
+		await sendAndConfirmTransaction(connection, createTx, [
+			payer,
+			wrappedSolAccount,
+		]);
+
 		// Now sync it
 		const syncTx = new Transaction().add(
 			createSyncNativeInstruction(
 				wrappedSolAccount.publicKey,
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, syncTx, [payer]);
 		logResult("SyncNative", sig, true);
-	} catch (e: any) {
-		logResult("SyncNative", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"SyncNative",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// CLOSE ACCOUNT TEST
 	// ===========================
-	
+
 	console.log("🗑️ Testing Close Account Instruction...\n");
-	
+
 	// 24. CloseAccount
 	try {
 		const tx = new Transaction().add(
@@ -693,32 +825,38 @@ async function main() {
 				payer.publicKey,
 				owner.publicKey,
 				[],
-				TOKEN_PROGRAM_ID
-			)
+				TOKEN_PROGRAM_ID,
+			),
 		);
-		
+
 		const sig = await sendAndConfirmTransaction(connection, tx, [payer, owner]);
 		logResult("CloseAccount", sig, true);
-	} catch (e: any) {
-		logResult("CloseAccount", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"CloseAccount",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// TOKEN-2022 EXTENSION TESTS
 	// ===========================
-	
+
 	console.log("🔧 Testing Token-2022 Extension Instructions...\n");
-	
+
 	// 25. InitializeTransferFeeConfig (Token-2022)
 	try {
 		const feeMint = Keypair.generate();
 		const feeAuthority = Keypair.generate();
 		const withdrawAuthority = Keypair.generate();
-		
+
 		const extensions = [ExtensionType.TransferFeeConfig];
 		const mintLen = getMintLen(extensions);
-		const lamports = await connection.getMinimumBalanceForRentExemption(mintLen);
-		
+		const lamports =
+			await connection.getMinimumBalanceForRentExemption(mintLen);
+
 		const tx = new Transaction().add(
 			SystemProgram.createAccount({
 				fromPubkey: payer.publicKey,
@@ -733,35 +871,38 @@ async function main() {
 				withdrawAuthority.publicKey,
 				100, // 1% fee (100 basis points)
 				BigInt(1000000), // 1 token max fee
-				TOKEN_2022_PROGRAM_ID
+				TOKEN_2022_PROGRAM_ID,
 			),
 			createInitializeMint2Instruction(
 				feeMint.publicKey,
 				9,
 				mintAuthority.publicKey,
 				null,
-				TOKEN_2022_PROGRAM_ID
-			)
+				TOKEN_2022_PROGRAM_ID,
+			),
 		);
-		
-		const sig = await sendAndConfirmTransaction(connection, tx, [payer, feeMint]);
+
+		const sig = await sendAndConfirmTransaction(connection, tx, [
+			payer,
+			feeMint,
+		]);
 		logResult("InitializeTransferFeeConfig (Token-2022)", sig, true);
-		
+
 		// 26. TransferCheckedWithFee (requires fee mint setup)
 		try {
 			const feeSource = await getAssociatedTokenAddress(
 				feeMint.publicKey,
 				owner.publicKey,
 				false,
-				TOKEN_2022_PROGRAM_ID
+				TOKEN_2022_PROGRAM_ID,
 			);
 			const feeDestination = await getAssociatedTokenAddress(
 				feeMint.publicKey,
 				recipient.publicKey,
 				false,
-				TOKEN_2022_PROGRAM_ID
+				TOKEN_2022_PROGRAM_ID,
 			);
-			
+
 			// Create accounts
 			const createTx = new Transaction().add(
 				createAssociatedTokenAccountInstruction(
@@ -770,7 +911,7 @@ async function main() {
 					owner.publicKey,
 					feeMint.publicKey,
 					TOKEN_2022_PROGRAM_ID,
-					ASSOCIATED_TOKEN_PROGRAM_ID
+					ASSOCIATED_TOKEN_PROGRAM_ID,
 				),
 				createAssociatedTokenAccountInstruction(
 					payer.publicKey,
@@ -778,11 +919,11 @@ async function main() {
 					recipient.publicKey,
 					feeMint.publicKey,
 					TOKEN_2022_PROGRAM_ID,
-					ASSOCIATED_TOKEN_PROGRAM_ID
-				)
+					ASSOCIATED_TOKEN_PROGRAM_ID,
+				),
 			);
 			await sendAndConfirmTransaction(connection, createTx, [payer]);
-			
+
 			// Mint tokens
 			const mintTx = new Transaction().add(
 				createMintToCheckedInstruction(
@@ -792,15 +933,18 @@ async function main() {
 					BigInt(100_000_000_000), // 100 tokens
 					9,
 					[],
-					TOKEN_2022_PROGRAM_ID
-				)
+					TOKEN_2022_PROGRAM_ID,
+				),
 			);
-			await sendAndConfirmTransaction(connection, mintTx, [payer, mintAuthority]);
-			
+			await sendAndConfirmTransaction(connection, mintTx, [
+				payer,
+				mintAuthority,
+			]);
+
 			// Transfer with fee
 			const transferAmount = BigInt(10_000_000_000); // 10 tokens
 			const expectedFee = BigInt(100_000_000); // 1% of 10 tokens = 0.1 tokens
-			
+
 			const transferTx = new Transaction().add(
 				createTransferCheckedWithFeeInstruction(
 					feeSource,
@@ -811,22 +955,25 @@ async function main() {
 					9,
 					expectedFee,
 					[],
-					TOKEN_2022_PROGRAM_ID
-				)
+					TOKEN_2022_PROGRAM_ID,
+				),
 			);
-			
-			const sig2 = await sendAndConfirmTransaction(connection, transferTx, [payer, owner]);
+
+			const sig2 = await sendAndConfirmTransaction(connection, transferTx, [
+				payer,
+				owner,
+			]);
 			logResult("TransferCheckedWithFee (Token-2022)", sig2, true);
-			
+
 			// 27. WithdrawWithheldTokensFromMint
 			try {
 				const withdrawDestination = await getAssociatedTokenAddress(
 					feeMint.publicKey,
 					withdrawAuthority.publicKey,
 					false,
-					TOKEN_2022_PROGRAM_ID
+					TOKEN_2022_PROGRAM_ID,
 				);
-				
+
 				const createWithdrawTx = new Transaction().add(
 					createAssociatedTokenAccountInstruction(
 						payer.publicKey,
@@ -834,27 +981,35 @@ async function main() {
 						withdrawAuthority.publicKey,
 						feeMint.publicKey,
 						TOKEN_2022_PROGRAM_ID,
-						ASSOCIATED_TOKEN_PROGRAM_ID
-					)
+						ASSOCIATED_TOKEN_PROGRAM_ID,
+					),
 				);
 				await sendAndConfirmTransaction(connection, createWithdrawTx, [payer]);
-				
+
 				const withdrawTx = new Transaction().add(
 					createWithdrawWithheldTokensFromMintInstruction(
 						feeMint.publicKey,
 						withdrawDestination,
 						withdrawAuthority.publicKey,
 						[],
-						TOKEN_2022_PROGRAM_ID
-					)
+						TOKEN_2022_PROGRAM_ID,
+					),
 				);
-				
-				const sig3 = await sendAndConfirmTransaction(connection, withdrawTx, [payer, withdrawAuthority]);
+
+				const sig3 = await sendAndConfirmTransaction(connection, withdrawTx, [
+					payer,
+					withdrawAuthority,
+				]);
 				logResult("WithdrawWithheldTokensFromMint (Token-2022)", sig3, true);
-			} catch (e: any) {
-				logResult("WithdrawWithheldTokensFromMint (Token-2022)", "", false, e.message);
+			} catch (e: unknown) {
+				logResult(
+					"WithdrawWithheldTokensFromMint (Token-2022)",
+					"",
+					false,
+					e.message,
+				);
 			}
-			
+
 			// 28. SetTransferFee
 			try {
 				const setFeeTx = new Transaction().add(
@@ -864,57 +1019,74 @@ async function main() {
 						[],
 						200, // Update to 2% fee
 						BigInt(2000000), // 2 token max fee
-						TOKEN_2022_PROGRAM_ID
-					)
+						TOKEN_2022_PROGRAM_ID,
+					),
 				);
-				
-				const sig4 = await sendAndConfirmTransaction(connection, setFeeTx, [payer, feeAuthority]);
+
+				const sig4 = await sendAndConfirmTransaction(connection, setFeeTx, [
+					payer,
+					feeAuthority,
+				]);
 				logResult("SetTransferFee (Token-2022)", sig4, true);
-			} catch (e: any) {
-				logResult("SetTransferFee (Token-2022)", "", false, e.message);
+			} catch (e: unknown) {
+				logResult(
+					"SetTransferFee (Token-2022)",
+					"",
+					false,
+					e instanceof Error ? e.message : String(e),
+				);
 			}
-			
-		} catch (e: any) {
-			logResult("TransferCheckedWithFee (Token-2022)", "", false, e.message);
+		} catch (e: unknown) {
+			logResult(
+				"TransferCheckedWithFee (Token-2022)",
+				"",
+				false,
+				e instanceof Error ? e.message : String(e),
+			);
 		}
-	} catch (e: any) {
-		logResult("InitializeTransferFeeConfig (Token-2022)", "", false, e.message);
+	} catch (e: unknown) {
+		logResult(
+			"InitializeTransferFeeConfig (Token-2022)",
+			"",
+			false,
+			e instanceof Error ? e.message : String(e),
+		);
 	}
-	
+
 	// ===========================
 	// SUMMARY
 	// ===========================
-	
-	console.log("\n" + "=".repeat(80));
+
+	console.log(`\n${"=".repeat(80)}`);
 	console.log("📊 TEST SUMMARY");
-	console.log("=".repeat(80) + "\n");
-	
-	const successful = results.filter(r => r.success);
-	const failed = results.filter(r => !r.success);
-	
+	console.log(`${"=".repeat(80)}\n`);
+
+	const successful = results.filter((r) => r.success);
+	const failed = results.filter((r) => !r.success);
+
 	console.log(`✅ Successful: ${successful.length}/${results.length}`);
 	console.log(`❌ Failed: ${failed.length}/${results.length}\n`);
-	
+
 	if (successful.length > 0) {
 		console.log("🎉 Successfully Tested Instructions:\n");
-		successful.forEach(r => {
+		successful.forEach((r) => {
 			console.log(`   • ${r.name}`);
 			console.log(`     ${r.explorerUrl}`);
 		});
 		console.log("");
 	}
-	
+
 	if (failed.length > 0) {
 		console.log("❌ Failed Instructions:\n");
-		failed.forEach(r => {
+		failed.forEach((r) => {
 			console.log(`   • ${r.name}: ${r.error}`);
 		});
 		console.log("");
 	}
-	
+
 	console.log("🔍 View all transactions in the explorer:");
 	console.log(`   ${EXPLORER_BASE_URL}\n`);
-	
+
 	console.log("💡 TIP: Search for these addresses in the explorer:");
 	console.log(`   Payer: ${payer.publicKey.toBase58()}`);
 	console.log(`   Owner: ${owner.publicKey.toBase58()}`);
