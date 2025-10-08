@@ -21,7 +21,8 @@
     "build:cli": "bun run --filter @solforge/cli build",
     "build:cli:all": "bun run --filter @solforge/cli build:bin:all",
     "lint": "bunx @biomejs/biome check apps packages src scripts",
-    "legacy:cli": "bun apps/cli/src/cli/main.ts"
+    "legacy:cli": "bun apps/cli/src/cli/main.ts",
+    "test:parsers": "bun run scripts/test-all-parsers.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

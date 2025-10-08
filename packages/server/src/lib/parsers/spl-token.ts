@@ -9,6 +9,27 @@ import {
     decodeTransferInstructionUnchecked,
     decodeInitializeAccount3InstructionUnchecked,
     decodeInitializeImmutableOwnerInstructionUnchecked,
+    // Additional core instruction decoders
+    decodeApproveInstruction,
+    decodeApproveCheckedInstruction,
+    decodeRevokeInstruction,
+    decodeSetAuthorityInstruction,
+    decodeMintToInstruction,
+    decodeBurnInstruction,
+    decodeBurnCheckedInstruction,
+    decodeCloseAccountInstruction,
+    decodeFreezeAccountInstruction,
+    decodeThawAccountInstruction,
+    decodeInitializeAccountInstruction,
+    decodeInitializeAccount2Instruction,
+    decodeInitializeMintInstruction,
+    decodeInitializeMint2Instruction,
+    decodeInitializeMultisigInstruction,
+    decodeSyncNativeInstruction,
+    decodeInitializeMintCloseAuthorityInstruction,
+    decodeInitializePermanentDelegateInstruction,
+    decodeAmountToUiAmountInstruction,
+    decodeUiAmountToAmountInstruction,
 } from "@solana/spl-token";
 import { u8 } from "@solana/buffer-layout";
 import { PublicKey as PK } from "@solana/web3.js";
@@ -28,8 +49,9 @@ export type ParsedInstruction =
 	| { programId: string; accounts: string[]; data: string };
 
 function ok(programId: string, type: string, info: unknown): ParsedInstruction {
-    // Use a single label for both SPL v1 and Token-2022 for compatibility with UIs
-    return { program: "spl-token", programId, parsed: { type, info } };
+    // Use different labels for SPL Token v1 and Token-2022 for better UI compatibility
+    const program = programId === TOKEN_PROGRAM_2022.toBase58() ? "spl-token-2022" : "spl-token";
+    return { program, programId, parsed: { type, info } };
 }
 
 function asBase58(pk: PublicKey | undefined): string | undefined {
@@ -78,6 +100,236 @@ export function tryParseSplToken(
 					uiAmount: Number(uiStr),
 					uiAmountString: uiStr,
 				},
+			});
+		} catch {}
+
+		// MintTo
+		try {
+			const m = decodeMintToInstruction(ix, programPk);
+			const amount = m.data.amount;
+			return ok(programIdStr, "mintTo", {
+				account: asBase58(m.keys.destination.pubkey),
+				mint: asBase58(m.keys.mint.pubkey),
+				mintAuthority: asBase58(m.keys.authority.pubkey),
+				amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+			});
+		} catch {}
+
+		// Approve
+		try {
+			const a = decodeApproveInstruction(ix, programPk);
+			const amount = a.data.amount;
+			return ok(programIdStr, "approve", {
+				source: asBase58(a.keys.account.pubkey),
+				delegate: asBase58(a.keys.delegate.pubkey),
+				owner: asBase58(a.keys.owner.pubkey),
+				amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+			});
+		} catch {}
+
+		// ApproveChecked
+		try {
+			const a = decodeApproveCheckedInstruction(ix, programPk);
+			const amount = a.data.amount;
+			const decimals = a.data.decimals;
+			return ok(programIdStr, "approveChecked", {
+				source: asBase58(a.keys.account.pubkey),
+				mint: asBase58(a.keys.mint.pubkey),
+				delegate: asBase58(a.keys.delegate.pubkey),
+				owner: asBase58(a.keys.owner.pubkey),
+				tokenAmount: {
+					amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+					decimals,
+				},
+			});
+		} catch {}
+
+		// Revoke
+		try {
+			const r = decodeRevokeInstruction(ix, programPk);
+			return ok(programIdStr, "revoke", {
+				source: asBase58(r.keys.account.pubkey),
+				owner: asBase58(r.keys.owner.pubkey),
+			});
+		} catch {}
+
+		// SetAuthority
+		try {
+			const s = decodeSetAuthorityInstruction(ix, programPk);
+			const authorityTypeMap: Record<number, string> = {
+				0: "mintTokens",
+				1: "freezeAccount",
+				2: "accountOwner",
+				3: "closeAccount",
+			};
+			return ok(programIdStr, "setAuthority", {
+				account: asBase58(s.keys.account.pubkey),
+				currentAuthority: asBase58(s.keys.currentAuthority.pubkey),
+				newAuthority: s.data.newAuthority ? s.data.newAuthority.toBase58() : null,
+				authorityType: authorityTypeMap[s.data.authorityType] || String(s.data.authorityType),
+			});
+		} catch {}
+
+		// Burn
+		try {
+			const b = decodeBurnInstruction(ix, programPk);
+			const amount = b.data.amount;
+			return ok(programIdStr, "burn", {
+				account: asBase58(b.keys.account.pubkey),
+				mint: asBase58(b.keys.mint.pubkey),
+				authority: asBase58(b.keys.owner.pubkey),
+				amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+			});
+		} catch {}
+
+		// BurnChecked
+		try {
+			const b = decodeBurnCheckedInstruction(ix, programPk);
+			const amount = b.data.amount;
+			const decimals = b.data.decimals;
+			return ok(programIdStr, "burnChecked", {
+				account: asBase58(b.keys.account.pubkey),
+				mint: asBase58(b.keys.mint.pubkey),
+				authority: asBase58(b.keys.owner.pubkey),
+				tokenAmount: {
+					amount: typeof amount === "bigint" ? amount.toString() : String(amount),
+					decimals,
+				},
+			});
+		} catch {}
+
+		// CloseAccount
+		try {
+			const c = decodeCloseAccountInstruction(ix, programPk);
+			return ok(programIdStr, "closeAccount", {
+				account: asBase58(c.keys.account.pubkey),
+				destination: asBase58(c.keys.destination.pubkey),
+				owner: asBase58(c.keys.authority.pubkey),
+			});
+		} catch {}
+
+		// FreezeAccount
+		try {
+			const f = decodeFreezeAccountInstruction(ix, programPk);
+			return ok(programIdStr, "freezeAccount", {
+				account: asBase58(f.keys.account.pubkey),
+				mint: asBase58(f.keys.mint.pubkey),
+				freezeAuthority: asBase58(f.keys.authority.pubkey),
+			});
+		} catch {}
+
+		// ThawAccount
+		try {
+			const t = decodeThawAccountInstruction(ix, programPk);
+			return ok(programIdStr, "thawAccount", {
+				account: asBase58(t.keys.account.pubkey),
+				mint: asBase58(t.keys.mint.pubkey),
+				freezeAuthority: asBase58(t.keys.authority.pubkey),
+			});
+		} catch {}
+
+		// InitializeAccount
+		try {
+			const i = decodeInitializeAccountInstruction(ix, programPk);
+			return ok(programIdStr, "initializeAccount", {
+				account: asBase58(i.keys.account.pubkey),
+				mint: asBase58(i.keys.mint.pubkey),
+				owner: asBase58(i.keys.owner.pubkey),
+				rentSysvar: asBase58(i.keys.rent.pubkey),
+			});
+		} catch {}
+
+		// InitializeAccount2
+		try {
+			const i = decodeInitializeAccount2Instruction(ix, programPk);
+			return ok(programIdStr, "initializeAccount2", {
+				account: asBase58(i.keys.account.pubkey),
+				mint: asBase58(i.keys.mint.pubkey),
+				owner: i.data.owner.toBase58(),
+				rentSysvar: asBase58(i.keys.rent.pubkey),
+			});
+		} catch {}
+
+		// InitializeMint
+		try {
+			const i = decodeInitializeMintInstruction(ix, programPk);
+			return ok(programIdStr, "initializeMint", {
+				mint: asBase58(i.keys.mint.pubkey),
+				decimals: i.data.decimals,
+				mintAuthority: i.data.mintAuthority.toBase58(),
+				freezeAuthority: i.data.freezeAuthority ? i.data.freezeAuthority.toBase58() : null,
+				rentSysvar: asBase58(i.keys.rent.pubkey),
+			});
+		} catch {}
+
+		// InitializeMint2
+		try {
+			const i = decodeInitializeMint2Instruction(ix, programPk);
+			return ok(programIdStr, "initializeMint2", {
+				mint: asBase58(i.keys.mint.pubkey),
+				decimals: i.data.decimals,
+				mintAuthority: i.data.mintAuthority.toBase58(),
+				freezeAuthority: i.data.freezeAuthority ? i.data.freezeAuthority.toBase58() : null,
+			});
+		} catch {}
+
+		// InitializeMultisig
+		try {
+			const i = decodeInitializeMultisigInstruction(ix, programPk);
+			return ok(programIdStr, "initializeMultisig", {
+				account: asBase58(i.keys.account.pubkey),
+				m: i.data.m,
+				signers: i.keys.signers.map((s) => s.pubkey.toBase58()),
+			});
+		} catch {}
+
+		// Note: InitializeMultisig2 doesn't have a decode function yet
+		// It will be recognized by opcode fallback
+
+		// SyncNative
+		try {
+			const s = decodeSyncNativeInstruction(ix, programPk);
+			return ok(programIdStr, "syncNative", {
+				account: asBase58(s.keys.account.pubkey),
+			});
+		} catch {}
+
+		// InitializeMintCloseAuthority
+		try {
+			const i = decodeInitializeMintCloseAuthorityInstruction(ix, programPk);
+			return ok(programIdStr, "initializeMintCloseAuthority", {
+				mint: asBase58(i.keys.mint.pubkey),
+				closeAuthority: i.data.closeAuthority ? i.data.closeAuthority.toBase58() : null,
+			});
+		} catch {}
+
+		// InitializePermanentDelegate
+		try {
+			const i = decodeInitializePermanentDelegateInstruction(ix, programPk);
+			return ok(programIdStr, "initializePermanentDelegate", {
+				mint: asBase58(i.keys.mint.pubkey),
+				delegate: i.data.delegate.toBase58(),
+			});
+		} catch {}
+
+		// Note: Reallocate and InitializeNonTransferableMint don't have decode functions
+		// in @solana/spl-token yet. They will be recognized by opcode fallback below.
+
+		// AmountToUiAmount
+		try {
+			const a = decodeAmountToUiAmountInstruction(ix, programPk);
+			return ok(programIdStr, "amountToUiAmount", {
+				mint: asBase58(a.keys.mint.pubkey),
+				amount: typeof a.data.amount === "bigint" ? a.data.amount.toString() : String(a.data.amount),
+			});
+		} catch {}
+
+		// UiAmountToAmount
+		try {
+			const u = decodeUiAmountToAmountInstruction(ix, programPk);
+			return ok(programIdStr, "uiAmountToAmount", {
+				mint: asBase58(u.keys.mint.pubkey),
+				uiAmount: u.data.amount,
 			});
 		} catch {}
 
