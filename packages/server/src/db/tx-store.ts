@@ -245,6 +245,15 @@ export class TxStore {
 		const r = rows[0];
 		return r?.bt != null ? Number(r.bt) : null;
 	}
+
+	async getRecentTransactions(limit = 50) {
+		const rows = await db
+			.select()
+			.from(transactions)
+			.orderBy(desc(transactions.slot))
+			.limit(Math.min(Math.max(limit, 1), 100));
+		return rows;
+	}
 }
 
 function safeParse<T = unknown>(s: string): T | null {

@@ -1,0 +1,14 @@
+{
+  "html": "/index.html",
+  "assets": {
+    "js": [
+      "/assets/index-BpCzziyn.js"
+    ],
+    "css": [
+      "/assets/index-BGtrIVHy.css"
+    ],
+    "other": [
+      "/vite.svg"
+    ]
+  }
+}

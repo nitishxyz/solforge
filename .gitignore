@@ -47,3 +47,5 @@ test-program
 .sst
 reference
 .agi
+web-dist
+web-assets*

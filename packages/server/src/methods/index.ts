@@ -83,6 +83,7 @@ import {
 	solforgeGetStatus,
 	solforgeListPrograms,
 	solforgeListTokensDetailed,
+	solforgeListTransactions,
 } from "./solforge";
 import {
 	getHealth,
@@ -181,6 +182,7 @@ export const rpcMethods: Record<string, RpcMethodHandler> = {
 	solforgeGetStatus,
 	solforgeListPrograms,
 	solforgeListTokensDetailed,
+	solforgeListTransactions,
 };
 
 // Admin methods (gated by SOLFORGE_ADMIN=1)

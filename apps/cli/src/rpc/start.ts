@@ -2,7 +2,8 @@ import {
 	createLiteSVMRpcServer,
 	createLiteSVMWebSocketServer,
 } from "@solforge/server";
-import { startGuiServer } from "../../../../src/gui/server.js";
+import { startApiServer } from "@solforge/api";
+import { assetPaths, getEmbeddedAsset } from "../web-assets.js";
 
 export interface RpcStartOptions {
 	rpcPort?: number;
@@ -28,8 +29,17 @@ export function startRpcServers(opts: RpcStartOptions = {}) {
 
 	const { httpServer, rpcServer } = createLiteSVMRpcServer(rpcPort, host);
 	const { wsServer } = createLiteSVMWebSocketServer(rpcServer, wsPort, host);
-	const guiServer = guiEnabled
-		? startGuiServer({ port: guiPort, host, rpcPort, rpcServer })
+	const apiServer = guiEnabled
+		? startApiServer({
+				port: guiPort,
+				host,
+				rpcPort,
+				rpcServer,
+				webAssets: {
+					getAsset: getEmbeddedAsset,
+					assetPaths,
+				},
+			})
 		: null;
 
 	return {
@@ -38,7 +48,7 @@ export function startRpcServers(opts: RpcStartOptions = {}) {
 		wsServer,
 		rpcPort,
 		wsPort,
-		guiPort: guiServer ? guiServer.port : null,
-		guiServer,
+		guiPort: apiServer ? apiServer.port : null,
+		apiServer,
 	};
 }

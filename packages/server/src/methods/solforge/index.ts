@@ -156,3 +156,34 @@ export const solforgeListTokensDetailed: RpcMethodHandler = async (
 		);
 	}
 };
+
+export const solforgeListTransactions: RpcMethodHandler = async (
+	id,
+	params,
+	context,
+) => {
+	try {
+		const limit = params?.[0] ? Number(params[0]) : 50;
+		const store = context.store;
+		if (!store)
+			throw new Error("Transaction store not available");
+
+		const rows = await store.getRecentTransactions(limit);
+		const transactions = rows.map((row) => ({
+			signature: row.signature,
+			slot: Number(row.slot),
+			blockTime: row.blockTime ? Number(row.blockTime) : null,
+			err: row.errJson ? JSON.parse(row.errJson) : null,
+		}));
+
+		return context.createSuccessResponse(id, transactions);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		return context.createErrorResponse(
+			id,
+			-32603,
+			"List transactions failed",
+			message,
+		);
+	}
+};

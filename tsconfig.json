@@ -13,7 +13,7 @@
 	"references": [
 		{ "path": "./apps/cli" },
 		{ "path": "./apps/web" },
-		{ "path": "./packages/install" }
+		{ "path": "./packages/install" },
+		{ "path": "./packages/server" }
 	]
 }
-		{ "path": "./packages/server" },
