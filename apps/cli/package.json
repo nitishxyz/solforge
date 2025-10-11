@@ -24,8 +24,8 @@
 		"lint": "biome check"
 	},
 	"dependencies": {
-		"@agi-cli/server": "^0.1.73",
-		"@agi-cli/web-ui": "^0.1.73",
+		"@agi-cli/server": "^0.1.76",
+		"@agi-cli/web-ui": "^0.1.76",
 		"@clack/prompts": "^0.11.0",
 		"@solana-program/compute-budget": "^0.9.0",
 		"@solana-program/memo": "^0.8.0",
