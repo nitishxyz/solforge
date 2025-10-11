@@ -2,6 +2,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { configQuery } from "../api/queries";
+import { AgiFloatingButton } from "./AgiFloatingButton";
+import { AgiSidebar } from "./AgiSidebar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -153,6 +155,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				{/* Page content */}
 				<main className="flex-1 overflow-auto">{children}</main>
 			</div>
+
+			{/* AGI Assistant Components */}
+			<AgiFloatingButton />
+			<AgiSidebar />
 		</div>
 	);
 }

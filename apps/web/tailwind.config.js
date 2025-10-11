@@ -1,7 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
 	darkMode: "class",
-	content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+	content: [
+		"./index.html", 
+		"./src/**/*.{js,ts,jsx,tsx}",
+		// Include @agi-cli/web-sdk package for Tailwind styles
+		"./node_modules/@agi-cli/web-sdk/dist/**/*.{js,jsx}",
+	],
 	theme: {
 		extend: {
 			colors: {

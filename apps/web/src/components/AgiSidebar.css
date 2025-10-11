@@ -1,0 +1,30 @@
+/* Override web-sdk absolute positioning to work within sidebar */
+.agi-sidebar-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Ensure web-sdk components respect the sidebar boundaries */
+.agi-sidebar-content [class*="absolute"],
+.agi-sidebar-content [class*="fixed"] {
+  position: absolute !important;
+}
+
+/* Message thread should fill available space */
+.agi-message-thread-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat input wrapper */
+.agi-chat-input-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  border-top: 1px solid hsl(var(--border));
+}
