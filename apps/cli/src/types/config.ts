@@ -37,7 +37,10 @@ export const AgiConfigSchema = z.object({
 	enabled: z.boolean().default(false),
 	port: z.number().int().min(1000).max(65535).default(3456),
 	host: z.string().default("127.0.0.1"),
-	provider: z.enum(["openrouter", "anthropic", "openai"]).optional().default("openrouter"),
+	provider: z
+		.enum(["openrouter", "anthropic", "openai"])
+		.optional()
+		.default("openrouter"),
 	model: z.string().optional().default("anthropic/claude-3.5-sonnet"),
 	apiKey: z.string().optional(), // API key for the provider (can use env var)
 	agent: z.enum(["general", "build"]).optional().default("general"),

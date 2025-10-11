@@ -10,7 +10,7 @@ import "./index.css";
 // Configure AGI API client
 import { client } from "@agi-cli/api";
 client.setConfig({
-	baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:3456",
+	baseURL: "http://127.0.0.1:3456",
 });
 
 const router = createRouter({

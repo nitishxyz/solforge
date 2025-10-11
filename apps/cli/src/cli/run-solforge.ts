@@ -86,12 +86,19 @@ async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 		await bootstrapEnvironment(config, host, started.rpcPort);
 
 		// Start AGI server if enabled
-		let agiStarted: { port: number; url: string; provider?: string; model?: string } | null = null;
+		let agiStarted: {
+			port: number;
+			url: string;
+			provider?: string;
+			model?: string;
+		} | null = null;
 		if (config.agi?.enabled) {
 			agiStarted = await startAgiServer(config, host, flags.debug === true);
 		}
 
-		const agiPart = agiStarted ? ` | AGI http://${host}:${agiStarted.port}/ui` : "";
+		const agiPart = agiStarted
+			? ` | AGI http://${host}:${agiStarted.port}/ui`
+			: "";
 		p.log.success(
 			`Solforge ready ➜ HTTP http://${host}:${started.rpcPort} | WS ws://${host}:${started.wsPort}${
 				started.guiPort ? ` | GUI http://${host}:${started.guiPort}` : ""
@@ -108,7 +115,12 @@ async function startAgiServer(
 	config: SolforgeConfig,
 	host: string,
 	debug: boolean = false,
-): Promise<{ port: number; url: string; provider?: string; model?: string } | null> {
+): Promise<{
+	port: number;
+	url: string;
+	provider?: string;
+	model?: string;
+} | null> {
 	if (!config.agi?.enabled) return null;
 
 	const agiConfig = config.agi;
@@ -119,8 +131,9 @@ async function startAgiServer(
 
 	// Only check for API key if provider is explicitly specified
 	if (provider) {
-		const apiKey = agiConfig.apiKey || process.env[`${provider.toUpperCase()}_API_KEY`];
-		
+		const apiKey =
+			agiConfig.apiKey || process.env[`${provider.toUpperCase()}_API_KEY`];
+
 		if (!apiKey) {
 			console.log(
 				chalk.yellow(
@@ -132,7 +145,7 @@ async function startAgiServer(
 	}
 
 	try {
-		const currentDir = process.cwd();
+		const _currentDir = process.cwd();
 		const cliDir = join(__dirname, "..", "..");
 		const agiServerScript = join(cliDir, "src", "agi-server-entry.ts");
 
@@ -140,9 +153,11 @@ async function startAgiServer(
 		const hostFlag = host !== "127.0.0.1" ? ` --host "${host}"` : "";
 		const providerFlag = provider ? ` --provider "${provider}"` : "";
 		const modelFlag = model ? ` --model "${model}"` : "";
-		const apiKeyFlag = agiConfig.apiKey ? ` --api-key "${agiConfig.apiKey}"` : "";
+		const apiKeyFlag = agiConfig.apiKey
+			? ` --api-key "${agiConfig.apiKey}"`
+			: "";
 		const agentFlag = agent !== "general" ? ` --agent "${agent}"` : "";
-		
+
 		const agiServerCommand = `nohup bun run "${agiServerScript}" --port ${port}${providerFlag}${modelFlag}${agentFlag}${hostFlag}${apiKeyFlag} > /dev/null 2>&1 &`;
 
 		const startResult = await runCommand("sh", ["-c", agiServerCommand], {

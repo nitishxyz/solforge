@@ -3,6 +3,17 @@ import { BUILTIN_AGENTS, createEmbeddedApp } from "@agi-cli/server";
 import { serveWebUI } from "@agi-cli/web-ui";
 import chalk from "chalk";
 
+type AppConfig = {
+	agents: {
+		general: typeof BUILTIN_AGENTS.general;
+		build: typeof BUILTIN_AGENTS.build;
+	};
+	provider?: "openrouter" | "anthropic" | "openai";
+	model?: string;
+	apiKey?: string;
+	agent?: "general" | "build";
+};
+
 async function main() {
 	try {
 		// Parse command line arguments
@@ -22,27 +33,50 @@ async function main() {
 		}
 
 		const port = parseInt(String(args[portIndex + 1]), 10);
-		const host = hostIndex !== -1 && args[hostIndex + 1] ? String(args[hostIndex + 1]) : "127.0.0.1";
-		const provider = providerIndex !== -1 && args[providerIndex + 1] ? String(args[providerIndex + 1]) : undefined;
-		const model = modelIndex !== -1 && args[modelIndex + 1] ? String(args[modelIndex + 1]) : undefined;
-		const apiKey = apiKeyIndex !== -1 && args[apiKeyIndex + 1] ? String(args[apiKeyIndex + 1]) : undefined;
-		const agent = agentIndex !== -1 && args[agentIndex + 1] ? String(args[agentIndex + 1]) : "general";
+		const host =
+			hostIndex !== -1 && args[hostIndex + 1]
+				? String(args[hostIndex + 1])
+				: "127.0.0.1";
+		const provider =
+			providerIndex !== -1 && args[providerIndex + 1]
+				? String(args[providerIndex + 1])
+				: undefined;
+		const model =
+			modelIndex !== -1 && args[modelIndex + 1]
+				? String(args[modelIndex + 1])
+				: undefined;
+		const apiKey =
+			apiKeyIndex !== -1 && args[apiKeyIndex + 1]
+				? String(args[apiKeyIndex + 1])
+				: undefined;
+		const agent =
+			agentIndex !== -1 && args[agentIndex + 1]
+				? String(args[agentIndex + 1])
+				: "general";
 
 		// Get API key from environment if not provided
 		let finalApiKey = apiKey;
 		if (!finalApiKey && provider) {
 			const envVarName = `${provider.toUpperCase()}_API_KEY`;
 			finalApiKey = process.env[envVarName];
-			
+
 			if (!finalApiKey) {
-				console.error(chalk.red(`❌ API key not provided and ${envVarName} environment variable not set`));
-				console.log(chalk.yellow(`💡 Set your API key with: export ${envVarName}=your-api-key`));
+				console.error(
+					chalk.red(
+						`❌ API key not provided and ${envVarName} environment variable not set`,
+					),
+				);
+				console.log(
+					chalk.yellow(
+						`💡 Set your API key with: export ${envVarName}=your-api-key`,
+					),
+				);
 				process.exit(1);
 			}
 		}
 
 		// Build config object, only including fields that are provided
-		const appConfig: any = {
+		const appConfig: AppConfig = {
 			agents: {
 				general: { ...BUILTIN_AGENTS.general },
 				build: { ...BUILTIN_AGENTS.build },
@@ -117,12 +151,16 @@ async function main() {
 
 		// Keep the process alive
 		process.on("SIGTERM", () => {
-			console.log(chalk.yellow("🤖 AGI Server received SIGTERM, shutting down..."));
+			console.log(
+				chalk.yellow("🤖 AGI Server received SIGTERM, shutting down..."),
+			);
 			process.exit(0);
 		});
 
 		process.on("SIGINT", () => {
-			console.log(chalk.yellow("🤖 AGI Server received SIGINT, shutting down..."));
+			console.log(
+				chalk.yellow("🤖 AGI Server received SIGINT, shutting down..."),
+			);
 			process.exit(0);
 		});
 

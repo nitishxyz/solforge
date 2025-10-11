@@ -124,7 +124,6 @@ export async function initCommand(): Promise<void> {
 							return "claude-3-5-sonnet-20241022";
 						case "openai":
 							return "gpt-4";
-						case "openrouter":
 						default:
 							return "anthropic/claude-3.5-sonnet";
 					}
@@ -189,7 +188,7 @@ export async function initCommand(): Promise<void> {
 		);
 		console.log(chalk.gray("2. Run `solforge start` to launch your localnet"));
 		console.log();
-		
+
 		if (config.agi.enabled) {
 			console.log(chalk.blue("🤖 AGI Server Configuration:"));
 			console.log(chalk.gray(`   - Port: ${config.agi.port}`));
@@ -204,7 +203,7 @@ export async function initCommand(): Promise<void> {
 			}
 			console.log();
 		}
-		
+
 		console.log(
 			chalk.yellow(
 				"💡 Tip: Check configs/example.sf.config.json for more examples",
