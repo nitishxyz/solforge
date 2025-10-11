@@ -15,6 +15,7 @@
 - **🎨 Web GUI**: Interactive dashboard for airdrops, minting, and monitoring
 - **📦 Program Cloning**: Import programs and accounts from mainnet
 - **🔄 WebSocket Support**: Real-time transaction subscriptions (in the works)
+- **🤖 AI Assistant**: Integrated AGI coding assistant for Solana development (optional)
  
 
 ## 🚀 Quick Install
@@ -343,6 +344,16 @@ solforge/
 ├── drizzle/           # SQLite migrations
 └── docs/              # Architecture and planning docs
 ```
+
+## 📖 Documentation
+
+- **[AGI Integration Guide](docs/AGI_INTEGRATION.md)** - AI coding assistant setup and usage
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Complete config reference
+- **[Architecture](docs/ARCHITECTURE_DIAGRAM.md)** - System design and architecture
+- **[API Reference](docs/API.md)** - REST API endpoints
+- **[Monorepo Guide](docs/MONOREPO_QUICK_START.md)** - Development setup
+
+> 💡 See the [docs/](docs/) directory for more documentation.
 
 ## 🔍 Troubleshooting
 

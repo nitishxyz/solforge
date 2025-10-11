@@ -16,6 +16,9 @@ export interface RunningValidator {
 	apiServerPort?: number;
 	apiServerUrl?: string;
 	apiServerPid?: number;
+	agiServerPort?: number;
+	agiServerUrl?: string;
+	agiServerPid?: number;
 }
 
 export class ProcessRegistry {

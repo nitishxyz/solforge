@@ -32,6 +32,17 @@ export const ProgramConfigSchema = z.object({
 	dependencies: z.array(z.string()).default([]), // Other program IDs this program depends on
 });
 
+// AGI configuration schema
+export const AgiConfigSchema = z.object({
+	enabled: z.boolean().default(false),
+	port: z.number().int().min(1000).max(65535).default(3456),
+	host: z.string().default("127.0.0.1"),
+	provider: z.enum(["openrouter", "anthropic", "openai"]).optional().default("openrouter"),
+	model: z.string().optional().default("anthropic/claude-3.5-sonnet"),
+	apiKey: z.string().optional(), // API key for the provider (can use env var)
+	agent: z.enum(["general", "build"]).optional().default("general"),
+});
+
 // Localnet configuration schema
 export const LocalnetConfigSchema = z.object({
 	airdropAmount: z.number().positive().default(100),
@@ -57,11 +68,13 @@ export const ConfigSchema = z.object({
 	tokens: z.array(TokenConfigSchema).default([]),
 	programs: z.array(ProgramConfigSchema).default([]),
 	localnet: LocalnetConfigSchema.default({}),
+	agi: AgiConfigSchema.default({}),
 });
 
 // Inferred TypeScript types
 export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type ProgramConfig = z.infer<typeof ProgramConfigSchema>;
+export type AgiConfig = z.infer<typeof AgiConfigSchema>;
 export type LocalnetConfig = z.infer<typeof LocalnetConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
