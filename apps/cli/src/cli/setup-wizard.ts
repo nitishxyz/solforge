@@ -88,6 +88,51 @@ export async function runSetupWizard(existing: SolforgeConfig = defaultConfig) {
 		);
 	}
 
+	const agiEnabledResp = await p.confirm({
+		message: "Enable AGI integration?",
+		initialValue: base.agi?.enabled ?? false,
+	});
+	if (p.isCancel(agiEnabledResp)) cancelSetup();
+	const agiEnabled = agiEnabledResp !== false;
+
+	let agiPort = base.agi?.port ?? 3456;
+	let agiProvider = base.agi?.provider ?? "openrouter";
+	const agiModel = base.agi?.model ?? "anthropic/claude-4.5-sonnet";
+	let agiApiKey = base.agi?.apiKey;
+
+	if (agiEnabled) {
+		agiPort = Number(
+			ensure(
+				await p.text({
+					message: "AGI port",
+					initialValue: String(agiPort),
+					validate: validatePort,
+				}),
+			),
+		);
+
+		const providerResp = ensure(
+			await p.select({
+				message: "AGI provider",
+				options: [
+					{ value: "openrouter", label: "OpenRouter" },
+					{ value: "anthropic", label: "Anthropic" },
+					{ value: "openai", label: "OpenAI" },
+				],
+				initialValue: agiProvider,
+			}),
+		);
+		agiProvider = providerResp as "openrouter" | "anthropic" | "openai";
+
+		const apiKeyResp = await p.text({
+			message: `API key (leave blank to use ${agiProvider.toUpperCase()}_API_KEY env var)`,
+			initialValue: agiApiKey ?? "",
+		});
+		if (p.isCancel(apiKeyResp)) cancelSetup();
+		const trimmedKey = typeof apiKeyResp === "string" ? apiKeyResp.trim() : "";
+		if (trimmedKey) agiApiKey = trimmedKey;
+	}
+
 	const endpoint = ensure(
 		await p.text({
 			message: "Source RPC endpoint for cloning",
@@ -158,6 +203,15 @@ export async function runSetupWizard(existing: SolforgeConfig = defaultConfig) {
 	base.server.rpcPort = rpcPort;
 	base.server.wsPort = wsPort;
 	base.gui = { enabled: guiEnabled, port: guiPort ?? defaultConfig.gui.port };
+	base.agi = {
+		enabled: agiEnabled,
+		port: agiPort,
+		host: "127.0.0.1",
+		provider: agiProvider,
+		model: agiModel,
+		apiKey: agiApiKey,
+		agent: "general",
+	};
 	base.clone.endpoint = endpoint;
 	base.clone.tokens = tokens;
 	base.clone.programs = programs;

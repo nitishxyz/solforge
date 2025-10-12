@@ -19,6 +19,15 @@ export interface SolforgeConfig {
 		}>;
 	};
 	gui: { enabled: boolean; port: number };
+	agi?: {
+		enabled: boolean;
+		port: number;
+		host: string;
+		provider: "openrouter" | "anthropic" | "openai";
+		model: string;
+		apiKey?: string;
+		agent: "general" | "build";
+	};
 	bootstrap: {
 		airdrops: Array<{ address: string; amountSol: number }>;
 	};
@@ -38,6 +47,14 @@ export const defaultConfig: SolforgeConfig = {
 		programAccounts: [],
 	},
 	gui: { enabled: true, port: 42069 },
+	agi: {
+		enabled: false,
+		port: 3456,
+		host: "127.0.0.1",
+		provider: "openrouter",
+		model: "anthropic/claude-3.5-sonnet",
+		agent: "general",
+	},
 	bootstrap: { airdrops: [] },
 };
 
