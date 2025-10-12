@@ -121,7 +121,7 @@ function formatAssetArray(files: string[]): string {
 
 	return `[
 ${items}
-\t]`;
+	]`;
 }
 
 const importsFile = `/**

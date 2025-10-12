@@ -49,4 +49,3 @@ reference
 .agi
 web-dist
 web-assets*
-**/routeTree.gen.ts
