@@ -2,7 +2,6 @@ import Database from "bun:sqlite";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import { bundledMigrations } from "../migrations-bundled";
 import * as schema from "./schema";
 
@@ -51,33 +50,25 @@ export type { SQLiteDatabase } from "drizzle-orm/sqlite-core";
 export * as dbSchema from "./schema";
 
 // Run Drizzle migrations on app start (Bun + SQLite)
-const migrationsFolder = process.env.DRIZZLE_MIGRATIONS || "drizzle";
+// Always use bundled migrations to avoid picking up external drizzle folders
 try {
-	// Prefer folder-based migrations when available (dev/uncompiled)
-	if (existsSync(migrationsFolder)) {
-		await migrate(db, { migrationsFolder });
-		console.log("✅ Database migrations completed (folder)");
-	} else {
-		// Bundled mode: apply embedded SQL files if schema isn't present
-		const haveTx = sqlite
-			.query(
-				"SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'",
-			)
-			.get() as { name?: string } | undefined;
-		if (!haveTx?.name) {
-			for (const m of bundledMigrations) {
-				try {
-					const sql = await Bun.file(m.path).text();
-					sqlite.exec(sql);
-					// console.log(`✅ Applied bundled migration: ${m.name}`);
-				} catch (e) {
-					console.error(`❌ Failed bundled migration: ${m.name}`, e);
-					throw e;
-				}
+	const haveTx = sqlite
+		.query(
+			"SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'",
+		)
+		.get() as { name?: string } | undefined;
+	if (!haveTx?.name) {
+		for (const m of bundledMigrations) {
+			try {
+				const sql = await Bun.file(m.path).text();
+				sqlite.exec(sql);
+			} catch (e) {
+				console.error(`❌ Failed bundled migration: ${m.name}`, e);
+				throw e;
 			}
 		}
-		console.log("✅ Database migrations completed (bundled)");
 	}
+	console.log("✅ Database migrations completed (bundled)");
 } catch (error) {
 	console.error("❌ Database migration failed:", error);
 }
