@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
-import { join } from "node:path";
 import chalk from "chalk";
+import { BUILTIN_AGENTS, createEmbeddedApp } from "@agi-cli/server";
+import { serveWebUI } from "@agi-cli/web-ui";
 import {
 	defaultConfig,
 	readConfig,
@@ -8,7 +9,6 @@ import {
 	writeConfig,
 } from "../config";
 import { startRpcServers } from "../rpc/start";
-import { runCommand } from "../utils/shell.js";
 import { bootstrapEnvironment } from "./bootstrap";
 import { cancelSetup } from "./setup-utils";
 import { runSetupWizard } from "./setup-wizard";
@@ -27,7 +27,6 @@ async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 	const exists = await Bun.file(CONFIG_PATH).exists();
 	if (!exists) {
 		if (ci) {
-			// Non-interactive: write defaults and continue
 			await saveConfig(defaultConfig);
 			return defaultConfig;
 		}
@@ -39,7 +38,7 @@ async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 	}
 
 	const current = await readConfig(CONFIG_PATH);
-	if (ci) return current; // Non-interactive: always reuse existing config
+	if (ci) return current;
 	const reuse = await p.confirm({
 		message: `Use existing config at ${CONFIG_PATH}?`,
 		initialValue: true,
@@ -91,7 +90,6 @@ async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 		await waitForRpc(`http://${host}:${started.rpcPort}`);
 		await bootstrapEnvironment(config, host, started.rpcPort);
 
-		// Start AGI server if enabled
 		let agiStarted: {
 			port: number;
 			url: string;
@@ -120,7 +118,7 @@ async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 async function startAgiServer(
 	config: SolforgeConfig,
 	host: string,
-	debug: boolean = false,
+	_debug: boolean = false,
 ): Promise<{
 	port: number;
 	url: string;
@@ -131,11 +129,10 @@ async function startAgiServer(
 
 	const agiConfig = config.agi;
 	const port = agiConfig.port || 3456;
-	const provider = agiConfig.provider; // Don't provide default - let AGI use its own
-	const model = agiConfig.model; // Don't provide default - let AGI use its own
+	const provider = agiConfig.provider;
+	const model = agiConfig.model;
 	const agent = agiConfig.agent || "general";
 
-	// Only check for API key if provider is explicitly specified
 	if (provider) {
 		const apiKey =
 			agiConfig.apiKey || process.env[`${provider.toUpperCase()}_API_KEY`];
@@ -151,48 +148,86 @@ async function startAgiServer(
 	}
 
 	try {
-		const _currentDir = process.cwd();
-		const cliDir = join(__dirname, "..", "..");
-		const agiServerScript = join(cliDir, "src", "agi-server-entry.ts");
+		type AppConfig = {
+			agents: {
+				general: typeof BUILTIN_AGENTS.general;
+				build: typeof BUILTIN_AGENTS.build;
+			};
+			provider?: "openrouter" | "anthropic" | "openai";
+			model?: string;
+			apiKey?: string;
+			agent?: "general" | "build";
+		};
 
-		// Build command with only the fields that are specified
-		const hostFlag = host !== "127.0.0.1" ? ` --host "${host}"` : "";
-		const providerFlag = provider ? ` --provider "${provider}"` : "";
-		const modelFlag = model ? ` --model "${model}"` : "";
-		const apiKeyFlag = agiConfig.apiKey
-			? ` --api-key "${agiConfig.apiKey}"`
-			: "";
-		const agentFlag = agent !== "general" ? ` --agent "${agent}"` : "";
+		const appConfig: AppConfig = {
+			agents: {
+				general: { ...BUILTIN_AGENTS.general },
+				build: { ...BUILTIN_AGENTS.build },
+			},
+		};
 
-		const agiServerCommand = `nohup bun run "${agiServerScript}" --port ${port}${providerFlag}${modelFlag}${agentFlag}${hostFlag}${apiKeyFlag} > /dev/null 2>&1 &`;
+		if (provider) {
+			appConfig.provider = provider as "openrouter" | "anthropic" | "openai";
+		}
 
-		const startResult = await runCommand("sh", ["-c", agiServerCommand], {
-			silent: !debug,
-			debug: debug,
+		if (model) {
+			appConfig.model = model;
+		}
+
+		if (agiConfig.apiKey) {
+			appConfig.apiKey = agiConfig.apiKey;
+		}
+
+		if (agent && agent !== "general") {
+			appConfig.agent = agent as "general" | "build";
+		}
+
+		const app = createEmbeddedApp(appConfig);
+		const handleWebUI = serveWebUI({ prefix: "/ui" });
+
+		const server = Bun.serve({
+			port,
+			hostname: host,
+			async fetch(req) {
+				const url = new URL(req.url);
+
+				const webUIResponse = await handleWebUI(req);
+				if (webUIResponse) return webUIResponse;
+
+				if (url.pathname === "/api/health") {
+					return Response.json({
+						status: "healthy",
+						uptime: process.uptime(),
+						...(provider && { provider }),
+						...(model && { model }),
+						agent,
+					});
+				}
+
+				return app.fetch(req);
+			},
 		});
 
-		if (startResult.success) {
-			// Wait a moment for the AGI server to start
-			await Bun.sleep(2000);
+		await Bun.sleep(500);
 
-			// Test if the AGI server is responding
-			try {
-				const response = await fetch(`http://${host}:${port}/api/health`);
-				if (response.ok) {
-					console.log(chalk.green(`🤖 AGI Server started on port ${port}`));
-					if (provider) console.log(chalk.gray(`   Provider: ${provider}`));
-					if (model) console.log(chalk.gray(`   Model: ${model}`));
-					return { port, url: `http://${host}:${port}`, provider, model };
-				}
-			} catch (error) {
-				console.log(
-					chalk.yellow(
-						`⚠️  AGI server health check failed: ${
-							error instanceof Error ? error.message : String(error)
-						}`,
-					),
-				);
+		try {
+			const response = await fetch(`http://${host}:${port}/api/health`);
+			if (response.ok) {
+				console.log(chalk.green(`🤖 AGI Server started on port ${port}`));
+				if (provider) console.log(chalk.gray(`   Provider: ${provider}`));
+				if (model) console.log(chalk.gray(`   Model: ${model}`));
+				console.log(chalk.gray(`   Agent: ${agent}`));
+				console.log(chalk.gray(`   Web UI: http://${host}:${server.port}/ui`));
+				return { port, url: `http://${host}:${port}`, provider, model };
 			}
+		} catch (error) {
+			console.log(
+				chalk.yellow(
+					`⚠️  AGI server health check failed: ${
+						error instanceof Error ? error.message : String(error)
+					}`,
+				),
+			);
 		}
 	} catch (error) {
 		console.log(
