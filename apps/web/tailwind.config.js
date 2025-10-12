@@ -2,7 +2,7 @@
 export default {
 	darkMode: "class",
 	content: [
-		"./index.html", 
+		"./index.html",
 		"./src/**/*.{js,ts,jsx,tsx}",
 		// Include @agi-cli/web-sdk package for Tailwind styles
 		"./node_modules/@agi-cli/web-sdk/dist/**/*.{js,jsx}",

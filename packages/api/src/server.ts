@@ -356,10 +356,10 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 
 						return new Response(html, {
 							headers: {
-							"Content-Type": "text/html; charset=utf-8",
-							"Cache-Control": "no-cache",
-							...CORS,
-						},
+								"Content-Type": "text/html; charset=utf-8",
+								"Cache-Control": "no-cache",
+								...CORS,
+							},
 						});
 					}
 
@@ -380,10 +380,10 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 
 						return new Response(html, {
 							headers: {
-							"Content-Type": "text/html; charset=utf-8",
-							"Cache-Control": "no-cache",
-							...CORS,
-						},
+								"Content-Type": "text/html; charset=utf-8",
+								"Cache-Control": "no-cache",
+								...CORS,
+							},
 						});
 					}
 				}
