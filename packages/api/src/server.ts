@@ -122,6 +122,50 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 	const rpcUrl = `http://${host}:${rpcPort}`;
 	const webAssets = opts.webAssets;
 
+	const resolveAgiServerUrl = (requestUrl: URL) => {
+		const envUrl = process.env.SOLFORGE_AGI_URL;
+		if (envUrl) return envUrl;
+		const rawHost = process.env.SOLFORGE_AGI_HOST?.trim();
+		const rawPort = process.env.SOLFORGE_AGI_PORT?.trim();
+		const fallbackHost = requestUrl.hostname || host;
+		const baseHost = rawHost && rawHost.length > 0 ? rawHost : fallbackHost;
+
+		try {
+			if (baseHost.includes("://")) {
+				const full = new URL(baseHost);
+				if (rawPort && rawPort.length > 0) {
+					full.port = rawPort;
+				} else if (!full.port) {
+					full.port = "3456";
+				}
+				if (!full.protocol) full.protocol = "http:";
+				return full.toString().replace(/\/$/, "");
+			}
+
+			const colonCount = (baseHost.match(/:/g) ?? []).length;
+			const needsIpv6Wrapping =
+				colonCount > 1 && !baseHost.startsWith("[") && !baseHost.endsWith("]");
+			const hostForUrl = needsIpv6Wrapping ? `[${baseHost}]` : baseHost;
+			const candidate = new URL(`http://${hostForUrl}`);
+			if (rawPort && rawPort.length > 0) {
+				candidate.port = rawPort;
+			} else if (!candidate.port) {
+				candidate.port = "3456";
+			}
+			return candidate.toString().replace(/\/$/, "");
+		} catch {
+			const safeHost = baseHost.replace(/\/$/, "");
+			const portPart = rawPort && rawPort.length > 0 ? rawPort : "3456";
+			return `http://${safeHost}:${portPart}`;
+		}
+	};
+
+	const injectAgiServerScript = (html: string, requestUrl: URL) => {
+		const agiServerUrl = resolveAgiServerUrl(requestUrl);
+		const scriptTag = `<script>window.AGI_SERVER_URL = ${JSON.stringify(agiServerUrl)};</script>`;
+		return html.replace("</head>", `${scriptTag}</head>`);
+	};
+
 	const callRpc = async (method: string, params: unknown[] = []) => {
 		if (!rpcServer) throw new HttpError(503, "RPC server not available");
 		const response: JsonRpcResponse = await rpcServer.handleRequest({
@@ -308,15 +352,14 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 				if (asset) {
 					if (assetPath.endsWith(".html")) {
 						let html = decoder.decode(asset);
-						const scriptTag = `<script>window.AGI_SERVER_URL = 'http://${host}:${port}';</script>`;
-						html = html.replace("</head>", `${scriptTag}</head>`);
+						html = injectAgiServerScript(html, url);
 
 						return new Response(html, {
 							headers: {
-								"Content-Type": "text/html; charset=utf-8",
-								"Cache-Control": "no-cache",
-								...CORS,
-							},
+							"Content-Type": "text/html; charset=utf-8",
+							"Cache-Control": "no-cache",
+							...CORS,
+						},
 						});
 					}
 
@@ -329,20 +372,18 @@ export function startApiServer(opts: ApiServerOptions = {}) {
 					});
 				}
 
-				// If no specific asset, try index.html for SPA routing
 				if (!pathname.startsWith("/api")) {
 					const indexAsset = webAssets.getAsset("/index.html");
 					if (indexAsset) {
 						let html = decoder.decode(indexAsset);
-						const scriptTag = `<script>window.AGI_SERVER_URL = 'http://${host}:${port}';</script>`;
-						html = html.replace("</head>", `${scriptTag}</head>`);
+						html = injectAgiServerScript(html, url);
 
 						return new Response(html, {
 							headers: {
-								"Content-Type": "text/html; charset=utf-8",
-								"Cache-Control": "no-cache",
-								...CORS,
-							},
+							"Content-Type": "text/html; charset=utf-8",
+							"Cache-Control": "no-cache",
+							...CORS,
+						},
 						});
 					}
 				}

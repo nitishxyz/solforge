@@ -64,6 +64,12 @@ async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 	const wsPort = Number(config.server.wsPort || rpcPort + 1);
 	const guiEnabled = config.gui?.enabled !== false;
 	const guiPort = Number(config.gui?.port ?? defaultConfig.gui.port);
+	if (config.agi?.enabled) {
+		const agiPort = Number(config.agi.port ?? 3456);
+		process.env.SOLFORGE_AGI_PORT = String(agiPort);
+	} else {
+		delete process.env.SOLFORGE_AGI_PORT;
+	}
 
 	const spinner = p.spinner();
 	const guiPart = guiEnabled ? `, GUI ${guiPort}` : "";
