@@ -30,8 +30,7 @@ function isInWorkspace() {
 
 function findBinaryInPath() {
 	const pathDirs = (process.env.PATH || "").split(path.delimiter);
-	const ext = process.platform === "win32" ? ".exe" : "";
-	const binName = `solforge${ext}`;
+	const binName = "solforge";
 
 	for (const dir of pathDirs) {
 		const binPath = path.join(dir, binName);
@@ -57,7 +56,6 @@ function assetName() {
 	if (p === "darwin" && a === "x64") return "solforge-darwin-x64";
 	if (p === "linux" && a === "x64") return "solforge-linux-x64";
 	if (p === "linux" && a === "arm64") return "solforge-linux-arm64";
-	if (p === "win32" && a === "x64") return "solforge-windows-x64.exe";
 	return null;
 }
 
@@ -111,8 +109,6 @@ function downloadWithProgress(url, dest) {
 }
 
 function updateShellProfile(userBin) {
-	if (process.platform === "win32") return;
-
 	const shell = process.env.SHELL || "";
 	let configFile;
 	let shellType;
@@ -174,8 +170,7 @@ async function install() {
 
 		const userBin = path.resolve(os.homedir(), ".local", "bin");
 		fs.mkdirSync(userBin, { recursive: true });
-		const ext = process.platform === "win32" ? ".exe" : "";
-		const binPath = path.resolve(userBin, `solforge${ext}`);
+		const binPath = path.resolve(userBin, "solforge");
 
 		await downloadWithProgress(url, binPath);
 
