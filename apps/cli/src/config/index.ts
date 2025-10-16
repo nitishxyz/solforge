@@ -23,8 +23,8 @@ export interface SolforgeConfig {
 		enabled: boolean;
 		port: number;
 		host: string;
-		provider: "openrouter" | "anthropic" | "openai";
-		model: string;
+		provider?: "openrouter" | "anthropic" | "openai";
+		model?: string;
 		apiKey?: string;
 		agent: "general" | "build";
 	};
@@ -51,8 +51,6 @@ export const defaultConfig: SolforgeConfig = {
 		enabled: false,
 		port: 3456,
 		host: "127.0.0.1",
-		provider: "openrouter",
-		model: "anthropic/claude-3.5-sonnet",
 		agent: "general",
 	},
 	bootstrap: { airdrops: [] },

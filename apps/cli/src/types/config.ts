@@ -1,14 +1,13 @@
 import { z } from "zod";
 
-// Token configuration schema
 export const TokenConfigSchema = z.object({
 	symbol: z.string().min(1, "Token symbol is required"),
 	mainnetMint: z.string().min(1, "Mainnet mint address is required"),
-	mintAuthority: z.string().optional(), // Path to keypair file
+	mintAuthority: z.string().optional(),
 	mintAmount: z
 		.number()
 		.positive("Mint amount must be positive")
-		.default(1000000), // Amount to mint to mint authority
+		.default(1000000),
 	recipients: z
 		.array(
 			z.object({
@@ -17,36 +16,32 @@ export const TokenConfigSchema = z.object({
 			}),
 		)
 		.default([]),
-	cloneMetadata: z.boolean().default(true), // Whether to clone token metadata
+	cloneMetadata: z.boolean().default(true),
 });
 
-// Program configuration schema
 export const ProgramConfigSchema = z.object({
 	name: z.string().optional(),
 	mainnetProgramId: z.string().min(1, "Program ID is required"),
-	deployPath: z.string().optional(), // Optional path to local .so file
+	deployPath: z.string().optional(),
 	upgradeable: z.boolean().default(false),
 	cluster: z
 		.enum(["mainnet-beta", "devnet", "testnet"])
 		.default("mainnet-beta"),
-	dependencies: z.array(z.string()).default([]), // Other program IDs this program depends on
+	dependencies: z.array(z.string()).default([]),
 });
 
-// AGI configuration schema
 export const AgiConfigSchema = z.object({
 	enabled: z.boolean().default(false),
 	port: z.number().int().min(1000).max(65535).default(3456),
 	host: z.string().default("127.0.0.1"),
 	provider: z
 		.enum(["openrouter", "anthropic", "openai"])
-		.optional()
-		.default("openrouter"),
-	model: z.string().optional().default("anthropic/claude-3.5-sonnet"),
-	apiKey: z.string().optional(), // API key for the provider (can use env var)
+		.optional(),
+	model: z.string().optional(),
+	apiKey: z.string().optional(),
 	agent: z.enum(["general", "build"]).optional().default("general"),
 });
 
-// Localnet configuration schema
 export const LocalnetConfigSchema = z.object({
 	airdropAmount: z.number().positive().default(100),
 	faucetAccounts: z.array(z.string()).default([]),
@@ -64,7 +59,6 @@ export const LocalnetConfigSchema = z.object({
 		.default("https://api.mainnet-beta.solana.com"),
 });
 
-// Complete configuration schema
 export const ConfigSchema = z.object({
 	name: z.string().default("solforge-localnet"),
 	description: z.string().optional(),
@@ -74,14 +68,12 @@ export const ConfigSchema = z.object({
 	agi: AgiConfigSchema.default({}),
 });
 
-// Inferred TypeScript types
 export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type ProgramConfig = z.infer<typeof ProgramConfigSchema>;
 export type AgiConfig = z.infer<typeof AgiConfigSchema>;
 export type LocalnetConfig = z.infer<typeof LocalnetConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
-// Validator status types
 export type ValidatorStatus =
 	| "stopped"
 	| "starting"
@@ -101,7 +93,6 @@ export interface ValidatorState {
 	error?: string;
 }
 
-// Operation result types
 export interface OperationResult<T = unknown> {
 	success: boolean;
 	data?: T;

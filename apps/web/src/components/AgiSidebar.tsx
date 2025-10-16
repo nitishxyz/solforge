@@ -9,7 +9,7 @@ import {
 import { useCreateSession, useSessions, useConfig } from "@agi-cli/web-sdk";
 import "./AgiSidebar.css";
 
-export function AgiSidebar() {
+export function AgiSidebar({ userContext }: { userContext?: string }) {
 	const isOpen = useAgiStore((state) => state.isOpen);
 	const setOpen = useAgiStore((state) => state.setOpen);
 	const activeSessionId = useAgiStore((state) => state.activeSessionId);
@@ -226,11 +226,11 @@ export function AgiSidebar() {
 							<div className="agi-message-thread-wrapper">
 								<MessageThreadContainer sessionId={activeSessionId} />
 							</div>
-							{/* Chat Input - Wrapper with positioning context */}
-							<div className="agi-chat-input-wrapper">
-								<ChatInputContainer sessionId={activeSessionId} />
-							</div>
-						</>
+					{/* Chat Input - Wrapper with positioning context */}
+					<div className="agi-chat-input-wrapper">
+						<ChatInputContainer sessionId={activeSessionId} userContext={userContext} />
+					</div>
+				</>
 					) : (
 						<div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
 							{sessionsLoading ? (

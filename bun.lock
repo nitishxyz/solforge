@@ -3,6 +3,9 @@
   "workspaces": {
     "": {
       "name": "solforge",
+      "dependencies": {
+        "@agi-cli/web-sdk": "^0.1.78",
+      },
       "devDependencies": {
         "@biomejs/biome": "2.2.4",
         "@types/bun": "latest",
@@ -17,13 +20,13 @@
     },
     "apps/cli": {
       "name": "@solforge/cli",
-      "version": "0.2.22",
+      "version": "0.2.24",
       "bin": {
         "solforge": "./dist/solforge",
       },
       "dependencies": {
-        "@agi-cli/server": "^0.1.76",
-        "@agi-cli/web-ui": "^0.1.76",
+        "@agi-cli/server": "^0.1.84",
+        "@agi-cli/web-ui": "^0.1.84",
         "@clack/prompts": "^0.11.0",
         "@solana-program/compute-budget": "^0.9.0",
         "@solana-program/memo": "^0.8.0",
@@ -45,7 +48,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@agi-cli/api": "^0.1.73",
-        "@agi-cli/web-sdk": "^0.1.76",
+        "@agi-cli/web-sdk": "^0.1.84",
         "@tanstack/react-query": "^5.90.2",
         "@tanstack/react-router": "^1.132.47",
         "@tanstack/router-devtools": "^1.132.50",
@@ -86,7 +89,7 @@
     },
     "packages/install": {
       "name": "solforge",
-      "version": "0.2.22",
+      "version": "0.2.24",
       "bin": {
         "solforge": "./start.cjs",
       },
@@ -105,17 +108,17 @@
     },
   },
   "packages": {
-    "@agi-cli/api": ["@agi-cli/api@0.1.73", "", { "dependencies": { "axios": "^1.7.9", "eventsource-parser": "^2.0.1" } }, "sha512-rbEP0QIw2n6mmqXqoQPsx7ZmUV4DmeLbWH3qCMyhN3reZ9c6detAAlaS3niOhXdFnmI5ZKy9CxdSb7zC/Ak6sg=="],
+    "@agi-cli/api": ["@agi-cli/api@0.1.78", "", { "dependencies": { "axios": "^1.7.9", "eventsource-parser": "^2.0.1" } }, "sha512-383SqARLA4AviWzpcpjN6nUC18TkypHCvb8oNsCM+xyk7G+4U8bek0l/YOMGuJ1UwLozESA7aq0ekobhZ0eKXw=="],
 
-    "@agi-cli/database": ["@agi-cli/database@0.1.76", "", { "dependencies": { "@agi-cli/sdk": "0.1.76", "drizzle-orm": "^0.44.5" } }, "sha512-MW8pDXLl9kEdeNMeyEDr8Cl8TE+VWLxi82T/cv/XuOgvKXAH47bfncb9AiMviLaaZGwz/K54QLOqsoOPX3Ql4A=="],
+    "@agi-cli/database": ["@agi-cli/database@0.1.84", "", { "dependencies": { "@agi-cli/sdk": "0.1.84", "drizzle-orm": "^0.44.5" } }, "sha512-z1IEhlvsVm18YYT71C6OtOPB79OQQhSZfGEWaUB4ids3FF6k12b2Dkr4GA+faQzQXky59TKCsPt0Hsm6z4EpIw=="],
 
-    "@agi-cli/sdk": ["@agi-cli/sdk@0.1.76", "", { "dependencies": { "@ai-sdk/anthropic": "^2.0.16", "@ai-sdk/google": "^2.0.14", "@ai-sdk/openai": "^2.0.30", "@ai-sdk/openai-compatible": "^1.0.18", "@openauthjs/openauth": "^0.4.3", "@openrouter/ai-sdk-provider": "^1.2.0", "ai": "^5.0.43", "diff": "^8.0.2", "fast-glob": "^3.3.2", "hono": "^4.9.7", "opencode-anthropic-auth": "^0.0.2", "zod": "^4.1.8" } }, "sha512-B+1G4DMd+RlvEqpFnnftIScoI3GHO2zi1Emk2bU1EvWfjvYSHf7O7pxmOqUryn8FhH/T0Q7a9JPdISy5Sp3s3g=="],
+    "@agi-cli/sdk": ["@agi-cli/sdk@0.1.84", "", { "dependencies": { "@ai-sdk/anthropic": "^2.0.16", "@ai-sdk/google": "^2.0.14", "@ai-sdk/openai": "^2.0.30", "@ai-sdk/openai-compatible": "^1.0.18", "@openauthjs/openauth": "^0.4.3", "@openrouter/ai-sdk-provider": "^1.2.0", "ai": "^5.0.43", "diff": "^8.0.2", "fast-glob": "^3.3.2", "hono": "^4.9.7", "opencode-anthropic-auth": "^0.0.2", "zod": "^4.1.8" } }, "sha512-v8nlWqezC2/PZ0kiDNvt7VYRyJIaTPAqAKCI+gkqxYD1Acq9gAa6X8uBZigVDv92+B3QHyeW+te2uECpDIsFvQ=="],
 
-    "@agi-cli/server": ["@agi-cli/server@0.1.76", "", { "dependencies": { "@agi-cli/database": "0.1.76", "@agi-cli/sdk": "0.1.76", "drizzle-orm": "^0.44.5", "hono": "^4.9.9", "zod": "^4.1.8" } }, "sha512-7AaVACKQmvQpRdpFTUQeqHgZv8jyRqTe0om85N6kZu/+y3ifj4mBoeA9DmM/cYy1HBB9Cw6NDvA+xnmiRWm5Qg=="],
+    "@agi-cli/server": ["@agi-cli/server@0.1.84", "", { "dependencies": { "@agi-cli/database": "0.1.84", "@agi-cli/sdk": "0.1.84", "drizzle-orm": "^0.44.5", "hono": "^4.9.9", "zod": "^4.1.8" } }, "sha512-JITw/B1HScEoJklxBeVj8GOhcogWMvstdGx6nHkU8Wl2ZcumZ10+Uz4BdB2uRM7qCfEPBSDgRh27ezhag7CMFg=="],
 
-    "@agi-cli/web-sdk": ["@agi-cli/web-sdk@0.1.76", "", { "dependencies": { "@agi-cli/api": "0.1.76", "axios": "^1.7.9" }, "peerDependencies": { "@tanstack/react-query": "^5.0.0", "lucide-react": "^0.263.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-markdown": "^9.0.0 || ^10.0.0", "react-syntax-highlighter": "^15.5.0", "remark-gfm": "^4.0.0", "zustand": "^4.0.0 || ^5.0.0" } }, "sha512-c7VjdJy+4LBOYr6E3gRxLZ/4eJki5AcvWYV1MBPwu9Tkeh2nbZ23NyUS7/AWmUWeTeTOWNrrQeZaPIm27+xaMw=="],
+    "@agi-cli/web-sdk": ["@agi-cli/web-sdk@0.1.78", "", { "dependencies": { "@agi-cli/api": "0.1.78", "axios": "^1.7.9" }, "peerDependencies": { "@tanstack/react-query": "^5.0.0", "lucide-react": "^0.263.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-markdown": "^9.0.0 || ^10.0.0", "react-syntax-highlighter": "^15.5.0", "remark-gfm": "^4.0.0", "zustand": "^4.0.0 || ^5.0.0" } }, "sha512-TrCFW0vU7+vudz1vSDoQsp70AuwxdyM1q/tUK0VPOG5uWX+VH+GU2VQ9S9taGy/L8Qdpvn6HnftAghG7M8OmLg=="],
 
-    "@agi-cli/web-ui": ["@agi-cli/web-ui@0.1.76", "", { "dependencies": { "express": "^5.1.0" } }, "sha512-UM+LgLvVT/5YHzleE9Q+k1dU8a5K+r5hn/aISyIZTrV6FQ6BbCmIv6y/VzYGXOiGBTQEZi21Arw6/Q8Xd/iM1g=="],
+    "@agi-cli/web-ui": ["@agi-cli/web-ui@0.1.84", "", { "dependencies": { "express": "^5.1.0" } }, "sha512-al4D4E+X0wL6XDoDaaU16hYGuRCJzEESuplfVHKntZcsXbqFCXA1nPOtylCYlBhG+bvEdpxdjnXfs9Zfky2Ryg=="],
 
     "@ai-sdk/anthropic": ["@ai-sdk/anthropic@2.0.27", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@ai-sdk/provider-utils": "3.0.12" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-tGXdWNs+dMZLsn6yVroz9PqPZbCY6kqwGl/xxFVxJWDrTPGj3+1t1vE7pzTZ3vDOiG05iVC7wzlXwV2Or650YA=="],
 
@@ -837,6 +840,8 @@
 
     "function-bind": ["function-bind@1.1.2", "", {}, "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA=="],
 
+    "fuse.js": ["fuse.js@7.1.0", "", {}, "sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ=="],
+
     "gensync": ["gensync@1.0.0-beta.2", "", {}, "sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg=="],
 
     "get-intrinsic": ["get-intrinsic@1.3.0", "", { "dependencies": { "call-bind-apply-helpers": "^1.0.2", "es-define-property": "^1.0.1", "es-errors": "^1.3.0", "es-object-atoms": "^1.1.1", "function-bind": "^1.1.2", "get-proto": "^1.0.1", "gopd": "^1.2.0", "has-symbols": "^1.1.0", "hasown": "^2.0.2", "math-intrinsics": "^1.1.0" } }, "sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ=="],
@@ -1489,8 +1494,6 @@
 
     "zwitch": ["zwitch@2.0.4", "", {}, "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="],
 
-    "@agi-cli/web-sdk/@agi-cli/api": ["@agi-cli/api@0.1.76", "", { "dependencies": { "axios": "^1.7.9", "eventsource-parser": "^2.0.1" } }, "sha512-xiev4C8GuUMauWA4QpNGvX5Tjuwhog+RBrYfYfeJa9qXIQHhfxvBdItvlyOePIUh7jB3zf/NaMY1aySo2lgVLQ=="],
-
     "@ai-sdk/provider-utils/@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 
     "@ai-sdk/provider-utils/eventsource-parser": ["eventsource-parser@3.0.6", "", {}, "sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg=="],
@@ -1643,6 +1646,8 @@
 
     "tar/yallist": ["yallist@5.0.0", "", {}, "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="],
 
+    "web/@agi-cli/web-sdk": ["@agi-cli/web-sdk@0.1.84", "", { "dependencies": { "@agi-cli/api": "0.1.84", "axios": "^1.7.9", "fuse.js": "^7.1.0" }, "peerDependencies": { "@tanstack/react-query": "^5.0.0", "lucide-react": "^0.263.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-markdown": "^9.0.0 || ^10.0.0", "react-syntax-highlighter": "^15.5.0", "remark-gfm": "^4.0.0", "zustand": "^4.0.0 || ^5.0.0" } }, "sha512-kMBgDiTWm5yEJdGtNIPp711og9Ntk10cbUdYOAUWI3FyyYqoonsowbRlUXDY8Es4R7N/q49Iy7C8OeJD3zi9YA=="],
+
     "web/@types/react": ["@types/react@19.2.2", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-6mDvHUFSjyT2B2yeNx2nUgMxh9LtOWvkhIU3uePn2I2oyNymUAX1NIsdgviM4CH+JSrp2D2hsMvJOkxY+0wNRA=="],
 
     "web/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
@@ -1754,6 +1759,8 @@
     "rpc-websockets/@types/ws/@types/node": ["@types/node@24.5.2", "", { "dependencies": { "undici-types": "~7.12.0" } }, "sha512-FYxk1I7wPv3K2XBaoyH2cTnocQEu8AOZ60hPbsyukMPLv5/5qr7V1i8PLHdl6Zf87I+xZXFvPCXYjiTFq+YSDQ=="],
 
     "string-width-cjs/strip-ansi/ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
+
+    "web/@agi-cli/web-sdk/@agi-cli/api": ["@agi-cli/api@0.1.84", "", { "dependencies": { "axios": "^1.7.9", "eventsource-parser": "^2.0.1" } }, "sha512-DlkBmkdlb8SblF/jy8/kjM+GYJGoKxc/e5ZhB/3Bng9Au3FGqzu/7Y36WZxRh7BGQ5eiEPhg/frlA131Yjvvig=="],
 
     "wrap-ansi-cjs/string-width/emoji-regex": ["emoji-regex@8.0.0", "", {}, "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="],
 

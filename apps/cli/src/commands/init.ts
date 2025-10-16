@@ -1,27 +1,19 @@
-import chalk from "chalk";
-import { existsSync, writeFileSync } from "node:fs";
 import inquirer from "inquirer";
+import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { Config } from "../types/config.js";
+import type { Config } from "../types/config";
+import chalk from "chalk";
 
 const defaultConfig: Config = {
-	name: "my-localnet",
+	name: "solforge-localnet",
 	description: "Local Solana development environment",
-	tokens: [
-		{
-			symbol: "USDC",
-			mainnetMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-			recipients: [],
-			mintAmount: 1000000,
-			cloneMetadata: true,
-		},
-	],
+	tokens: [],
 	programs: [],
 	localnet: {
-		airdropAmount: 100,
-		faucetAccounts: [],
 		port: 8899,
 		faucetPort: 9900,
+		airdropAmount: 100,
+		faucetAccounts: [],
 		reset: false,
 		logLevel: "info",
 		bindAddress: "127.0.0.1",
@@ -33,8 +25,6 @@ const defaultConfig: Config = {
 		enabled: false,
 		port: 3456,
 		host: "127.0.0.1",
-		provider: "openrouter",
-		model: "anthropic/claude-3.5-sonnet",
 		agent: "general",
 	},
 };
@@ -42,46 +32,30 @@ const defaultConfig: Config = {
 export async function initCommand(): Promise<void> {
 	const configPath = resolve(process.cwd(), "sf.config.json");
 
-	// Check if config already exists
-	if (existsSync(configPath)) {
-		const { overwrite } = await inquirer.prompt([
-			{
-				type: "confirm",
-				name: "overwrite",
-				message: "sf.config.json already exists. Overwrite?",
-				default: false,
-			},
-		]);
+	console.log(chalk.cyan.bold("\n🔨 SolForge Configuration Setup\n"));
 
-		if (!overwrite) {
-			console.log(chalk.yellow("⚠️  Initialization cancelled"));
-			return;
-		}
-	}
-
-	// Gather basic configuration
 	const answers = await inquirer.prompt([
 		{
 			type: "input",
 			name: "name",
 			message: "Project name:",
-			default: "my-localnet",
+			default: "solforge-localnet",
 		},
 		{
 			type: "input",
 			name: "description",
-			message: "Description:",
+			message: "Project description:",
 			default: "Local Solana development environment",
 		},
 		{
-			type: "number",
-			name: "port",
-			message: "RPC port:",
-			default: 8899,
+			type: "confirm",
+			name: "includeWSOL",
+			message: "Include wrapped SOL token?",
+			default: true,
 		},
 		{
 			type: "confirm",
-			name: "includeUsdc",
+			name: "includeUSDC",
 			message: "Include USDC token?",
 			default: true,
 		},
@@ -93,7 +67,6 @@ export async function initCommand(): Promise<void> {
 		},
 	]);
 
-	// AGI configuration (if enabled)
 	let agiConfig = defaultConfig.agi;
 	if (answers.enableAgi) {
 		const agiAnswers = await inquirer.prompt([
@@ -106,45 +79,38 @@ export async function initCommand(): Promise<void> {
 			{
 				type: "list",
 				name: "provider",
-				message: "AI provider:",
+				message: "AI provider (optional - AGI handles fallback):",
 				choices: [
-					{ name: "OpenRouter (recommended)", value: "openrouter" },
+					{ name: "None (use AGI defaults)", value: undefined },
+					{ name: "OpenRouter", value: "openrouter" },
 					{ name: "Anthropic", value: "anthropic" },
 					{ name: "OpenAI", value: "openai" },
 				],
-				default: "openrouter",
+				default: undefined,
 			},
 			{
 				type: "input",
 				name: "model",
-				message: "Model name:",
-				default: (answers: { provider: string }) => {
-					switch (answers.provider) {
-						case "anthropic":
-							return "claude-3-5-sonnet-20241022";
-						case "openai":
-							return "gpt-4";
-						default:
-							return "anthropic/claude-3.5-sonnet";
-					}
-				},
+				message: "Model name (optional):",
+				default: "",
+				when: (answers: { provider?: string }) => !!answers.provider,
+			},
+			{
+				type: "input",
+				name: "apiKey",
+				message: "API key (optional - uses env var if blank):",
+				default: "",
+				when: (answers: { provider?: string }) => !!answers.provider,
 			},
 			{
 				type: "list",
 				name: "agent",
-				message: "Default agent:",
+				message: "AGI agent mode:",
 				choices: [
-					{ name: "General (for general coding)", value: "general" },
-					{ name: "Build (for build/deployment tasks)", value: "build" },
+					{ name: "General", value: "general" },
+					{ name: "Build", value: "build" },
 				],
 				default: "general",
-			},
-			{
-				type: "password",
-				name: "apiKey",
-				message: "API Key (optional, can use env var):",
-				mask: "*",
-				default: "",
 			},
 		]);
 
@@ -152,68 +118,75 @@ export async function initCommand(): Promise<void> {
 			enabled: true,
 			port: agiAnswers.agiPort,
 			host: "127.0.0.1",
-			provider: agiAnswers.provider,
-			model: agiAnswers.model,
-			agent: agiAnswers.agent,
-			apiKey: agiAnswers.apiKey || undefined,
+			...(agiAnswers.provider && { provider: agiAnswers.provider }),
+			...(agiAnswers.model && { model: agiAnswers.model }),
+			...(agiAnswers.apiKey && { apiKey: agiAnswers.apiKey }),
+			agent: agiAnswers.agent || "general",
 		};
 	}
 
-	// Build config
+	const tokens: Array<{
+		symbol: string;
+		mainnetMint: string;
+		cloneMetadata: boolean;
+	}> = [];
+
+	if (answers.includeWSOL) {
+		tokens.push({
+			symbol: "WSOL",
+			mainnetMint: "So11111111111111111111111111111111111111112",
+			cloneMetadata: true,
+		});
+	}
+
+	if (answers.includeUSDC) {
+		tokens.push({
+			symbol: "USDC",
+			mainnetMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+			cloneMetadata: true,
+		});
+	}
+
 	const config: Config = {
-		...defaultConfig,
 		name: answers.name,
 		description: answers.description,
-		localnet: {
-			...defaultConfig.localnet,
-			port: answers.port,
-		},
+		tokens,
+		programs: [],
+		localnet: defaultConfig.localnet,
 		agi: agiConfig,
 	};
 
-	if (!answers.includeUsdc) {
-		config.tokens = [];
-	}
+	writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-	try {
-		// Write config file
-		writeFileSync(configPath, JSON.stringify(config, null, 2));
+	console.log(chalk.green(`\n✅ Configuration written to ${configPath}\n`));
 
-		console.log(chalk.green("✅ sf.config.json created successfully!"));
-		console.log(chalk.gray(`📄 Config saved to: ${configPath}`));
-		console.log();
-		console.log(chalk.blue("Next steps:"));
-		console.log(
-			chalk.gray("1. Edit sf.config.json to add your tokens and programs"),
-		);
-		console.log(chalk.gray("2. Run `solforge start` to launch your localnet"));
-		console.log();
-
-		if (config.agi.enabled) {
-			console.log(chalk.blue("🤖 AGI Server Configuration:"));
-			console.log(chalk.gray(`   - Port: ${config.agi.port}`));
-			console.log(chalk.gray(`   - Provider: ${config.agi.provider}`));
-			console.log(chalk.gray(`   - Model: ${config.agi.model}`));
-			if (!config.agi.apiKey) {
-				console.log(
-					chalk.yellow(
-						`   ⚠️  Set your API key in environment variable: ${config.agi.provider.toUpperCase()}_API_KEY`,
-					),
-				);
-			}
-			console.log();
+	if (tokens.length > 0) {
+		console.log(chalk.blue("📦 Tokens to clone:"));
+		for (const token of tokens) {
+			console.log(
+				chalk.gray(`   - ${token.symbol} (${token.mainnetMint.slice(0, 8)}...)`),
+			);
 		}
-
-		console.log(
-			chalk.yellow(
-				"💡 Tip: Check configs/example.sf.config.json for more examples",
-			),
-		);
-	} catch (error) {
-		console.error(chalk.red("❌ Failed to create sf.config.json"));
-		console.error(
-			chalk.red(error instanceof Error ? error.message : String(error)),
-		);
-		process.exit(1);
+		console.log();
 	}
+
+	if (agiConfig.enabled) {
+		console.log(chalk.blue("🤖 AGI Server Configuration:"));
+		console.log(chalk.gray(`   Port: ${agiConfig.port}`));
+		if (agiConfig.provider) {
+			console.log(chalk.gray(`   Provider: ${agiConfig.provider}`));
+		}
+		if (agiConfig.model) {
+			console.log(chalk.gray(`   Model: ${agiConfig.model}`));
+		}
+		console.log(chalk.gray(`   Agent: ${agiConfig.agent}`));
+		console.log();
+	}
+
+	console.log(chalk.cyan("Next steps:"));
+	console.log(chalk.gray("   1. Run 'solforge start' to launch the localnet"));
+	console.log(
+		chalk.gray("   2. Use 'solforge mint <token>' to mint tokens to your wallet"),
+	);
+	console.log();
 }

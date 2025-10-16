@@ -35,5 +35,8 @@
     "postcss": "^8.5.6",
     "tailwindcss": "3",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@agi-cli/web-sdk": "^0.1.78"
   }
 }

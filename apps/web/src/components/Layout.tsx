@@ -5,7 +5,13 @@ import { configQuery } from "../api/queries";
 import { AgiFloatingButton } from "./AgiFloatingButton";
 import { AgiSidebar } from "./AgiSidebar";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ 
+	children,
+	userContext,
+}: { 
+	children: React.ReactNode;
+	userContext?: string;
+}) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const router = useRouterState();
 	const { data: config } = useQuery(configQuery);
@@ -156,9 +162,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<main className="flex-1 overflow-auto">{children}</main>
 			</div>
 
-			{/* AGI Assistant Components */}
-			<AgiFloatingButton />
-			<AgiSidebar />
-		</div>
+		{/* AGI Assistant Components */}
+		<AgiFloatingButton />
+		<AgiSidebar userContext={userContext} />
+	</div>
 	);
 }

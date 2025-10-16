@@ -18,6 +18,8 @@ import { TokensPanel } from "./TokensPanel";
 import { useState } from "react";
 import { CloneProgramModal } from "./CloneProgramModal";
 import { CloneTokenModal } from "./CloneTokenModal";
+import { transformDashboardContext } from "../utils/context-transformers";
+import { usePageContext } from "../hooks/use-page-context";
 
 export function Dashboard() {
 	const queryClient = useQueryClient();
@@ -29,6 +31,11 @@ export function Dashboard() {
 	const { data: programs = [], isLoading: programsLoading } =
 		useQuery(programsQuery);
 	const { data: tokens = [], isLoading: tokensLoading } = useQuery(tokensQuery);
+
+	const pageContext = usePageContext(
+		{ status: status ?? null, programs, tokens },
+		transformDashboardContext,
+	);
 
 	const airdrop = useMutation({
 		...airdropMutation,
@@ -122,7 +129,7 @@ export function Dashboard() {
 	});
 
 	return (
-		<Layout>
+		<Layout userContext={pageContext}>
 			<div className="p-6 space-y-6">
 				{/* Header */}
 				<div className="flex items-center justify-between">

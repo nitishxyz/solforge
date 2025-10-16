@@ -4,10 +4,13 @@ import { useState } from "react";
 import { Layout } from "./Layout";
 import { transactionQuery } from "../api/queries";
 import type { ParsedInstruction } from "../api/types";
+import { transformTransactionContext } from "../utils/context-transformers";
+import { usePageContext } from "../hooks/use-page-context";
 
 export function TransactionDetailsPage() {
 	const { signature } = useParams({ from: "/transactions/$signature" });
 	const { data: tx, isLoading, error } = useQuery(transactionQuery(signature));
+	const pageContext = usePageContext(tx, transformTransactionContext);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const [expandedSections, setExpandedSections] = useState({
 		instructions: true,
@@ -80,7 +83,7 @@ export function TransactionDetailsPage() {
 	const instructions = tx.transaction?.message?.instructions || [];
 
 	return (
-		<Layout>
+		<Layout userContext={pageContext}>
 			<div className="p-6 space-y-4">
 				<div className="flex items-center gap-4">
 					<Link

@@ -9,6 +9,34 @@ import {
 import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import type { RpcMethodHandler } from "../../types";
 
+function detectInstructionError(logs: string[]): unknown | null {
+	let instructionIndex = 0;
+	let depth = 0;
+	
+	for (const log of logs) {
+		if (log.includes("invoke [1]")) {
+			if (depth === 0) instructionIndex++;
+		}
+		const depthMatch = log.match(/\[(\d+)\]/);
+		if (depthMatch) {
+			depth = parseInt(depthMatch[1], 10);
+		}
+		
+		if (log.includes("failed:") || log.includes("Program failed to complete")) {
+			const customMatch = log.match(/failed: custom program error: (0x[0-9a-fA-F]+)/);
+			if (customMatch) {
+				return { InstructionError: [instructionIndex - 1, { Custom: parseInt(customMatch[1], 16) }] };
+			}
+			const panicMatch = log.match(/failed: (.+)/);
+			if (panicMatch) {
+				return { InstructionError: [instructionIndex - 1, panicMatch[1]] };
+			}
+			return { InstructionError: [instructionIndex - 1, "Program failed"] };
+		}
+	}
+	return null;
+}
+
 export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 	const [encodedTx] = params;
 	try {
@@ -418,10 +446,12 @@ export const sendTransaction: RpcMethodHandler = (id, params, context) => {
 				console.debug(
 					`[tx-capture] sendTransaction meta: logs=${logs.length} innerGroups=${Array.isArray(innerInstructions) ? innerInstructions.length : 0} computeUnits=${computeUnits} returnData=${returnData ? "yes" : "no"}`,
 				);
-			}
-		} catch {}
-		context.recordTransaction(signature, tx, {
+		}
+	} catch {}
+	const detectedError = detectInstructionError(logs);
+	context.recordTransaction(signature, tx, {
 			logs,
+			err: detectedError,
 			fee: 5000,
 			blockTime: Math.floor(Date.now() / 1000),
 			preBalances,
