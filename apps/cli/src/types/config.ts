@@ -31,7 +31,7 @@ export const ProgramConfigSchema = z.object({
 });
 
 export const AgiConfigSchema = z.object({
-	enabled: z.boolean().default(false),
+	enabled: z.boolean().default(true),
 	port: z.number().int().min(1000).max(65535).default(3456),
 	host: z.string().default("127.0.0.1"),
 	provider: z

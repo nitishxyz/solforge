@@ -1,23 +1,26 @@
 import * as p from "@clack/prompts";
 import { readConfig, writeConfig } from "../config/index.ts";
 import chalk from "chalk";
+import {
+	cancelSetup,
+	collectCustomEntries,
+	ensure,
+	validatePort,
+	validatePositiveNumber,
+	validatePubkey,
+} from "./setup-utils.ts";
 
-function cancelSetup(): never {
-	p.cancel("Setup canceled.");
-	process.exit(0);
-}
+const TOKEN_PRESETS = [
+	{ value: "usdc", label: "USDC", mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
+	{ value: "usdt", label: "USDT", mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" },
+];
 
-function validatePort(v: string): string | undefined {
-	const num = Number(v);
-	if (Number.isNaN(num) || num < 1024 || num > 65535)
-		return "Port must be between 1024 and 65535";
-	return undefined;
-}
-
-function ensure<T>(v: T | symbol): T {
-	if (typeof v === "symbol") cancelSetup();
-	return v;
-}
+const PROGRAM_PRESETS = [
+	{ value: "jupiter", label: "Jupiter", programId: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" },
+	{ value: "pump", label: "Pump core", programId: "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P" },
+	{ value: "pump-amm", label: "Pump AMM", programId: "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA" },
+	{ value: "pump-fees", label: "Pump fees", programId: "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ" },
+];
 
 export async function runSetupWizard(configFile?: string) {
 	p.intro(chalk.cyan.bold("SolForge Configuration"));
@@ -60,9 +63,49 @@ export async function runSetupWizard(configFile?: string) {
 		);
 	}
 
+	const tokenSelection = ensure(
+		await p.multiselect({
+			message: "Which tokens should be cloned?",
+			options: [
+				...TOKEN_PRESETS.map((token) => ({
+					value: token.value,
+					label: `${token.label} (${token.mint})`,
+				})),
+				{ value: "__custom__", label: "Add custom token mint" },
+			],
+			initialValues: TOKEN_PRESETS.filter((preset) =>
+				base.clone.tokens?.includes(preset.mint),
+			).map((preset) => preset.value),
+			required: false,
+		}),
+	) as string[];
+
+	const tokens = await resolveTokens(tokenSelection, base.clone.tokens ?? []);
+
+	const programSelection = ensure(
+		await p.multiselect({
+			message: "Clone any on-chain programs?",
+			options: [
+				...PROGRAM_PRESETS.map((program) => ({
+					value: program.value,
+					label: `${program.label} (${program.programId})`,
+				})),
+				{ value: "__custom__", label: "Add custom program" },
+			],
+			initialValues: PROGRAM_PRESETS.filter((preset) =>
+				base.clone.programs?.includes(preset.programId),
+			).map((preset) => preset.value),
+			required: false,
+		}),
+	) as string[];
+
+	const programs = await resolvePrograms(programSelection, base.clone.programs ?? []);
+
+	const airdrops = await collectAirdrops(base.bootstrap?.airdrops ?? []);
+
 	const agiEnabledResp = await p.confirm({
 		message: "Enable AGI?",
-		initialValue: base.agi?.enabled ?? false,
+		initialValue: base.agi?.enabled ?? true,
 	});
 	if (p.isCancel(agiEnabledResp)) cancelSetup();
 	const agiEnabled = agiEnabledResp !== false;
@@ -105,7 +148,7 @@ export async function runSetupWizard(configFile?: string) {
 			agiModel = modelResp || undefined;
 
 			const apiKeyResp = await p.text({
-				message: `API key (leave blank to use ${agiProvider.toUpperCase()}_API_KEY env var)`,
+				message: `API key (leave blank to use ${agiProvider?.toUpperCase()}_API_KEY env var)`,
 				initialValue: agiApiKey ?? "",
 			});
 			if (p.isCancel(apiKeyResp)) cancelSetup();
@@ -116,7 +159,9 @@ export async function runSetupWizard(configFile?: string) {
 	const updated = {
 		...base,
 		server: { ...base.server, rpcPort, wsPort },
+		clone: { ...base.clone, tokens, programs },
 		gui: { ...base.gui, enabled: guiEnabled, port: guiPort },
+		bootstrap: { airdrops },
 		agi: agiEnabled
 			? {
 					enabled: true,
@@ -133,4 +178,93 @@ export async function runSetupWizard(configFile?: string) {
 	await writeConfig(updated, configFile);
 
 	p.outro(chalk.green("Configuration saved"));
+}
+
+async function resolveTokens(selections: string[], existing: string[] = []) {
+	const set = new Set(existing);
+	for (const selection of selections) {
+		if (selection === "__custom__") {
+			(await collectCustomEntries("token mint address")).forEach((value) =>
+				set.add(value),
+			);
+			continue;
+		}
+		const preset = TOKEN_PRESETS.find((token) => token.value === selection);
+		if (!preset) continue;
+		const mint = ensure(
+			await p.text({
+				message: `Mint address for ${preset.label}`,
+				initialValue: preset.mint,
+				validate: validatePubkey,
+			}),
+		).trim();
+		set.add(mint);
+	}
+	return Array.from(set);
+}
+
+async function resolvePrograms(selections: string[], existing: string[] = []) {
+	const set = new Set(existing);
+	for (const selection of selections) {
+		if (selection === "__custom__") {
+			(await collectCustomEntries("program id")).forEach((value) =>
+				set.add(value),
+			);
+			continue;
+		}
+		const preset = PROGRAM_PRESETS.find(
+			(program) => program.value === selection,
+		);
+		if (!preset) continue;
+		const programId = ensure(
+			await p.text({
+				message: `Program ID for ${preset.label}`,
+				initialValue: preset.programId,
+				validate: validatePubkey,
+			}),
+		).trim();
+		set.add(programId);
+	}
+	return Array.from(set);
+}
+
+async function collectAirdrops(
+	existing: Array<{ address: string; amountSol: number }>,
+) {
+	const entries: Array<{ address: string; amountSol: number }> = [];
+	if (existing.length > 0) {
+		const keep = await p.confirm({
+			message: `Keep existing airdrop recipients (${existing.length})?`,
+			initialValue: true,
+		});
+		if (p.isCancel(keep)) cancelSetup();
+		if (keep) entries.push(...existing);
+	}
+
+	while (true) {
+		const address = await p.text({
+			message:
+				entries.length === 0
+					? "Airdrop recipient address (leave blank to skip)"
+					: "Add another airdrop recipient (leave blank to finish)",
+		});
+		if (p.isCancel(address)) cancelSetup();
+		const trimmed = typeof address === "string" ? address.trim() : "";
+		if (!trimmed) break;
+		const error = validatePubkey(trimmed);
+		if (error) {
+			p.log.error(error);
+			continue;
+		}
+		const amount = ensure(
+			await p.text({
+				message: `Amount of SOL to airdrop to ${trimmed}`,
+				initialValue: "100",
+				validate: validatePositiveNumber,
+			}),
+		);
+		entries.push({ address: trimmed, amountSol: Number(amount) });
+	}
+
+	return entries;
 }

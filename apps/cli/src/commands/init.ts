@@ -22,7 +22,7 @@ const defaultConfig: Config = {
 		limitLedgerSize: 100000,
 	},
 	agi: {
-		enabled: false,
+		enabled: true,
 		port: 3456,
 		host: "127.0.0.1",
 		agent: "general",
@@ -60,11 +60,11 @@ export async function initCommand(): Promise<void> {
 			default: true,
 		},
 		{
-			type: "confirm",
-			name: "enableAgi",
-			message: "Enable AGI CLI server (AI coding assistant)?",
-			default: false,
-		},
+		type: "confirm",
+		name: "enableAgi",
+		message: "Enable AGI CLI server (AI coding assistant)?",
+		default: true,
+	},
 	]);
 
 	let agiConfig = defaultConfig.agi;

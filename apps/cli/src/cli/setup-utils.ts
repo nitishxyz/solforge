@@ -1,44 +1,46 @@
 import * as p from "@clack/prompts";
-
-const CANCEL_MESSAGE = "Setup cancelled";
+import { PublicKey } from "@solana/web3.js";
 
 export function cancelSetup(): never {
-	p.cancel(CANCEL_MESSAGE);
+	p.cancel("Setup canceled.");
 	process.exit(0);
 }
 
-export function ensure<T>(value: T | symbol): T {
-	if (p.isCancel(value)) cancelSetup();
-	return value as T;
-}
-
-export function validatePort(value: string | number | undefined) {
-	const num = Number(value);
-	if (!Number.isInteger(num)) return "Port must be an integer";
-	if (num < 1 || num > 65535) return "Port must be between 1 and 65535";
+export function validatePort(v: string): string | undefined {
+	const num = Number(v);
+	if (Number.isNaN(num) || num < 1024 || num > 65535)
+		return "Port must be between 1024 and 65535";
 	return undefined;
 }
 
-export function validatePositiveNumber(value: string) {
-	const num = Number(value);
-	if (!Number.isFinite(num)) return "Enter a number";
-	if (num <= 0) return "Enter a positive number";
+export function validatePubkey(v: string): string | undefined {
+	try {
+		new PublicKey(v);
+		return undefined;
+	} catch {
+		return "Invalid public key";
+	}
+}
+
+export function validatePositiveNumber(v: string): string | undefined {
+	const num = Number(v);
+	if (Number.isNaN(num) || num <= 0) return "Must be a positive number";
 	return undefined;
 }
 
-export function validatePubkey(value: string | undefined) {
-	if (!value) return "Value is required";
-	const trimmed = value.trim();
-	if (trimmed.length < 32 || trimmed.length > 44)
-		return "Expected base58 address";
-	return undefined;
+export function ensure<T>(v: T | symbol): T {
+	if (typeof v === "symbol") cancelSetup();
+	return v;
 }
 
-export async function collectCustomEntries(label: string) {
-	const results: string[] = [];
+export async function collectCustomEntries(label: string): Promise<string[]> {
+	const entries: string[] = [];
 	while (true) {
 		const value = await p.text({
-			message: `Enter ${label} (leave blank to finish)`,
+			message:
+				entries.length === 0
+					? `Enter ${label} (leave blank to skip)`
+					: `Add another ${label} (leave blank to finish)`,
 		});
 		if (p.isCancel(value)) cancelSetup();
 		const trimmed = typeof value === "string" ? value.trim() : "";
@@ -48,7 +50,7 @@ export async function collectCustomEntries(label: string) {
 			p.log.error(error);
 			continue;
 		}
-		results.push(trimmed);
+		entries.push(trimmed);
 	}
-	return results;
+	return entries;
 }

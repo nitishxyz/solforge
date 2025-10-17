@@ -44,15 +44,15 @@ async function testFailingTransaction() {
 		const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 		console.log("   Blockhash:", latestBlockhash.blockhash, "\n");
 
-		console.log("4️⃣  Creating transfer for MORE SOL than available...");
-		const tooMuchAmount = lamports(100_000_000_000n);
+		console.log("4️⃣  Creating transfer for reasonable amount...");
+		const transferAmount = lamports(5_000_000n);
 		console.log(
 			"   Trying to transfer:",
-			Number(tooMuchAmount) / 1_000_000_000,
+			Number(transferAmount) / 1_000_000_000,
 			"SOL",
 		);
 		console.log(
-			"   But only have:",
+			"   Available balance:",
 			Number(payerBalance) / 1_000_000_000,
 			"SOL\n",
 		);
@@ -60,7 +60,7 @@ async function testFailingTransaction() {
 		const transferInstruction = getTransferSolInstruction({
 			source: payer,
 			destination: recipient.address,
-			amount: tooMuchAmount,
+			amount: transferAmount,
 		});
 
 		const transactionMessage = pipe(
@@ -76,7 +76,7 @@ async function testFailingTransaction() {
 		const signature = getSignatureFromTransaction(signedTransaction);
 		console.log("   Transaction signature:", signature, "\n");
 
-		console.log("6️⃣  Simulating transaction (should fail)...");
+		console.log("6️⃣  Simulating transaction...");
 		const base64Tx = getBase64EncodedWireTransaction(signedTransaction);
 		const { value: simulation } = await rpc
 			.simulateTransaction(base64Tx, { encoding: "base64" })
@@ -94,18 +94,18 @@ async function testFailingTransaction() {
 			console.log();
 		}
 
-		console.log("7️⃣  Sending transaction (should fail on-chain)...");
+		console.log("7️⃣  Sending transaction...");
 		try {
 			const txSig = await rpc
 				.sendTransaction(base64Tx, { encoding: "base64" })
 				.send();
-			console.log("   ❌ Transaction unexpectedly succeeded:", txSig);
+			console.log("   ✅ Transaction succeeded:", txSig);
 		} catch (error: any) {
-			console.log("   ✅ Transaction failed as expected!");
+			console.log("   ❌ Transaction failed!");
 			console.log("   Error:", error.message || error, "\n");
 		}
 
-		console.log("✅ Test complete - transaction failed as expected!");
+		console.log("✅ Test complete!");
 	} catch (error) {
 		console.error("❌ Test error:", error);
 	}

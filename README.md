@@ -1,186 +1,235 @@
 # 🔥 SolForge
 
-> **Lightning-fast Solana localnet for developers** ⚡
-> Drop-in replacement for `solana-test-validator` with sub-second startup and minimal memory footprint.
+> **AI-Powered Solana Development Suite** 🤖⚡  
+> The next-generation Solana development environment combining blazing-fast localnet performance with integrated AI assistance. Build faster, debug smarter, ship sooner.
 
-[![Version](https://img.shields.io/badge/version-0.2.5-blue)](https://github.com/nitishxyz/solforge)
+[![Version](https://img.shields.io/badge/version-0.2.18-blue)](https://github.com/nitishxyz/solforge)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Powered by LiteSVM](https://img.shields.io/badge/powered%20by-LiteSVM-purple)](https://github.com/litesvm/litesvm)
+[![AI Enabled](https://img.shields.io/badge/AI-enabled-orange)](AGI_QUICKSTART.md)
 
-## ✨ Features
+---
 
-- **⚡ Blazing Fast**: Sub-second startup, ~50MB memory (vs 500MB+ for test-validator)
-- **🔌 Drop-in Compatible**: Works with Solana CLI, Anchor, web3.js, and @solana/kit
-- **💰 Unlimited Airdrops**: Built-in faucet with no rate limits
-- **🎨 Web GUI**: Interactive dashboard for airdrops, minting, and monitoring
-- **📦 Program Cloning**: Import programs and accounts from mainnet
-- **🔄 WebSocket Support**: Real-time transaction subscriptions (in the works)
-- **🤖 AI Assistant**: Integrated AGI coding assistant for Solana development (optional)
- 
+## 🎯 What is SolForge?
 
-## 🚀 Quick Install
+SolForge started as a lightning-fast alternative to `solana-test-validator`, but has evolved into something far more powerful: **a complete AI-powered Solana development suite** that combines:
 
-### One-Liner Install (Recommended)
+- 🚀 **Ultra-Fast Localnet** - Sub-second startup (~50MB vs 500MB+)
+- 🤖 **Integrated AI Assistant** - Built-in coding assistant powered by Claude, GPT-4, or your choice of LLM
+- 🎨 **Modern Web Dashboard** - Full-featured GUI with AI chat sidebar
+- 🛠️ **Complete Dev Toolkit** - Program cloning, token minting, unlimited airdrops
+- 🔌 **Drop-in Compatible** - Works with Anchor, web3.js, @solana/kit, and all existing tooling
+
+**Think of it as:** Your localnet, your dev tools, and your AI pair programmer—all in one command.
+
+---
+
+## ✨ Why SolForge?
+
+### The All-in-One Development Suite
+
+| Feature | SolForge | solana-test-validator |
+|---------|----------|----------------------|
+| **Startup Time** | < 1s | 10-30s |
+| **Memory Usage** | ~50MB | 500MB+ |
+| **AI Assistant** | ✅ Built-in | ❌ None |
+| **Web Dashboard** | ✅ Modern React UI | ❌ CLI only |
+| **Program Cloning** | ✅ One command | ❌ Manual |
+| **Token Cloning** | ✅ Automatic | ❌ Complex |
+| **Unlimited Airdrops** | ✅ Instant | ⚠️ Rate limited |
+| **WebSocket Support** | ✅ Real-time | ✅ Yes |
+
+---
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
+# One-liner install (recommended)
 curl -fsSL https://install.solforge.sh | sh
-```
 
-### Manual Install
-
-Download the latest binary from [GitHub Releases](https://github.com/nitishxyz/solforge/releases) and add to your PATH.
-
-### NPM/Bun Install
-
-```bash
-# Using npm
-npm install -g solforge
-
-# Using bun
+# Or with Bun
 bun install -g solforge
+
+# Or with npm
+npm install -g solforge
 ```
 
-## 🎯 Quick Start
-
-### 1️⃣ Start the Localnet
+### Start Everything
 
 ```bash
-solforge
+# Initialize config
+solforge init
+
+# Start localnet + AI + web dashboard
+solforge start
 ```
 
-This starts:
-
+This launches:
 - 🌐 **RPC Server**: `http://127.0.0.1:8899`
 - 📡 **WebSocket**: `ws://127.0.0.1:8900`
-- 🎨 **Web GUI**: `http://127.0.0.1:42069`
+- 🎨 **Web Dashboard**: `http://127.0.0.1:42069`
+- 🤖 **AI Assistant**: `http://127.0.0.1:3456/ui` _(if enabled)_
 
-### 2️⃣ Configure Solana CLI
+### Get Coding in 30 Seconds
 
 ```bash
+# Configure Solana CLI
 solana config set -u http://127.0.0.1:8899
-```
 
-### 3️⃣ Get Some SOL
-
-```bash
-# Using Solana CLI
+# Get some SOL
 solana airdrop 1000
 
-# Using SolForge CLI
-solforge airdrop --to <PUBKEY> --sol 100
+# You're ready! 🎉
 ```
 
-## 📚 Command Reference
+---
 
-### 🔧 Server Commands
+## 🤖 AI-Powered Development
 
-#### Start Server
+### Enable the AI Assistant
 
-```bash
-# Basic start
-solforge start
-
-# Custom ports
-solforge start --port 8899 --ws-port 8900
-
-# Bind to 0.0.0.0 for LAN access
-solforge start --network
-```
-
-### 💰 Airdrop Commands
-
-#### Send SOL
-
-```bash
-# Airdrop to specific address
-solforge airdrop --to <PUBKEY> --sol 100
-
-# Interactive mode
-solforge airdrop
-```
-
-### 🪙 Token Commands
-
-#### Create Token
-
-```bash
-# Interactive token creation
-solforge mint
-
-# Create new token
-solforge token create --decimals 9 --supply 1000000
-
-# Clone from mainnet
-solforge token clone <MINT_ADDRESS>
-
-# Adopt mint authority
-solforge token adopt-authority <MINT_ADDRESS>
-```
-
-### 📦 Program Commands
-
-#### Clone Program
-
-```bash
-# Clone program from mainnet
-solforge program clone <PROGRAM_ID>
-
-# Clone with accounts
-solforge program clone <PROGRAM_ID> --with-accounts
-
-# Clone specific accounts
-solforge program accounts clone <PROGRAM_ID> --limit 100
-
-# Load local program
-solforge program load --file ./program.so --id <PROGRAM_ID>
-```
-
-### ⚙️ Configuration Commands
-
-#### Initialize Config
-
-```bash
-# Create default config
-solforge config init
-
-# Get config value
-solforge config get server.rpcPort
-
-# Set config value
-solforge config set server.rpcPort 9999
-```
-
-## 📝 Configuration File
-
-Create `sf.config.json` in your project root:
+Add this to your `sf.config.json`:
 
 ```json
 {
+  "agi": {
+    "enabled": true
+  }
+}
+```
+
+That's it! The AI server starts automatically with smart defaults. No API keys required initially (uses AGI's defaults).
+
+### What Can the AI Do?
+
+1. **🐛 Debug Your Programs**
+   ```
+   "Why is my PDA derivation failing?"
+   "Explain this transaction error: Program failed..."
+   ```
+
+2. **📝 Generate Code**
+   ```
+   "Create an Anchor program for a token swap"
+   "Write a TypeScript client for my NFT program"
+   ```
+
+3. **🎓 Learn Solana**
+   ```
+   "What's the difference between a PDA and a keypair?"
+   "How do cross-program invocations work?"
+   ```
+
+4. **🔍 Review & Optimize**
+   ```
+   "Review this program for security issues"
+   "How can I optimize these compute units?"
+   ```
+
+5. **🚀 Deployment Help**
+   ```
+   "Deploy this program to devnet"
+   "Set up CI/CD for my Anchor project"
+   ```
+
+### Access the AI
+
+- **Web Dashboard**: Built-in chat sidebar at `http://127.0.0.1:42069`
+- **Standalone UI**: Direct access at `http://127.0.0.1:3456/ui`
+- **API**: Programmatic access via REST/SSE endpoints
+
+📖 **Detailed Guide**: [AGI_QUICKSTART.md](AGI_QUICKSTART.md)
+
+---
+
+## 🎨 Web Dashboard
+
+The modern web interface combines all your dev tools in one place:
+
+### Features
+- 📊 **Real-time Monitoring** - Slots, blocks, transactions
+- 💸 **Instant Airdrops** - Visual SOL distribution
+- 🪙 **Token Management** - Create, clone, and mint tokens
+- 🤖 **AI Chat Sidebar** - Get help without leaving your workspace
+- 🔍 **Transaction Inspector** - Debug transactions visually
+- 📈 **Network Stats** - Live performance metrics
+
+Access at `http://127.0.0.1:42069` when SolForge is running.
+
+---
+
+## 🛠️ Complete Development Toolkit
+
+### Program Development
+
+```bash
+# Clone programs from mainnet
+solforge program clone TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+
+# Clone with all associated accounts
+solforge program clone <PROGRAM_ID> --with-accounts
+
+# Load your own program
+solforge program load --file ./target/deploy/my_program.so
+```
+
+### Token Operations
+
+```bash
+# Clone USDC to localnet
+solforge token clone EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+
+# Create new token with metadata
+solforge mint
+
+# Interactive token creation wizard
+solforge token create
+```
+
+### Instant Airdrops
+
+```bash
+# No rate limits, no waiting
+solforge airdrop --to <PUBKEY> --sol 1000
+
+# Or use the web dashboard for visual control
+```
+
+---
+
+## 📝 Configuration
+
+Create `sf.config.json` to customize everything:
+
+```json
+{
+  "name": "my-solana-project",
   "server": {
     "rpcPort": 8899,
-    "wsPort": 8900,
-  },
-  "svm": {
-    "initialLamports": "1000000000000000",
-    "faucetSOL": 1000
-  },
-  "clone": {
-    "endpoint": "https://api.mainnet-beta.solana.com",
-    "programs": [
-      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-      "11111111111111111111111111111111"
-    ],
-    "tokens": ["So11111111111111111111111111111111111111112"],
-    "programAccounts": [
-      {
-        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-        "limit": 10
-      }
-    ]
+    "wsPort": 8900
   },
   "gui": {
     "enabled": true,
     "port": 42069
+  },
+  "agi": {
+    "enabled": true,
+    "port": 3456,
+    "provider": "openrouter",
+    "model": "anthropic/claude-3.5-sonnet"
+  },
+  "clone": {
+    "programs": [
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ],
+    "tokens": [
+      {
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "symbol": "USDC"
+      }
+    ]
   },
   "bootstrap": {
     "airdrops": [
@@ -193,45 +242,24 @@ Create `sf.config.json` in your project root:
 }
 ```
 
-### 🔑 Configuration Options
+### Configuration Options
 
-| Option                | Description                                 | Default                               |
-| --------------------- | ------------------------------------------- | ------------------------------------- |
-| `server.rpcPort`      | HTTP RPC port                               | `8899`                                |
-| `server.wsPort`       | WebSocket port                              | `8900`                                |
-| `server.network`      | Bind to `0.0.0.0` for LAN access            | `false`                               |
-| `svm.initialLamports` | Initial lamports for accounts               | `1000000000000000`                    |
-| `svm.faucetSOL`       | SOL amount per airdrop                      | `1000`                                |
-| `clone.endpoint`      | RPC endpoint for cloning                    | `https://api.mainnet-beta.solana.com` |
-| `clone.programs`      | Program IDs to clone on startup             | `[]`                                  |
-| `clone.tokens`        | Token mints to clone on startup             | `[]`                                  |
-| `gui.enabled`         | Enable web GUI                              | `true`                                |
-| `gui.port`            | GUI port                                    | `42069`                               |
-| `bootstrap.airdrops`  | Auto-airdrops on startup                    | `[]`                                  |
+| Section | Purpose | Docs |
+|---------|---------|------|
+| `server` | RPC/WebSocket ports | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
+| `gui` | Web dashboard settings | [apps/web/README.md](apps/web/README.md) |
+| `agi` | AI assistant configuration | [AGI_QUICKSTART.md](AGI_QUICKSTART.md) |
+| `clone` | Auto-clone programs/tokens | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
+| `bootstrap` | Auto-airdrops on startup | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
 
-## 🌍 Environment Variables
+---
 
-Override configuration with environment variables:
+## 🔌 Framework Integration
 
-```bash
-# Server settings
-export RPC_PORT=8899
-export SOLFORGE_GUI_PORT=3000
-
-# Debug mode
-export DEBUG_RPC_LOG=1  # Log all RPC calls
-
-# Start with env vars
-solforge start
-```
-
-## 🔌 Integration Examples
-
-### Anchor Framework
-
-Configure `Anchor.toml`:
+### Anchor
 
 ```toml
+# Anchor.toml
 [provider]
 cluster = "http://127.0.0.1:8899"
 wallet = "~/.config/solana/id.json"
@@ -242,15 +270,15 @@ test = "solforge start && anchor test --skip-local-validator"
 
 ### @solana/web3.js
 
-```javascript
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+```typescript
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const connection = new Connection("http://127.0.0.1:8899", "confirmed");
 
 // Request airdrop
-const signature = await connection.requestAirdrop(
+await connection.requestAirdrop(
   new PublicKey("YOUR_WALLET"),
-  100 * LAMPORTS_PER_SOL,
+  100 * LAMPORTS_PER_SOL
 );
 
 // Get balance
@@ -267,44 +295,227 @@ const rpc = createSolanaRpc("http://127.0.0.1:8899");
 
 // Request airdrop
 await rpc
-  .requestAirdrop(address("YOUR_WALLET"), lamports(1_000_000_000n))
+  .requestAirdrop(address("YOUR_WALLET"), lamports(100_000_000_000n))
   .send();
 
 // Get balance
 const balance = await rpc.getBalance(address("YOUR_WALLET")).send();
 ```
 
-## 🎨 Web GUI
+---
 
-The built-in GUI provides:
+## 📊 Performance & Comparison
 
-- **📊 Dashboard**: Current slot, block height, recent transactions
-- **💸 Airdrop Tool**: Quick SOL distribution interface
-- **🪙 Token Minter**: Create and mint SPL tokens
-- **📈 Status Monitor**: Real-time localnet statistics
+### Speed Matters
 
-Access at: `http://127.0.0.1:42069`
+```bash
+# solana-test-validator
+$ time solana-test-validator
+Startup: ~15-30 seconds
+Memory: 500-800 MB
+CPU: 5-10% idle
+
+# SolForge
+$ time solforge start
+Startup: < 1 second
+Memory: ~50 MB
+CPU: < 1% idle
+```
+
+### Why It's Fast
+
+- **LiteSVM**: Built on an optimized Solana Virtual Machine implementation
+- **Minimal Overhead**: No unnecessary validators or consensus
+- **Efficient Architecture**: Bun runtime + smart resource management
+- **Optimized RPC**: Direct SVM access without validator overhead
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        SolForge CLI                          │
+│  Entry point - orchestrates all components                  │
+└───────────┬─────────────────────────────────────────────────┘
+            │
+            ├──> 🚀 LiteSVM RPC Server (packages/server)
+            │    • Full Solana RPC API (90+ methods)
+            │    • WebSocket subscriptions
+            │    • ~50MB memory, sub-second startup
+            │
+            ├──> 🎨 Web Dashboard (apps/web)
+            │    • React + TypeScript + Vite
+            │    • Real-time monitoring
+            │    • Token & airdrop tools
+            │    • AGI chat sidebar integration
+            │
+            └──> 🤖 AGI Server (@agi-cli/server)
+                 • Embedded AI assistant
+                 • Multi-provider support (OpenRouter, Anthropic, OpenAI)
+                 • Specialized Solana development agents
+                 • REST API + SSE streaming
+```
+
+### Project Structure
+
+```
+solforge/
+├── apps/
+│   ├── cli/              # Main CLI entry point
+│   │   ├── commands/     # start, init, mint, etc.
+│   │   ├── services/     # Process management, token cloning
+│   │   └── config/       # Configuration management
+│   └── web/              # React dashboard
+│       ├── components/   # UI components + AGI sidebar
+│       └── routes/       # Dashboard pages
+├── packages/
+│   ├── server/           # LiteSVM RPC/WebSocket server
+│   │   ├── methods/      # 90+ RPC method implementations
+│   │   └── ws-server/    # WebSocket subscription server
+│   └── install/          # Installation CLI
+└── docs/                 # Architecture & guides
+```
+
+---
+
+## 🎓 Use Cases
+
+### For Hackathons 🏆
+- **Fast Iteration**: Sub-second restart means rapid development
+- **AI Pair Programming**: Debug faster with integrated AI
+- **Complete Toolkit**: Everything you need in one tool
+- **Visual Debugging**: Web dashboard for real-time insights
+
+### For Learning 📚
+- **Beginner Friendly**: AI explains Solana concepts as you code
+- **Interactive**: Web GUI makes concepts visual
+- **Fast Feedback**: Instant airdrops and program deployment
+- **Production-Ready**: Same RPC API as mainnet
+
+### For Teams 👥
+- **Consistent Environments**: Same config across all devs
+- **Faster Onboarding**: One command to start developing
+- **AI Knowledge Base**: Team can query AI for project patterns
+- **Remote Development**: `--network` flag for LAN access
+
+### For CI/CD 🔄
+- **Fast Tests**: Startup time doesn't bottleneck pipelines
+- **Scriptable**: Full CLI automation support
+- **Docker Ready**: Minimal resource footprint
+- **Reliable**: Deterministic behavior for testing
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [AGI_QUICKSTART.md](AGI_QUICKSTART.md) | AI assistant setup & usage |
+| [AGI_MINIMAL_CONFIG.md](AGI_MINIMAL_CONFIG.md) | Minimal AI configuration |
+| [apps/web/TESTING_AGI.md](apps/web/TESTING_AGI.md) | Testing AI integration |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Complete config reference |
+| [docs/ARCHITECTURE_DIAGRAM.md](docs/ARCHITECTURE_DIAGRAM.md) | System design details |
+| [docs/API.md](docs/API.md) | REST API endpoints |
+| [docs/MONOREPO_QUICK_START.md](docs/MONOREPO_QUICK_START.md) | Development setup |
+| [AGENTS.md](AGENTS.md) | Development guidelines |
+
+---
+
+## 🔧 Advanced Usage
+
+### AI Configuration
+
+```json
+{
+  "agi": {
+    "enabled": true,
+    "port": 3456,
+    "provider": "openrouter",
+    "model": "anthropic/claude-3.5-sonnet",
+    "agent": "general"
+  }
+}
+```
+
+**Supported Providers:**
+- OpenRouter (recommended - access to all models with one key)
+- Anthropic (Claude 3.5 Sonnet)
+- OpenAI (GPT-4 Turbo)
+
+**Agent Types:**
+- `general` - General Solana development & debugging
+- `build` - Build processes & deployment tasks
+
+### Network Mode
+
+Make your localnet accessible on your LAN:
+
+```bash
+solforge start --network
+```
+
+Now accessible at `http://YOUR_IP:8899` from other devices.
+
+### Bootstrap Configurations
+
+Auto-setup on every start:
+
+```json
+{
+  "clone": {
+    "programs": ["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"],
+    "tokens": [
+      {
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "symbol": "USDC"
+      }
+    ]
+  },
+  "bootstrap": {
+    "airdrops": [
+      { "address": "YOUR_WALLET", "amountSol": 100 }
+    ]
+  }
+}
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/test.yml
+- name: Setup SolForge
+  run: |
+    curl -fsSL https://install.solforge.sh | sh
+    solforge init
+    solforge start &
+    sleep 2
+
+- name: Run Tests
+  run: |
+    anchor test --skip-local-validator
+```
+
+---
 
 ## 🏗️ Building from Source
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime installed
+- [Bun](https://bun.sh) runtime
 
-### Build Steps
+### Build Commands
 
 ```bash
-# Clone repository
+# Clone & install
 git clone https://github.com/nitishxyz/solforge.git
 cd solforge
-
-# Install dependencies
 bun install
 
 # Run from source
 bun apps/cli/index.ts start
 
-# Build binary
+# Build binary for your platform
 bun run --filter @solforge/cli build:bin
 
 # Build for all platforms
@@ -326,45 +537,37 @@ bun run build:bin:linux-x64
 # Linux ARM64
 bun run build:bin:linux-arm64
 
-# Windows
+# Windows x64
 bun run build:bin:windows-x64
 ```
 
-## 🗂️ Project Structure
-
-```
-solforge/
-├── apps/
-│   ├── cli/           # SolForge CLI (commands, services, RPC bootstrap)
-│   └── web/           # Web UI (in development)
-├── packages/
-│   ├── server/        # LiteSVM RPC and WebSocket servers
-│   └── install/       # Installer CLI
-├── scripts/           # Build and setup scripts
-├── drizzle/           # SQLite migrations
-└── docs/              # Architecture and planning docs
-```
-
-## 📖 Documentation
-
-- **[AGI Integration Guide](docs/AGI_INTEGRATION.md)** - AI coding assistant setup and usage
-- **[Configuration Guide](docs/CONFIGURATION.md)** - Complete config reference
-- **[Architecture](docs/ARCHITECTURE_DIAGRAM.md)** - System design and architecture
-- **[API Reference](docs/API.md)** - REST API endpoints
-- **[Monorepo Guide](docs/MONOREPO_QUICK_START.md)** - Development setup
-
-> 💡 See the [docs/](docs/) directory for more documentation.
+---
 
 ## 🔍 Troubleshooting
 
 ### Port Already in Use
 
 ```bash
+# Check what's using the port
+lsof -i :8899
+
 # Use different port
 solforge start --port 9999
+```
 
-# Or update config
-solforge config set server.rpcPort 9999
+### AI Server Not Starting
+
+```bash
+# Check API key (if using specific provider)
+echo $OPENROUTER_API_KEY
+
+# Start with debug logs
+solforge start --debug
+
+# Use minimal config (no API key needed)
+{
+  "agi": { "enabled": true }
+}
 ```
 
 ### GUI Not Loading
@@ -373,12 +576,10 @@ solforge config set server.rpcPort 9999
 # Check if port is available
 lsof -i :42069
 
-# Use different GUI port
+# Use different port
 export SOLFORGE_GUI_PORT=3000
 solforge start
 ```
-
-
 
 ### Connection Refused
 
@@ -386,23 +587,48 @@ solforge start
 # Verify server is running
 curl http://127.0.0.1:8899/health
 
-# Check logs with debug mode
+# Check with debug mode
 DEBUG_RPC_LOG=1 solforge start
 ```
 
-## 📊 Performance Comparison
+---
 
-| Metric           | SolForge | solana-test-validator |
-| ---------------- | -------- | --------------------- |
-| Startup Time     | < 1s     | 10-30s                |
-| Memory Usage     | ~50MB    | 500MB+                |
-| CPU Usage (idle) | < 1%     | 5-10%                 |
-| Airdrop Speed    | Instant  | Rate limited          |
-| Program Deploy   | < 100ms  | 1-2s                  |
+## 📚 API Coverage
+
+### ✅ Fully Implemented (90+ methods)
+
+- **Account Operations**: getAccountInfo, getMultipleAccounts, getProgramAccounts
+- **Transaction Processing**: sendTransaction, simulateTransaction, getTransaction
+- **Block & Slot Queries**: getBlock, getSlot, getBlockHeight, getEpochInfo
+- **Token Operations**: getTokenAccountsByOwner, getTokenSupply, getTokenAccountBalance
+- **Program Deployment**: Full program deployment support
+- **WebSocket Subscriptions**: accountSubscribe, signatureSubscribe, programSubscribe
+
+### 🚧 In Progress
+
+- Additional WebSocket subscription types
+- Stake account operations
+- Vote account queries
+
+### 📋 Planned
+
+- Snapshot/restore functionality
+- Time-travel debugging
+- Multi-tenant support
+- Enhanced transaction inspection
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Whether you're:
+- Adding new RPC methods
+- Improving AI prompts
+- Enhancing the web dashboard
+- Writing documentation
+- Reporting bugs
+
+**See [AGENTS.md](AGENTS.md) for development guidelines.**
 
 ### Development Workflow
 
@@ -417,74 +643,49 @@ bun run lint
 bun run format
 ```
 
-## 📚 API Coverage
+---
 
-### ✅ Fully Implemented (90+ methods)
+## 🙏 Acknowledgments
 
-- Account operations
-- Transaction submission/simulation
-- Block/slot queries
-- Token operations
-- Program deployment
-- WebSocket subscriptions (signatures)
+SolForge is built on the shoulders of giants:
 
-### 🚧 Partial Support
+- **[LiteSVM](https://github.com/litesvm/litesvm)** - Fast Solana VM implementation
+- **[Bun](https://bun.sh)** - Lightning-fast JavaScript runtime
+- **[@agi-cli](https://github.com/OpenAgentsInc/openagents)** - AI coding assistant framework
+- **Solana Labs** - For building an incredible blockchain platform
+- **The Solana Community** - For inspiration and feedback
 
-- Stake operations
-- Vote accounts
-- Advanced subscriptions
-
-### 📋 Planned
-
-- Snapshot/restore
-- Time-travel debugging
-- Multi-tenant support
-
-## 🛠️ Advanced Usage
-
-### Custom Program Development
-
-```bash
-# Deploy custom program
-solana program deploy ./my-program.so
-
-# Clone and modify existing program
-solforge program clone <PROGRAM_ID>
-```
-
-### CI/CD Integration
-
-```yaml
-# GitHub Actions example
-- name: Setup SolForge
-  run: |
-    curl -fsSL https://install.solforge.sh | sh
-    solforge start &
-    sleep 2
-
-- name: Run Tests
-  run: |
-    anchor test --skip-local-validator
-```
+---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
 
 ## 🔗 Links
 
 - **GitHub**: [github.com/nitishxyz/solforge](https://github.com/nitishxyz/solforge)
 - **Issues**: [Report bugs or request features](https://github.com/nitishxyz/solforge/issues)
 - **Discord**: [Join our community](#) _(coming soon)_
+- **Twitter**: [@solforge_dev](#) _(coming soon)_
 
-## 🙏 Acknowledgments
+---
 
-- Built on [LiteSVM](https://github.com/litesvm/litesvm) - Fast SVM implementation
-- Powered by [Bun](https://bun.sh) - All-in-one JavaScript runtime
-- Inspired by the Solana developer community
+## 🌟 Star History
+
+If SolForge helps you build faster, please consider starring the repo! ⭐
 
 ---
 
 <p align="center">
-  Made with ❤️ for Solana developers
+  <strong>Made with ❤️ for Solana developers</strong><br>
+  <em>From a simple localnet to an AI-powered development suite</em>
+</p>
+
+<p align="center">
+  <a href="#-quick-start">Get Started</a> •
+  <a href="AGI_QUICKSTART.md">AI Docs</a> •
+  <a href="docs/">Full Docs</a> •
+  <a href="https://github.com/nitishxyz/solforge/issues">Support</a>
 </p>

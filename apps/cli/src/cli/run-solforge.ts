@@ -31,10 +31,8 @@ async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 			return defaultConfig;
 		}
 		p.intro("Solforge setup");
-		const config = await runSetupWizard();
-		await saveConfig(config);
-		p.outro("Configuration saved");
-		return config;
+		await runSetupWizard(CONFIG_PATH);
+		return await readConfig(CONFIG_PATH);
 	}
 
 	const current = await readConfig(CONFIG_PATH);
@@ -47,9 +45,8 @@ async function ensureConfig(ci = false): Promise<SolforgeConfig> {
 
 	if (reuse) return current;
 
-	const updated = await runSetupWizard(current);
-	await saveConfig(updated);
-	return updated;
+	await runSetupWizard(CONFIG_PATH);
+	return await readConfig(CONFIG_PATH);
 }
 
 async function startWithConfig(config: SolforgeConfig, args: string[] = []) {

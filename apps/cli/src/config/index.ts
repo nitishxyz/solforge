@@ -48,7 +48,7 @@ export const defaultConfig: SolforgeConfig = {
 	},
 	gui: { enabled: true, port: 42069 },
 	agi: {
-		enabled: false,
+		enabled: true,
 		port: 3456,
 		host: "127.0.0.1",
 		agent: "general",
