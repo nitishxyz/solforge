@@ -1,54 +1,56 @@
 ---
-import { getCollection } from 'astro:content';
-import '../../styles/global.css';
+import { getCollection } from "astro:content";
+import "../../styles/global.css";
 
 // Get the main docs index
-const allDocs = await getCollection('docs');
-const indexDoc = allDocs.find(doc => doc.slug === 'index');
+const allDocs = await getCollection("docs");
+const indexDoc = allDocs.find((doc) => doc.slug === "index");
 
 if (!indexDoc) {
-  // If no index doc, redirect to quickstart
-  return Astro.redirect('/docs/getting-started/quickstart');
+	// If no index doc, redirect to quickstart
+	return Astro.redirect("/docs/getting-started/quickstart");
 }
 
 const { Content } = await indexDoc.render();
 
 // Group docs by section
 const sections = [
-  {
-    title: 'Getting Started',
-    items: allDocs.filter(d => d.slug.startsWith('getting-started/')).sort((a, b) => {
-      const order = ['quickstart', 'installation', 'first-project'];
-      const aIndex = order.findIndex(o => a.slug.includes(o));
-      const bIndex = order.findIndex(o => b.slug.includes(o));
-      return aIndex - bIndex;
-    })
-  },
-  {
-    title: 'AI Integration',
-    items: allDocs.filter(d => d.slug.startsWith('ai/'))
-  },
-  {
-    title: 'Core Features',
-    items: allDocs.filter(d => d.slug.startsWith('core/'))
-  },
-  {
-    title: 'CLI Reference',
-    items: allDocs.filter(d => d.slug.startsWith('cli/'))
-  },
-  {
-    title: 'Configuration',
-    items: allDocs.filter(d => d.slug.startsWith('config/'))
-  },
-  {
-    title: 'Frameworks',
-    items: allDocs.filter(d => d.slug.startsWith('frameworks/'))
-  },
-  {
-    title: 'Advanced',
-    items: allDocs.filter(d => d.slug.startsWith('advanced/'))
-  }
-].filter(section => section.items.length > 0);
+	{
+		title: "Getting Started",
+		items: allDocs
+			.filter((d) => d.slug.startsWith("getting-started/"))
+			.sort((a, b) => {
+				const order = ["quickstart", "installation", "first-project"];
+				const aIndex = order.findIndex((o) => a.slug.includes(o));
+				const bIndex = order.findIndex((o) => b.slug.includes(o));
+				return aIndex - bIndex;
+			}),
+	},
+	{
+		title: "AI Integration",
+		items: allDocs.filter((d) => d.slug.startsWith("ai/")),
+	},
+	{
+		title: "Core Features",
+		items: allDocs.filter((d) => d.slug.startsWith("core/")),
+	},
+	{
+		title: "CLI Reference",
+		items: allDocs.filter((d) => d.slug.startsWith("cli/")),
+	},
+	{
+		title: "Configuration",
+		items: allDocs.filter((d) => d.slug.startsWith("config/")),
+	},
+	{
+		title: "Frameworks",
+		items: allDocs.filter((d) => d.slug.startsWith("frameworks/")),
+	},
+	{
+		title: "Advanced",
+		items: allDocs.filter((d) => d.slug.startsWith("advanced/")),
+	},
+].filter((section) => section.items.length > 0);
 ---
 
 <!DOCTYPE html>

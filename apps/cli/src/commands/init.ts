@@ -60,11 +60,11 @@ export async function initCommand(): Promise<void> {
 			default: true,
 		},
 		{
-		type: "confirm",
-		name: "enableAgi",
-		message: "Enable AGI CLI server (AI coding assistant)?",
-		default: true,
-	},
+			type: "confirm",
+			name: "enableAgi",
+			message: "Enable AGI CLI server (AI coding assistant)?",
+			default: true,
+		},
 	]);
 
 	let agiConfig = defaultConfig.agi;
@@ -164,7 +164,9 @@ export async function initCommand(): Promise<void> {
 		console.log(chalk.blue("📦 Tokens to clone:"));
 		for (const token of tokens) {
 			console.log(
-				chalk.gray(`   - ${token.symbol} (${token.mainnetMint.slice(0, 8)}...)`),
+				chalk.gray(
+					`   - ${token.symbol} (${token.mainnetMint.slice(0, 8)}...)`,
+				),
 			);
 		}
 		console.log();
@@ -186,7 +188,9 @@ export async function initCommand(): Promise<void> {
 	console.log(chalk.cyan("Next steps:"));
 	console.log(chalk.gray("   1. Run 'solforge start' to launch the localnet"));
 	console.log(
-		chalk.gray("   2. Use 'solforge mint <token>' to mint tokens to your wallet"),
+		chalk.gray(
+			"   2. Use 'solforge mint <token>' to mint tokens to your wallet",
+		),
 	);
 	console.log();
 }

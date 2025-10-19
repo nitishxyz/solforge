@@ -11,15 +11,39 @@ import {
 } from "./setup-utils.ts";
 
 const TOKEN_PRESETS = [
-	{ value: "usdc", label: "USDC", mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
-	{ value: "usdt", label: "USDT", mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" },
+	{
+		value: "usdc",
+		label: "USDC",
+		mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+	},
+	{
+		value: "usdt",
+		label: "USDT",
+		mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+	},
 ];
 
 const PROGRAM_PRESETS = [
-	{ value: "jupiter", label: "Jupiter", programId: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" },
-	{ value: "pump", label: "Pump core", programId: "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P" },
-	{ value: "pump-amm", label: "Pump AMM", programId: "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA" },
-	{ value: "pump-fees", label: "Pump fees", programId: "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ" },
+	{
+		value: "jupiter",
+		label: "Jupiter",
+		programId: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+	},
+	{
+		value: "pump",
+		label: "Pump core",
+		programId: "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+	},
+	{
+		value: "pump-amm",
+		label: "Pump AMM",
+		programId: "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+	},
+	{
+		value: "pump-fees",
+		label: "Pump fees",
+		programId: "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ",
+	},
 ];
 
 export async function runSetupWizard(configFile?: string) {
@@ -99,7 +123,10 @@ export async function runSetupWizard(configFile?: string) {
 		}),
 	) as string[];
 
-	const programs = await resolvePrograms(programSelection, base.clone.programs ?? []);
+	const programs = await resolvePrograms(
+		programSelection,
+		base.clone.programs ?? [],
+	);
 
 	const airdrops = await collectAirdrops(base.bootstrap?.airdrops ?? []);
 
@@ -137,7 +164,11 @@ export async function runSetupWizard(configFile?: string) {
 			initialValue: agiProvider,
 		});
 		if (p.isCancel(providerResp)) cancelSetup();
-		agiProvider = providerResp as "openrouter" | "anthropic" | "openai" | undefined;
+		agiProvider = providerResp as
+			| "openrouter"
+			| "anthropic"
+			| "openai"
+			| undefined;
 
 		if (agiProvider) {
 			const modelResp = await p.text({

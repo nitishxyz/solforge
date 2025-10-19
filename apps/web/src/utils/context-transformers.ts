@@ -143,8 +143,10 @@ ${ix.parsed?.type ? `- **Type**: ${ix.parsed.type}` : ""}
 	const innerInstructions = tx.meta?.innerInstructions || [];
 	if (
 		innerInstructions.length > 0 &&
-		innerInstructions.reduce((acc, group) => acc + group.instructions.length, 0) >
-			0
+		innerInstructions.reduce(
+			(acc, group) => acc + group.instructions.length,
+			0,
+		) > 0
 	) {
 		const totalInner = innerInstructions.reduce(
 			(acc, group) => acc + group.instructions.length,

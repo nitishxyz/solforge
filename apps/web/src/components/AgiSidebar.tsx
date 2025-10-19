@@ -226,11 +226,14 @@ export function AgiSidebar({ userContext }: { userContext?: string }) {
 							<div className="agi-message-thread-wrapper">
 								<MessageThreadContainer sessionId={activeSessionId} />
 							</div>
-					{/* Chat Input - Wrapper with positioning context */}
-					<div className="agi-chat-input-wrapper">
-						<ChatInputContainer sessionId={activeSessionId} userContext={userContext} />
-					</div>
-				</>
+							{/* Chat Input - Wrapper with positioning context */}
+							<div className="agi-chat-input-wrapper">
+								<ChatInputContainer
+									sessionId={activeSessionId}
+									userContext={userContext}
+								/>
+							</div>
+						</>
 					) : (
 						<div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
 							{sessionsLoading ? (
