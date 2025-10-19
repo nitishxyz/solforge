@@ -409,16 +409,12 @@ solforge/
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [AGI_QUICKSTART.md](AGI_QUICKSTART.md) | AI assistant setup & usage |
-| [AGI_MINIMAL_CONFIG.md](AGI_MINIMAL_CONFIG.md) | Minimal AI configuration |
-| [apps/web/TESTING_AGI.md](apps/web/TESTING_AGI.md) | Testing AI integration |
-| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Complete config reference |
-| [docs/ARCHITECTURE_DIAGRAM.md](docs/ARCHITECTURE_DIAGRAM.md) | System design details |
-| [docs/API.md](docs/API.md) | REST API endpoints |
-| [docs/MONOREPO_QUICK_START.md](docs/MONOREPO_QUICK_START.md) | Development setup |
-| [AGENTS.md](AGENTS.md) | Development guidelines |
+**📖 [Complete Documentation](https://solforge.dev/docs)** - All documentation is now hosted on the website as a single source of truth.
+
+Quick links:
+- [AI Assistant Setup](https://solforge.dev/docs/ai/quickstart) - Enable and configure the AI
+- [Configuration Reference](https://solforge.dev/docs/config/reference) - Complete sf.config.json guide
+- [CLI Commands](https://solforge.dev/docs/cli/overview) - All available CLI commands
 
 ---
 

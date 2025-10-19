@@ -1,0 +1,138 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  
+  return docs.map((doc) => ({
+    params: { slug: doc.slug === 'index' ? undefined : doc.slug },
+    props: { doc },
+  }));
+}
+
+const { doc } = Astro.props;
+const { Content } = await doc.render();
+
+// Generate navigation from all docs
+const allDocs = await getCollection('docs');
+
+// Group docs by section
+const sections = [
+  {
+    title: 'Getting Started',
+    items: allDocs.filter(d => d.slug.startsWith('getting-started/')).sort((a, b) => {
+      const order = ['quickstart', 'installation', 'first-project'];
+      const aIndex = order.findIndex(o => a.slug.includes(o));
+      const bIndex = order.findIndex(o => b.slug.includes(o));
+      return aIndex - bIndex;
+    })
+  },
+  {
+    title: 'AI Integration',
+    items: allDocs.filter(d => d.slug.startsWith('ai/'))
+  },
+  {
+    title: 'Core Features',
+    items: allDocs.filter(d => d.slug.startsWith('core/'))
+  },
+  {
+    title: 'CLI Reference',
+    items: allDocs.filter(d => d.slug.startsWith('cli/'))
+  },
+  {
+    title: 'Configuration',
+    items: allDocs.filter(d => d.slug.startsWith('config/'))
+  },
+  {
+    title: 'Frameworks',
+    items: allDocs.filter(d => d.slug.startsWith('frameworks/'))
+  },
+  {
+    title: 'Advanced',
+    items: allDocs.filter(d => d.slug.startsWith('advanced/'))
+  }
+].filter(section => section.items.length > 0);
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{doc.data.title} - SolForge Docs</title>
+    <meta name="description" content={doc.data.description || doc.data.title} />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <!-- Top Navigation -->
+    <nav class="border-b border-border">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <a href="/" class="text-2xl font-bold">⚡ SolForge</a>
+          </div>
+          <div class="flex items-center gap-6">
+            <a href="/docs" class="text-sm hover:text-primary transition-colors">Docs</a>
+            <a href="https://github.com/nitishxyz/solforge" target="_blank" class="text-sm hover:text-primary transition-colors">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container flex max-w-screen-2xl px-6 py-8 md:grid md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
+      <!-- Sidebar -->
+      <aside class="hidden md:block md:sticky md:top-20 md:h-[calc(100vh-5rem)] md:overflow-y-auto md:pr-4">
+        <nav class="space-y-6">
+          {sections.map((section) => (
+            <div>
+              <h4 class="mb-2 text-sm font-semibold">
+                {section.title}
+              </h4>
+              <div class="space-y-1">
+                {section.items.map((item) => (
+                  <a
+                    href={`/docs/${item.slug}`}
+                    class:list={[
+                      "block text-sm transition-colors py-1",
+                      item.slug === doc.slug
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    ]}
+                  >
+                    {item.data.title}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="min-w-0 flex-1">
+        <div class="mx-auto w-full min-w-0 max-w-4xl">
+          <div class="mb-4 flex items-center space-x-1 text-sm text-muted-foreground">
+            <a href="/docs" class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground">
+              Docs
+            </a>
+            <span>/</span>
+            <span class="font-medium text-foreground">{doc.data.title}</span>
+          </div>
+
+          <div class="mt-8">
+            <article class="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-5xl prose-h1:mb-4 prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-lg prose-p:leading-relaxed prose-li:text-lg prose-code:text-base prose-pre:text-sm prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+              <Content />
+            </article>
+          </div>
+
+          <div class="mt-16 pt-4 border-t border-border">
+            <p class="text-sm text-muted-foreground">
+              Found an issue? <a href="https://github.com/nitishxyz/solforge/issues" target="_blank" class="underline hover:text-foreground transition-colors">Let us know →</a>
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
