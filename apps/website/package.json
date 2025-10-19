@@ -1,0 +1,23 @@
+{
+  "name": "website",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "sst dev astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "astro": "^5.14.6",
+    "aws4fetch": "^1.0.20",
+    "sst": "^3.17.19",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@astrojs/tailwind": "^6.0.2",
+    "tailwindcss": "^3"
+  }
+}

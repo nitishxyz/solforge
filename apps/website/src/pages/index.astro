@@ -1,0 +1,312 @@
+---
+import '../styles/global.css';
+---
+
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>SolForge - Blazing Fast Solana Development</title>
+		<meta name="description" content="Local Solana development environment powered by Bun. Test validator, built-in faucet, and powerful CLI tools." />
+		<style>
+			@keyframes blink {
+				0%, 49% { opacity: 1; }
+				50%, 100% { opacity: 0; }
+			}
+			.cursor {
+				animation: blink 1s infinite;
+			}
+			.terminal-line {
+				opacity: 0;
+				animation: fadeIn 0.3s forwards;
+			}
+			@keyframes fadeIn {
+				to { opacity: 1; }
+			}
+			#terminal-content {
+				transition: height 0.3s ease-out;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body class="min-h-screen">
+		<!-- Navigation -->
+		<nav class="border-b border-border">
+			<div class="container mx-auto px-4 py-4">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<span class="text-2xl font-bold">⚡ SolForge</span>
+					</div>
+					<div class="flex items-center gap-6">
+						<a href="/docs" class="text-sm hover:text-primary transition-colors">Docs</a>
+						<a href="https://github.com/nitishxyz/solforge" target="_blank" class="text-sm hover:text-primary transition-colors">GitHub</a>
+					</div>
+				</div>
+			</div>
+		</nav>
+
+		<main>
+			<!-- Hero Section -->
+			<section class="container mx-auto px-4 py-20">
+				<div class="max-w-4xl mx-auto text-center">
+					<h1 class="text-6xl font-bold mb-6 leading-tight">
+						Blazing Fast<br />Solana Development
+					</h1>
+					<p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+						A local Solana development environment powered by Bun. 
+						Get a test validator, built-in faucet, and powerful CLI tools in seconds.
+					</p>
+					<div class="flex gap-4 justify-center flex-wrap">
+						<a 
+							href="/docs" 
+							class="px-8 py-4 bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+						>
+							Get Started
+						</a>
+						<a 
+							href="https://github.com/nitishxyz/solforge" 
+							target="_blank"
+							class="px-8 py-4 border border-border font-semibold hover:bg-accent transition-colors"
+						>
+							View on GitHub →
+						</a>
+					</div>
+				</div>
+			</section>
+
+			<!-- Animated Terminal Demo Section -->
+			<section class="container mx-auto px-4 py-12">
+				<div class="max-w-3xl mx-auto">
+					<div class="bg-card border border-border p-6">
+						<div class="flex items-center gap-2 mb-4 pb-4 border-b border-border">
+							<div class="flex gap-1.5">
+								<div class="w-3 h-3 bg-red-500"></div>
+								<div class="w-3 h-3 bg-yellow-500"></div>
+								<div class="w-3 h-3 bg-green-500"></div>
+							</div>
+							<span class="text-sm text-muted-foreground font-mono ml-2">Terminal</span>
+						</div>
+						<div id="terminal-content" class="text-sm font-mono min-h-[400px]">
+							<!-- Terminal content will be animated here -->
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Features Grid -->
+			<section class="container mx-auto px-4 py-20">
+				<div class="max-w-6xl mx-auto">
+					<h2 class="text-3xl font-bold text-center mb-12">Everything you need to build on Solana</h2>
+					<div class="grid md:grid-cols-3 gap-6">
+						<!-- Feature 1 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">⚡</div>
+							<h3 class="text-xl font-semibold mb-3">Lightning Fast</h3>
+							<p class="text-muted-foreground">
+								Powered by Bun for instant startup and blazing fast execution. 
+								No more waiting for slow dev environments.
+							</p>
+						</div>
+
+						<!-- Feature 2 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">🔧</div>
+							<h3 class="text-xl font-semibold mb-3">Complete Toolkit</h3>
+							<p class="text-muted-foreground">
+								Local test validator, faucet, account management, and deployment tools. 
+								Everything in one package.
+							</p>
+						</div>
+
+						<!-- Feature 3 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">🎯</div>
+							<h3 class="text-xl font-semibold mb-3">Developer First</h3>
+							<p class="text-muted-foreground">
+								Beautiful CLI, intuitive commands, and helpful error messages. 
+								Built by developers, for developers.
+							</p>
+						</div>
+
+						<!-- Feature 4 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">🔒</div>
+							<h3 class="text-xl font-semibold mb-3">Secure by Default</h3>
+							<p class="text-muted-foreground">
+								Isolated local environment means you never risk real SOL. 
+								Perfect for testing and experimentation.
+							</p>
+						</div>
+
+						<!-- Feature 5 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">📦</div>
+							<h3 class="text-xl font-semibold mb-3">Zero Config</h3>
+							<p class="text-muted-foreground">
+								Works out of the box with sensible defaults. 
+								No configuration files or complex setup required.
+							</p>
+						</div>
+
+						<!-- Feature 6 -->
+						<div class="border border-border p-6 hover:border-primary/50 transition-colors">
+							<div class="text-3xl mb-4">🚀</div>
+							<h3 class="text-xl font-semibold mb-3">Production Ready</h3>
+							<p class="text-muted-foreground">
+								Deploy to mainnet with confidence. 
+								Same tools for development and production.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- CTA Section -->
+			<section class="container mx-auto px-4 py-20">
+				<div class="max-w-4xl mx-auto text-center border border-border p-12">
+					<h2 class="text-4xl font-bold mb-4">Ready to build on Solana?</h2>
+					<p class="text-xl text-muted-foreground mb-8">
+						Join developers using SolForge to ship faster.
+					</p>
+					<a 
+						href="/docs" 
+						class="inline-block px-8 py-4 bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+					>
+						Get Started Now
+					</a>
+				</div>
+			</section>
+		</main>
+
+		<!-- Footer -->
+		<footer class="border-t border-border mt-20">
+			<div class="container mx-auto px-4 py-8">
+				<div class="flex flex-col md:flex-row justify-between items-center gap-4">
+					<div class="text-sm text-muted-foreground">
+						Built with ⚡ by the SolForge team
+					</div>
+					<div class="flex gap-6">
+						<a href="https://github.com/nitishxyz/solforge" target="_blank" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+							GitHub
+						</a>
+						<a href="/docs" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+							Documentation
+						</a>
+					</div>
+				</div>
+			</div>
+		</footer>
+
+		<script>
+			const terminalSteps = [
+				{ type: 'command', text: '$ curl -fsSL https://install.solforge.sh | bash', delay: 200 },
+				{ type: 'output', text: 'Downloading SolForge...', delay: 600 },
+				{ type: 'output', text: '✓ Installed successfully!', delay: 400, color: 'text-green-500' },
+				{ type: 'empty', delay: 500 },
+				{ type: 'command', text: '$ solforge', delay: 200 },
+				{ type: 'output', text: '', delay: 300 },
+				{ type: 'output', text: '┌  SolForge Configuration', delay: 400, color: 'text-cyan-400' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  RPC port', delay: 300 },
+				{ type: 'output', text: '│  8899', delay: 400, color: 'text-muted-foreground' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  WS port', delay: 300 },
+				{ type: 'output', text: '│  8900', delay: 400, color: 'text-muted-foreground' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  Enable GUI?', delay: 300 },
+				{ type: 'output', text: '│  Yes', delay: 400, color: 'text-green-500' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  GUI port', delay: 300 },
+				{ type: 'output', text: '│  3000', delay: 400, color: 'text-muted-foreground' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◇  Which tokens should be cloned?', delay: 300 },
+				{ type: 'output', text: '│  ◼ USDC, USDT', delay: 500, color: 'text-cyan-400' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◇  Clone any on-chain programs?', delay: 300 },
+				{ type: 'output', text: '│  ◼ Jupiter', delay: 500, color: 'text-cyan-400' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  Enable AGI?', delay: 300 },
+				{ type: 'output', text: '│  Yes', delay: 400, color: 'text-green-500' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '◆  AGI port', delay: 300 },
+				{ type: 'output', text: '│  3456', delay: 400, color: 'text-muted-foreground' },
+				{ type: 'output', text: '│', delay: 100 },
+				{ type: 'output', text: '└  Configuration saved', delay: 400, color: 'text-green-500' },
+				{ type: 'output', text: '', delay: 200 },
+				{ type: 'output', text: '◒  Starting RPC on 127.0.0.1:8899 (WS 8900, GUI 3000)...', delay: 600 },
+				{ type: 'output', text: '◆  Cloning tokens from mainnet...', delay: 800 },
+				{ type: 'output', text: '   → USDC cloned', delay: 500, color: 'text-muted-foreground' },
+				{ type: 'output', text: '   → USDT cloned', delay: 500, color: 'text-muted-foreground' },
+				{ type: 'output', text: '◆  Cloning programs...', delay: 600 },
+				{ type: 'output', text: '   → Jupiter cloned', delay: 600, color: 'text-muted-foreground' },
+				{ type: 'output', text: '', delay: 600 },
+				{ type: 'output', text: '◇  Solforge ready ➜ HTTP http://127.0.0.1:8899 | WS ws://127.0.0.1:8900 | GUI http://127.0.0.1:3000 | AGI http://127.0.0.1:3456/ui', delay: 500, color: 'text-green-500' },
+				{ type: 'empty', delay: 200 },
+				{ type: 'cursor', text: '$', delay: 1000 },
+			];
+
+			let currentStep = 0;
+			let isAnimating = false;
+
+			async function typeText(element, text, speed = 30) {
+				for (let char of text) {
+					element.textContent += char;
+					await new Promise(resolve => setTimeout(resolve, speed));
+				}
+			}
+
+			async function animateTerminal() {
+				if (isAnimating) return;
+				isAnimating = true;
+
+				const terminal = document.getElementById('terminal-content');
+				terminal.innerHTML = '';
+				terminal.style.height = '0px';
+				currentStep = 0;
+
+				for (const step of terminalSteps) {
+					await new Promise(resolve => setTimeout(resolve, step.delay));
+
+					const line = document.createElement('div');
+					line.className = 'terminal-line';
+					
+					if (step.type === 'command') {
+						line.className += ' ' + (step.color || 'text-foreground');
+						terminal.appendChild(line);
+						await typeText(line, step.text, 50);
+					} else if (step.type === 'output') {
+						line.className += ' ' + (step.color || 'text-muted-foreground');
+						line.textContent = step.text;
+						terminal.appendChild(line);
+					} else if (step.type === 'cursor') {
+						line.className += ' text-foreground';
+						line.innerHTML = step.text + '<span class="cursor">_</span>';
+						terminal.appendChild(line);
+					} else if (step.type === 'empty') {
+						line.innerHTML = '&nbsp;';
+						terminal.appendChild(line);
+					}
+
+					// Smooth height transition
+					const newHeight = terminal.scrollHeight;
+					terminal.style.height = `${newHeight}px`;
+				}
+
+				// Restart animation after delay
+				setTimeout(() => {
+					isAnimating = false;
+					animateTerminal();
+				}, 5000);
+			}
+
+			// Start animation when page loads
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', animateTerminal);
+			} else {
+				animateTerminal();
+			}
+		</script>
+	</body>
+</html>

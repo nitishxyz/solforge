@@ -26,7 +26,7 @@ async function testFailingTransaction() {
 		console.log("   Recipient:", recipient.address, "\n");
 
 		console.log("2️⃣  Requesting small airdrop (only 0.01 SOL)...");
-		const smallAirdrop = lamports(10_000_000n);
+		const smallAirdrop = lamports(1_000_000n);
 		await rpc
 			.requestAirdrop(payer.address, smallAirdrop, { commitment: "confirmed" })
 			.send();
@@ -45,7 +45,7 @@ async function testFailingTransaction() {
 		console.log("   Blockhash:", latestBlockhash.blockhash, "\n");
 
 		console.log("4️⃣  Creating transfer for reasonable amount...");
-		const transferAmount = lamports(5_000_000n);
+		const transferAmount = lamports(5_000_000_000n);
 		console.log(
 			"   Trying to transfer:",
 			Number(transferAmount) / 1_000_000_000,
