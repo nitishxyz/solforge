@@ -26,22 +26,16 @@ bun install -g solforge
 npm install -g solforge
 ```
 
-## Initialize Your Project
+## Start SolForge
 
 ```bash
-# Navigate to your project directory
-cd my-solana-project
-
-# Initialize SolForge configuration
-solforge init
+# Just run solforge - it does everything!
+solforge
 ```
 
-This creates `sf.config.json` with sensible defaults.
-
-## Start Everything
-
-```bash
-solforge start
+This will:
+1. Run interactive setup (creates `sf.config.json`)
+2. Start all services automatically
 ```
 
 This launches:
@@ -93,7 +87,7 @@ console.log(`Balance: ${balance / LAMPORTS_PER_SOL} SOL`);
 
 **Port already in use?**
 ```bash
-solforge start --port 9999
+solforge --port 9999
 ```
 
 **Need to see what's running?**

@@ -55,15 +55,26 @@ bun install -g solforge
 # Or with npm
 npm install -g solforge
 ```
+```
+
+**GitLab CI:**
+```yaml
+script:
+  - npm install -g solforge
+  - solforge --ci &
+  - sleep 5
+  - anchor test --skip-local-validator
+# Bind to all interfaces for LAN access
+solforge --network
+# Note: Keep SolForge local-only in production for security
+test = "anchor test --skip-local-validator"
+### Start SolForge
+solforge
 
 ### Start Everything
 
 ```bash
 # Initialize config
-solforge init
-
-# Start localnet + AI + web dashboard
-solforge start
 ```
 
 This launches:
@@ -71,6 +82,7 @@ This launches:
 - 📡 **WebSocket**: `ws://127.0.0.1:8900`
 - 🎨 **Web Dashboard**: `http://127.0.0.1:42069`
 - 🤖 **AI Assistant**: `http://127.0.0.1:3456/ui` _(if enabled)_
+This runs interactive setup (first time) and launches all services:
 
 ### Get Coding in 30 Seconds
 
@@ -265,7 +277,7 @@ cluster = "http://127.0.0.1:8899"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "solforge start && anchor test --skip-local-validator"
+test = "solforge &&  anchor test --skip-local-validator"
 ```
 
 ### @solana/web3.js
@@ -311,12 +323,14 @@ const balance = await rpc.getBalance(address("YOUR_WALLET")).send();
 ```bash
 # solana-test-validator
 $ time solana-test-validator
+$ time solforge
 Startup: ~15-30 seconds
 Memory: 500-800 MB
 CPU: 5-10% idle
+$ time solforge
 
 # SolForge
-$ time solforge start
+$ time solforge
 Startup: < 1 second
 Memory: ~50 MB
 CPU: < 1% idle
@@ -448,7 +462,7 @@ Quick links:
 Make your localnet accessible on your LAN:
 
 ```bash
-solforge start --network
+solforge --network
 ```
 
 Now accessible at `http://YOUR_IP:8899` from other devices.
@@ -474,18 +488,13 @@ Auto-setup on every start:
     ]
   }
 }
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install -g solforge
+      - run: solforge --ci &
+      - run: sleep 5 && anchor test --skip-local-validator
 ```
-
-### CI/CD Integration
-
-```yaml
-# .github/workflows/test.yml
-- name: Setup SolForge
   run: |
-    curl -fsSL https://install.solforge.sh | sh
-    solforge init
-    solforge start &
-    sleep 2
 
 - name: Run Tests
   run: |
@@ -548,7 +557,7 @@ bun run build:bin:windows-x64
 lsof -i :8899
 
 # Use different port
-solforge start --port 9999
+solforge --port 9999
 ```
 
 ### AI Server Not Starting
@@ -558,7 +567,7 @@ solforge start --port 9999
 echo $OPENROUTER_API_KEY
 
 # Start with debug logs
-solforge start --debug
+solforge --debug
 
 # Use minimal config (no API key needed)
 {
@@ -574,17 +583,17 @@ lsof -i :42069
 
 # Use different port
 export SOLFORGE_GUI_PORT=3000
-solforge start
+solforge
 ```
 
 ### Connection Refused
+### Quick Reference
 
 ```bash
-# Verify server is running
-curl http://127.0.0.1:8899/health
-
-# Check with debug mode
-DEBUG_RPC_LOG=1 solforge start
+solforge              # Start everything
+solforge stop         # Stop everything
+solforge mint         # Mint tokens
+solforge token clone  # Clone token from mainnet
 ```
 
 ---
