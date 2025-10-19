@@ -55,18 +55,18 @@ import "../styles/global.css";
 						Blazing Fast<br />Solana Development
 					</h1>
 					<p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-						A local Solana development environment powered by Bun. 
+						A local Solana development environment powered by Bun.
 						Get a test validator, built-in faucet, and powerful CLI tools in seconds.
 					</p>
 					<div class="flex gap-4 justify-center flex-wrap">
-						<a 
-							href="/docs" 
+						<a
+							href="/docs"
 							class="px-8 py-4 bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
 						>
 							Get Started
 						</a>
-						<a 
-							href="https://github.com/nitishxyz/solforge" 
+						<a
+							href="https://github.com/nitishxyz/solforge"
 							target="_blank"
 							class="px-8 py-4 border border-border font-semibold hover:bg-accent transition-colors"
 						>
@@ -105,7 +105,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">⚡</div>
 							<h3 class="text-xl font-semibold mb-3">Lightning Fast</h3>
 							<p class="text-muted-foreground">
-								Powered by Bun for instant startup and blazing fast execution. 
+								Powered by Bun for instant startup and blazing fast execution.
 								No more waiting for slow dev environments.
 							</p>
 						</div>
@@ -115,7 +115,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">🔧</div>
 							<h3 class="text-xl font-semibold mb-3">Complete Toolkit</h3>
 							<p class="text-muted-foreground">
-								Local test validator, faucet, account management, and deployment tools. 
+								Local test validator, faucet, account management, and deployment tools.
 								Everything in one package.
 							</p>
 						</div>
@@ -125,7 +125,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">🎯</div>
 							<h3 class="text-xl font-semibold mb-3">Developer First</h3>
 							<p class="text-muted-foreground">
-								Beautiful CLI, intuitive commands, and helpful error messages. 
+								Beautiful CLI, intuitive commands, and helpful error messages.
 								Built by developers, for developers.
 							</p>
 						</div>
@@ -135,7 +135,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">🔒</div>
 							<h3 class="text-xl font-semibold mb-3">Secure by Default</h3>
 							<p class="text-muted-foreground">
-								Isolated local environment means you never risk real SOL. 
+								Isolated local environment means you never risk real SOL.
 								Perfect for testing and experimentation.
 							</p>
 						</div>
@@ -145,7 +145,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">📦</div>
 							<h3 class="text-xl font-semibold mb-3">Zero Config</h3>
 							<p class="text-muted-foreground">
-								Works out of the box with sensible defaults. 
+								Works out of the box with sensible defaults.
 								No configuration files or complex setup required.
 							</p>
 						</div>
@@ -155,7 +155,7 @@ import "../styles/global.css";
 							<div class="text-3xl mb-4">🚀</div>
 							<h3 class="text-xl font-semibold mb-3">Production Ready</h3>
 							<p class="text-muted-foreground">
-								Deploy to mainnet with confidence. 
+								Deploy to mainnet with confidence.
 								Same tools for development and production.
 							</p>
 						</div>
@@ -170,8 +170,8 @@ import "../styles/global.css";
 					<p class="text-xl text-muted-foreground mb-8">
 						Join developers using SolForge to ship faster.
 					</p>
-					<a 
-						href="/docs" 
+					<a
+						href="/docs"
 						class="inline-block px-8 py-4 bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
 					>
 						Get Started Now
@@ -201,7 +201,7 @@ import "../styles/global.css";
 
 		<script>
 			const terminalSteps = [
-				{ type: 'command', text: '$ curl -fsSL https://install.solforge.sh | bash', delay: 200 },
+				{ type: 'command', text: '$ curl -fsSL https://install.solforge.sh | sh', delay: 200 },
 				{ type: 'output', text: 'Downloading SolForge...', delay: 600 },
 				{ type: 'output', text: '✓ Installed successfully!', delay: 400, color: 'text-green-500' },
 				{ type: 'empty', delay: 500 },
@@ -247,10 +247,9 @@ import "../styles/global.css";
 				{ type: 'cursor', text: '$', delay: 1000 },
 			];
 
-			let currentStep = 0;
 			let isAnimating = false;
 
-			async function typeText(element, text, speed = 30) {
+			async function typeText(element: HTMLElement, text: string, speed = 30) {
 				for (let char of text) {
 					element.textContent += char;
 					await new Promise(resolve => setTimeout(resolve, speed));
@@ -262,23 +261,24 @@ import "../styles/global.css";
 				isAnimating = true;
 
 				const terminal = document.getElementById('terminal-content');
+				if (!terminal) return;
+
 				terminal.innerHTML = '';
 				terminal.style.height = '0px';
-				currentStep = 0;
 
 				for (const step of terminalSteps) {
 					await new Promise(resolve => setTimeout(resolve, step.delay));
 
 					const line = document.createElement('div');
 					line.className = 'terminal-line';
-					
-					if (step.type === 'command') {
-						line.className += ' ' + (step.color || 'text-foreground');
-						terminal.appendChild(line);
-						await typeText(line, step.text, 50);
-					} else if (step.type === 'output') {
+
+				if (step.type === 'command') {
+					line.className += ' ' + (step.color || 'text-foreground');
+					terminal.appendChild(line);
+					await typeText(line, step.text ?? '', 50);
+				} else if (step.type === 'output') {
 						line.className += ' ' + (step.color || 'text-muted-foreground');
-						line.textContent = step.text;
+						line.textContent = step.text ?? '';
 						terminal.appendChild(line);
 					} else if (step.type === 'cursor') {
 						line.className += ' text-foreground';

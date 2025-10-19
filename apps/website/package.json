@@ -13,8 +13,9 @@
 		"@astrojs/check": "^0.9.4",
 		"@tailwindcss/typography": "^0.5.19",
 		"astro": "^5.14.6",
+		"astro-sst": "^3.1.4",
 		"aws4fetch": "^1.0.20",
-		"sst": "^3.17.19",
+		"sst": "3.17.13",
 		"typescript": "^5.9.3"
 	},
 	"devDependencies": {

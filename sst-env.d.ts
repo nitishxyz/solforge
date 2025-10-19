@@ -9,6 +9,10 @@ declare module "sst" {
       "type": "sst.cloudflare.Worker"
       "url": string
     }
+    "SolforgeWeb": {
+      "type": "sst.aws.Astro"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
