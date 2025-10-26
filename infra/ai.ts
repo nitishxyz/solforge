@@ -1,12 +1,17 @@
 import { domains } from "./domains";
-import { databaseUrl } from "./secrets";
+import {
+  anthropicApiKey,
+  databaseUrl,
+  googleAiApiKey,
+  openAiApiKey,
+} from "./secrets";
 import { vpc } from "./vpc";
 
 const cluster = new sst.aws.Cluster("SolforgeCluster", { vpc });
 
 export const apiService = new sst.aws.Service("SolforgeAiService", {
   cluster,
-  link: [databaseUrl],
+  link: [databaseUrl, openAiApiKey, anthropicApiKey, googleAiApiKey],
   image: {
     dockerfile: "./apps/ai/Dockerfile",
   },
