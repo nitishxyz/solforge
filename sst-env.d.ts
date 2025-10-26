@@ -5,6 +5,23 @@
 
 declare module "sst" {
   export interface Resource {
+    "DatabaseUrl": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "ForgeVpc": {
+      "bastion": string
+      "type": "sst.aws.Vpc"
+    }
+    "SolforgeAiApiRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
+    "SolforgeAiService": {
+      "service": string
+      "type": "sst.aws.Service"
+      "url": string
+    }
     "SolforgeSh": {
       "type": "sst.cloudflare.Worker"
       "url": string

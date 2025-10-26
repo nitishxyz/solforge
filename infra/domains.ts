@@ -7,4 +7,6 @@ export const domains = {
 	rpc: `${SUB}rpc.${HOST}`,
 	gui: `${SUB}gui.${HOST}`,
 	sh: `${SUB}install.${HOST}`,
+	aiService: `${SUB}ai.service.${HOST}`,
+	ai: `${SUB}ai.${HOST}`,
 };

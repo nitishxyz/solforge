@@ -1,0 +1,27 @@
+{
+  "name": "ai",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "db": "sst shell --stage bat -- drizzle-kit",
+    "seed": "sst shell --stage bat -- bun run db/seed/index.ts",
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.16",
+    "@ai-sdk/google": "^2.0.14",
+    "@ai-sdk/openai": "^2.0.30",
+    "@solana/web3.js": "^1.98.4",
+    "ai": "^5.0.43",
+    "drizzle-orm": "^0.44.5",
+    "hono": "4.9.11",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pg": "^8.15.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
