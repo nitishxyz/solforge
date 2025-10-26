@@ -23,6 +23,8 @@ export interface SolforgeConfig {
 		enabled: boolean;
 		port: number;
 		host: string;
+		domain?: string;
+		corsOrigins?: string[];
 		provider?: "openrouter" | "anthropic" | "openai";
 		model?: string;
 		apiKey?: string;

@@ -63,8 +63,15 @@ async function startWithConfig(config: SolforgeConfig, args: string[] = []) {
 	if (config.agi?.enabled) {
 		const agiPort = Number(config.agi.port ?? 3456);
 		process.env.SOLFORGE_AGI_PORT = String(agiPort);
+		// If a custom domain is configured, use it for the AGI server URL
+		if (config.agi.domain) {
+			process.env.SOLFORGE_AGI_URL = config.agi.domain;
+		} else {
+			delete process.env.SOLFORGE_AGI_URL;
+		}
 	} else {
 		delete process.env.SOLFORGE_AGI_PORT;
+		delete process.env.SOLFORGE_AGI_URL;
 	}
 
 	const spinner = p.spinner();
@@ -150,6 +157,7 @@ async function startAgiServer(
 				general: typeof BUILTIN_AGENTS.general;
 				build: typeof BUILTIN_AGENTS.build;
 			};
+			corsOrigins?: string[];
 			provider?: "openrouter" | "anthropic" | "openai";
 			model?: string;
 			apiKey?: string;
@@ -162,6 +170,24 @@ async function startAgiServer(
 				build: { ...BUILTIN_AGENTS.build },
 			},
 		};
+
+		// Build CORS origins list
+		const corsOrigins: string[] = [];
+		
+		// Add custom domain if configured
+		if (agiConfig.domain) {
+			corsOrigins.push(agiConfig.domain);
+		}
+		
+		// Add any additional CORS origins from config
+		if (agiConfig.corsOrigins) {
+			corsOrigins.push(...agiConfig.corsOrigins);
+		}
+		
+		// Set CORS origins if any were configured
+		if (corsOrigins.length > 0) {
+			appConfig.corsOrigins = corsOrigins;
+		}
 
 		if (provider) {
 			appConfig.provider = provider as "openrouter" | "anthropic" | "openai";

@@ -26,12 +26,13 @@ function getMimeType(path: string): string {
 }
 
 /**
- * Create the web UI server
- */
+* Create the web UI server
+*/
 export function createWebServer(
 	port: number,
 	agiServerPort: number,
 	network = false,
+	agiDomain?: string,
 ): { port: number; server: Server } {
 	// Build asset map - maps URL paths to file paths
 	const assetMap = new Map<string, string>();
@@ -57,6 +58,11 @@ export function createWebServer(
 
 	// Get the appropriate server URL for network mode
 	const getServerUrl = (requestHost?: string) => {
+		// If a custom domain is configured, use it (e.g., https://agi.solforge.sh)
+		if (agiDomain) {
+			return agiDomain;
+		}
+
 		if (network && requestHost) {
 			// Extract hostname from request (e.g., "192.168.1.100:3457" -> "192.168.1.100")
 			const hostname = requestHost.split(":")[0];

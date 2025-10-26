@@ -141,6 +141,7 @@ export async function runSetupWizard(configFile?: string) {
 	let agiProvider = base.agi?.provider;
 	let agiModel = base.agi?.model;
 	let agiApiKey = base.agi?.apiKey;
+	let agiDomain = base.agi?.domain;
 
 	if (agiEnabled) {
 		agiPort = Number(
@@ -185,6 +186,13 @@ export async function runSetupWizard(configFile?: string) {
 			if (p.isCancel(apiKeyResp)) cancelSetup();
 			agiApiKey = apiKeyResp || undefined;
 		}
+
+		const domainResp = await p.text({
+			message: "AGI domain (optional - defaults to localhost, e.g., https://agi.solforge.sh)",
+			initialValue: agiDomain ?? "",
+		});
+		if (p.isCancel(domainResp)) cancelSetup();
+		agiDomain = domainResp || undefined;
 	}
 
 	const updated = {
@@ -201,6 +209,7 @@ export async function runSetupWizard(configFile?: string) {
 					...(agiProvider && { provider: agiProvider }),
 					...(agiModel && { model: agiModel }),
 					...(agiApiKey && { apiKey: agiApiKey }),
+					...(agiDomain && { domain: agiDomain }),
 					agent: base.agi?.agent ?? "general",
 				}
 			: { ...base.agi, enabled: false },
