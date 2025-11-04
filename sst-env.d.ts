@@ -5,6 +5,10 @@
 
 declare module "sst" {
   export interface Resource {
+    "AnthropicApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "DatabaseUrl": {
       "type": "sst.sst.Secret"
       "value": string
@@ -12,6 +16,18 @@ declare module "sst" {
     "ForgeVpc": {
       "bastion": string
       "type": "sst.aws.Vpc"
+    }
+    "GoogleAiApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "OpenAiApiKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "PlatformWallet": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "SolforgeAiApiRouter": {
       "type": "sst.aws.Router"

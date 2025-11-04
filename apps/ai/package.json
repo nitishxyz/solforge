@@ -1,25 +1,40 @@
 {
-  "name": "ai",
+  "name": "@solforge/ai",
+  "version": "0.0.1",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
     "db": "sst shell --stage bat -- drizzle-kit",
     "seed": "sst shell --stage bat -- bun run db/seed/index.ts",
+    "reset": "sst shell --stage bat -- bun run scripts/reset-database.ts",
+    "test": "bun run test/test-client.ts",
+    "test:x402": "bun run test/x402-client-test.ts",
+    "test:full": "bun run test/full-flow-test.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.16",
-    "@ai-sdk/google": "^2.0.14",
+    "@ai-sdk/gateway": "^1.0.39",
     "@ai-sdk/openai": "^2.0.30",
+    "@noble/hashes": "^2.0.1",
+    "@solana-program/compute-budget": "^0.10.0",
+    "@solana-program/token": "^0.7.0",
+    "@solana-program/token-2022": "^0.6.0",
+    "@solana/kit": "^5.0.0",
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "ai": "^5.0.43",
+    "bs58": "^6.0.0",
     "drizzle-orm": "^0.44.5",
     "hono": "4.9.11",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/pg": "^8.15.5"
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.30.2",
+    "x402": "^0.6.6"
   },
   "peerDependencies": {
     "typescript": "^5"

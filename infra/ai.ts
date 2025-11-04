@@ -24,7 +24,7 @@ export const apiService = new sst.aws.Service("SolforgeAiService", {
   },
   dev: {
     directory: "apps/ai",
-    command: "bun run --watch index.ts",
+    command: "bun run --watch src/index.ts",
   },
 });
 

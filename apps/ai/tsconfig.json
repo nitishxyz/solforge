@@ -20,6 +20,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "typeRoots": ["./types", "./node_modules/@types"],
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,

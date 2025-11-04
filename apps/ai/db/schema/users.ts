@@ -1,10 +1,12 @@
-import { pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, text, numeric, integer } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  walletAddress: varchar("wallet_address").unique(),
-  //
-  // Database timestamps
+  walletAddress: text("wallet_address").primaryKey(),
+  balanceUsd: numeric("balance_usd", { precision: 12, scale: 8 }).notNull().default("0.00000000"),
+  totalSpent: numeric("total_spent", { precision: 12, scale: 8 }).notNull().default("0.00000000"),
+  totalTopups: numeric("total_topups", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  requestCount: integer("request_count").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  lastPayment: timestamp("last_payment"),
+  lastRequest: timestamp("last_request"),
 });
