@@ -4,6 +4,7 @@ import {
   databaseUrl,
   googleAiApiKey,
   openAiApiKey,
+  platformWallet,
 } from "./secrets";
 import { vpc } from "./vpc";
 
@@ -11,7 +12,7 @@ const cluster = new sst.aws.Cluster("SolforgeCluster", { vpc });
 
 export const apiService = new sst.aws.Service("SolforgeAiService", {
   cluster,
-  link: [databaseUrl, openAiApiKey, anthropicApiKey, googleAiApiKey],
+  link: [databaseUrl, openAiApiKey, anthropicApiKey, googleAiApiKey, platformWallet],
   image: {
     dockerfile: "./apps/ai/Dockerfile",
   },

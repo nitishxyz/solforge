@@ -43,6 +43,10 @@ const keypair = Keypair.fromSecretKey(bs58.decode(TEST_WALLET_PRIVATE_KEY));
 const wallet = new SimpleWalletAdapter(keypair);
 const client = new X402Client("https://api.devnet.solana.com");
 const BASE_URL = "http://localhost:4000";
+const promptArg =
+  Bun.argv.length > 2
+    ? Bun.argv.slice(2).join(" ")
+    : "Say hello in exactly six words.";
 
 const signWithTestWallet = (message: Uint8Array) =>
   signMessageWithKeypair(keypair, message);
@@ -69,7 +73,7 @@ async function fetchBalance(label: string) {
   }
   const data = (await response.json()) as any;
   console.log(
-    `${label}: $${parseFloat(data.balance_usd).toFixed(4)} | requests: ${
+    `${label}: $${parseFloat(data.balance_usd).toFixed(8)} | requests: ${
       data.request_count ?? 0
     }`,
   );
@@ -89,7 +93,7 @@ async function fetchTransactions(limit = 5) {
   const data = (await response.json()) as any;
   data.transactions.forEach((tx: any, index: number) => {
     console.log(
-      `  ${index + 1}. ${tx.type.toUpperCase()} - $${parseFloat(tx.amount_usd).toFixed(4)} (${tx.model ?? "n/a"})`,
+      `  ${index + 1}. ${tx.type.toUpperCase()} - $${parseFloat(tx.amount_usd).toFixed(8)} (${tx.model ?? "n/a"})`,
     );
   });
 }
@@ -143,13 +147,14 @@ async function runTests() {
   console.log("🧪 Starting AI Proxy x402 flow");
   console.log("========================================");
   console.log(`🔑 Test Wallet: ${wallet.publicKey.toBase58()}`);
+  console.log(`📝 Prompt: "${promptArg}"`);
 
   await listModels();
 
   await fetchBalance("Initial balance");
 
   try {
-    await performChatCompletion("Say hello in exactly six words.");
+    await performChatCompletion(promptArg);
   } catch (error: any) {
     console.error("\n❌ Chat request failed:", error.message);
     return;

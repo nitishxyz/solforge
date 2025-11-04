@@ -37,6 +37,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@agi-cli/web-sdk": "^0.1.78"
+    "@agi-cli/web-sdk": "^0.1.78",
+    "sst": "3.17.13"
   }
 }

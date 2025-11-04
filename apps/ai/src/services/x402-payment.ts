@@ -1,7 +1,7 @@
 import { config } from "../config";
 
 const FACILITATOR_FEE_PAYER = "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4";
-export const TOPUP_AMOUNTS = [1, 5, 10] as const;
+export const TOPUP_AMOUNTS = [0.1, 1, 5, 10] as const;
 const TOPUP_AMOUNTS_IN_MICRO_USDC = new Set(
   TOPUP_AMOUNTS.map((amount) => Math.round(amount * 1_000_000).toString()),
 );

@@ -1,7 +1,7 @@
-declare module "x402/shared/svm" {
+declare module "x402/shared" {
   import type { KeyPairSigner } from "@solana/kit";
 
-  export function createSignerFromBase58(
-    privateKey: string,
-  ): Promise<KeyPairSigner>;
+  export const svm: {
+    createSignerFromBase58(privateKey: string): Promise<KeyPairSigner>;
+  };
 }

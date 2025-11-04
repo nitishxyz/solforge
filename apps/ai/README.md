@@ -95,6 +95,12 @@ OpenAI-compatible chat completions
 - Supports: Streaming and non-streaming
 - Returns: 402 if balance too low
 
+#### `POST /v1/completions`
+OpenAI-compatible text completions
+- Requires: Wallet auth headers, sufficient balance
+- Body: `prompt` string (or array), OpenAI completion parameters
+- Supports: Streaming (`stream: true`) and non-streaming
+
 #### `POST /v1/topup`
 Top up account balance
 - Requires: Wallet auth headers, x402 payment payload

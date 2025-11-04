@@ -20,20 +20,27 @@ chat.post("/v1/chat/completions", walletAuth, balanceCheck, async (c) => {
 
   let result: any;
   if (model.startsWith("gpt-") || model.startsWith("o1-")) {
-    result = await handleOpenAI(walletAddress, body, isStream);
+    result = await handleOpenAI(walletAddress, body, {
+      stream: isStream,
+      responseFormat: "chat",
+    });
   } else if (model.startsWith("claude-")) {
-    result = await handleAnthropic(walletAddress, body, isStream);
+    result = await handleAnthropic(walletAddress, body, {
+      stream: isStream,
+    });
   } else {
     return c.json({ error: "Unsupported model" }, 400);
   }
 
   if (result.type === "stream" && result.stream) {
+    const completionId = `chatcmpl-${Date.now()}`;
+    const created = Math.floor(Date.now() / 1000);
     return stream(c, async (stream) => {
       for await (const chunk of result.stream) {
         const sseData = {
-          id: `chatcmpl-${Date.now()}`,
+          id: completionId,
           object: "chat.completion.chunk",
-          created: Math.floor(Date.now() / 1000),
+          created,
           model: body.model,
           choices: [
             {
@@ -44,6 +51,28 @@ chat.post("/v1/chat/completions", walletAuth, balanceCheck, async (c) => {
           ],
         };
         await stream.write(`data: ${JSON.stringify(sseData)}\n\n`);
+      }
+      if (typeof result.finalize === "function") {
+        const metadata = await result.finalize();
+        if (metadata) {
+          const responseMetadata = {
+            id: completionId,
+            object: "chat.completion.metadata",
+            created,
+            model: body.model,
+            metadata: {
+              balance_remaining: metadata.newBalance.toFixed(8),
+              cost_usd: metadata.cost.toFixed(8),
+              usage: {
+                prompt_tokens: metadata.usage.inputTokens,
+                completion_tokens: metadata.usage.outputTokens,
+                total_tokens: metadata.usage.totalTokens,
+              },
+              finish_reason: metadata.finishReason,
+            },
+          };
+          await stream.write(`data: ${JSON.stringify(responseMetadata)}\n\n`);
+        }
       }
       await stream.write("data: [DONE]\n\n");
     });

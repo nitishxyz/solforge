@@ -8,8 +8,7 @@ import nacl from "tweetnacl";
 import bs58 from "bs58";
 import { createPaymentHeader, selectPaymentRequirements } from "x402/client";
 import type { PaymentRequirements } from "x402/types";
-import type { KeyPairSigner } from "@solana/kit";
-import { createSignerFromBase58 } from "x402/shared/svm";
+import { svm } from "x402/shared";
 
 export interface X402PaymentRequirement {
   scheme: "exact";
@@ -58,7 +57,7 @@ export class X402Client {
 
     // Use SDK to create proper KeyPairSigner from secret key
     const privateKeyBase58 = bs58.encode(wallet.secretKey);
-    const signer = await createSignerFromBase58(privateKeyBase58);
+    const signer = await svm.createSignerFromBase58(privateKeyBase58);
 
     // Use Coinbase x402 SDK to create payment header
     const paymentHeader = await createPaymentHeader(

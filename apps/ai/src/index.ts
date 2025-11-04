@@ -8,6 +8,7 @@ import balance from "./routes/balance";
 import txRouter from "./routes/transactions";
 import models from "./routes/models";
 import topup from "./routes/topup";
+import completions from "./routes/completions";
 
 const app = new Hono();
 
@@ -27,6 +28,7 @@ app.route("/", balance);
 app.route("/", txRouter);
 app.route("/", models);
 app.route("/", topup);
+app.route("/", completions);
 
 app.onError(errorHandler);
 
