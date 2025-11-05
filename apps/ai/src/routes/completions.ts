@@ -69,27 +69,53 @@ completions.post("/v1/completions", walletAuth, balanceCheck, async (c) => {
         };
         await streamWriter.write(`data: ${JSON.stringify(sseData)}\n\n`);
       }
+      let finishReason: string | null = null;
       if (typeof result.finalize === "function") {
         const metadata = await result.finalize();
         if (metadata) {
-          const metadataEvent = {
+          finishReason = metadata.finishReason ?? "stop";
+          const finalChunk = {
             id: completionId,
-            object: "text_completion.metadata",
+            object: "text_completion.chunk",
             created: started,
             model,
-            metadata: {
+            choices: [
+              {
+                index: 0,
+                text: "",
+                logprobs: null,
+                finish_reason: finishReason,
+              },
+            ],
+            usage: {
+              prompt_tokens: metadata.usage.inputTokens,
+              completion_tokens: metadata.usage.outputTokens,
+              total_tokens: metadata.usage.totalTokens,
+            },
+            solforge_metadata: {
               balance_remaining: metadata.newBalance.toFixed(8),
               cost_usd: metadata.cost.toFixed(8),
-              usage: {
-                prompt_tokens: metadata.usage.inputTokens,
-                completion_tokens: metadata.usage.outputTokens,
-                total_tokens: metadata.usage.totalTokens,
-              },
-              finish_reason: metadata.finishReason,
             },
           };
-          await streamWriter.write(`data: ${JSON.stringify(metadataEvent)}\n\n`);
+          await streamWriter.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
         }
+      }
+      if (!finishReason) {
+        const finalChunk = {
+          id: completionId,
+          object: "text_completion.chunk",
+          created: started,
+          model,
+          choices: [
+            {
+              index: 0,
+              text: "",
+              logprobs: null,
+              finish_reason: "stop",
+            },
+          ],
+        };
+        await streamWriter.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
       }
       await streamWriter.write("data: [DONE]\n\n");
     });

@@ -11,6 +11,67 @@ const anthropic = createAnthropic({
   apiKey: config.anthropic.apiKey,
 });
 
+type UsageTotals = {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+};
+
+function resolveUsage(
+  usage: Awaited<ReturnType<typeof streamText>>["usage"],
+  steps: Awaited<ReturnType<typeof streamText>>["steps"] | undefined,
+): UsageTotals | null {
+  const lastStepUsage = steps && steps.length > 0 ? steps.at(-1)?.usage : undefined;
+
+  const inputTokens =
+    usage?.promptTokens ??
+    usage?.inputTokens ??
+    lastStepUsage?.inputTokens ??
+    lastStepUsage?.promptTokens;
+
+  const outputTokens =
+    usage?.completionTokens ??
+    usage?.outputTokens ??
+    lastStepUsage?.outputTokens ??
+    lastStepUsage?.completionTokens;
+
+  const totalTokens =
+    usage?.totalTokens ??
+    lastStepUsage?.totalTokens ??
+    (inputTokens != null && outputTokens != null
+      ? inputTokens + outputTokens
+      : undefined);
+
+  if (totalTokens == null) {
+    return null;
+  }
+
+  const round = (value: number | undefined) =>
+    value != null && Number.isFinite(value) ? Math.max(0, Math.round(value)) : undefined;
+
+  const sanitizedTotal = round(totalTokens);
+  if (sanitizedTotal == null) {
+    return null;
+  }
+
+  const roundedInput = round(inputTokens);
+  const roundedOutput = round(outputTokens);
+
+  const sanitizedInput =
+    roundedInput ??
+    (roundedOutput != null ? Math.max(0, sanitizedTotal - roundedOutput) : sanitizedTotal);
+
+  const sanitizedOutput =
+    roundedOutput ??
+    (sanitizedInput != null ? Math.max(0, sanitizedTotal - sanitizedInput) : sanitizedTotal);
+
+  return {
+    inputTokens: sanitizedInput ?? sanitizedTotal,
+    outputTokens: sanitizedOutput ?? sanitizedTotal,
+    totalTokens: sanitizedTotal,
+  };
+}
+
 export async function handleAnthropic(
   walletAddress: string,
   body: any,
@@ -36,17 +97,14 @@ export async function handleAnthropic(
       type: "stream" as const,
       finalize: async () => {
         try {
-          const [usage, finishReason] = await Promise.all([
+          const [usage, finishReason, steps] = await Promise.all([
             result.usage,
             result.finishReason,
+            result.steps.catch(() => undefined),
           ]);
 
-          if (
-            !usage ||
-            usage.inputTokens == null ||
-            usage.outputTokens == null ||
-            usage.totalTokens == null
-          ) {
+          const totals = resolveUsage(usage, steps);
+          if (!totals) {
             return null;
           }
 
@@ -55,15 +113,15 @@ export async function handleAnthropic(
             "anthropic",
             body.model,
             {
-              inputTokens: usage.inputTokens,
-              outputTokens: usage.outputTokens,
-              totalTokens: usage.totalTokens,
+              inputTokens: totals.inputTokens,
+              outputTokens: totals.outputTokens,
+              totalTokens: totals.totalTokens,
             },
             config.markup
           );
 
           return {
-            usage,
+            usage: totals,
             cost,
             newBalance,
             finishReason: finishReason ?? "stop",
@@ -76,18 +134,15 @@ export async function handleAnthropic(
     };
   }
 
-  const [text, usage, finishReason] = await Promise.all([
+  const [text, usage, finishReason, steps] = await Promise.all([
     result.text,
     result.usage,
     result.finishReason,
+    result.steps.catch(() => []),
   ]);
 
-  if (
-    !usage ||
-    usage.inputTokens == null ||
-    usage.outputTokens == null ||
-    usage.totalTokens == null
-  ) {
+  const totals = resolveUsage(usage, steps);
+  if (!totals) {
     throw new Error("No usage data returned from Anthropic");
   }
 
@@ -96,9 +151,9 @@ export async function handleAnthropic(
     "anthropic",
     body.model,
     {
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      totalTokens: usage.totalTokens,
+      inputTokens: totals.inputTokens,
+      outputTokens: totals.outputTokens,
+      totalTokens: totals.totalTokens,
     },
     config.markup
   );
@@ -119,9 +174,9 @@ export async function handleAnthropic(
       },
     ],
     usage: {
-      prompt_tokens: usage.inputTokens,
-      completion_tokens: usage.outputTokens,
-      total_tokens: usage.totalTokens,
+      prompt_tokens: totals.inputTokens,
+      completion_tokens: totals.outputTokens,
+      total_tokens: totals.totalTokens,
     },
   };
 

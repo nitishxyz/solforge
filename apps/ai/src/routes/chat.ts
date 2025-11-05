@@ -52,27 +52,52 @@ chat.post("/v1/chat/completions", walletAuth, balanceCheck, async (c) => {
         };
         await stream.write(`data: ${JSON.stringify(sseData)}\n\n`);
       }
+      let finishReason: string | null = null;
       if (typeof result.finalize === "function") {
         const metadata = await result.finalize();
         if (metadata) {
-          const responseMetadata = {
+          finishReason = metadata.finishReason ?? "stop";
+          const usage = {
+            prompt_tokens: metadata.usage.inputTokens,
+            completion_tokens: metadata.usage.outputTokens,
+            total_tokens: metadata.usage.totalTokens,
+          };
+          const finalChunk = {
             id: completionId,
-            object: "chat.completion.metadata",
+            object: "chat.completion.chunk",
             created,
             model: body.model,
-            metadata: {
+            choices: [
+              {
+                index: 0,
+                delta: {},
+                finish_reason: finishReason,
+              },
+            ],
+            usage,
+            solforge_metadata: {
               balance_remaining: metadata.newBalance.toFixed(8),
               cost_usd: metadata.cost.toFixed(8),
-              usage: {
-                prompt_tokens: metadata.usage.inputTokens,
-                completion_tokens: metadata.usage.outputTokens,
-                total_tokens: metadata.usage.totalTokens,
-              },
-              finish_reason: metadata.finishReason,
             },
           };
-          await stream.write(`data: ${JSON.stringify(responseMetadata)}\n\n`);
+          await stream.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
         }
+      }
+      if (!finishReason) {
+        const finalChunk = {
+          id: completionId,
+          object: "chat.completion.chunk",
+          created,
+          model: body.model,
+          choices: [
+            {
+              index: 0,
+              delta: {},
+              finish_reason: "stop",
+            },
+          ],
+        };
+        await stream.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
       }
       await stream.write("data: [DONE]\n\n");
     });

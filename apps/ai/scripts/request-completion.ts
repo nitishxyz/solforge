@@ -1,49 +1,14 @@
 import bs58 from "bs58";
-import bs58 from "bs58";
-import { Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import {
-  X402Client,
-  signMessageWithKeypair,
-  type WalletAdapter,
-} from "../src/client/x402-client";
+  BASE_URL,
+  fetchWithAutoTopup,
+  walletPublicKey,
+} from "./lib/solforge-client";
 
-const WALLET_PRIVATE_KEY =
-  "4HVvY6VJDPySX1RTmiCm1aWQVRu3sPYf4qex68VvbRP8hoLGUAWWdVLQx4gnsQf4QFe7pYAQz4VGWX9pEjFJzFkh";
-const WALLET_PUBLIC_KEY = "HiZJzJdU8XhfWYEzYWBJ7GCPGViNYTZetDHM7D6SNQFw";
-const BASE_URL = process.env.AI_PROXY_URL ?? "http://localhost:4000";
-const RPC_URL = process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
-const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
-
-class SimpleWalletAdapter implements WalletAdapter {
-  constructor(private readonly keypair: Keypair) {}
-
-  get publicKey(): PublicKey {
-    return this.keypair.publicKey;
-  }
-
-  get secretKey(): Uint8Array {
-    return this.keypair.secretKey;
-  }
-
-  async signTransaction(
-    tx: Transaction | VersionedTransaction,
-  ): Promise<Transaction | VersionedTransaction> {
-    if ("version" in tx) {
-      tx.sign([this.keypair]);
-      return tx;
-    }
-    tx.partialSign(this.keypair);
-    return tx;
-  }
-}
-
-const keypair = Keypair.fromSecretKey(bs58.decode(WALLET_PRIVATE_KEY));
-const wallet = new SimpleWalletAdapter(keypair);
-const x402Client = new X402Client(RPC_URL);
-const signMessage = (message: Uint8Array) =>
-  signMessageWithKeypair(keypair, message);
-
-async function createRequestInit(prompt: string, stream: boolean): Promise<RequestInit> {
+async function createRequestInit(
+  prompt: string,
+  stream: boolean,
+): Promise<RequestInit> {
   return {
     method: "POST",
     headers: {
@@ -56,103 +21,6 @@ async function createRequestInit(prompt: string, stream: boolean): Promise<Reque
       stream,
     }),
   };
-}
-
-async function createAuthHeaders() {
-  return x402Client.createAuthHeaders(wallet.publicKey.toBase58(), signMessage);
-}
-
-async function settlePaymentAndRetry(
-  errorResponse: Response,
-  requestInit: RequestInit,
-): Promise<Response> {
-  const body = (await errorResponse.json()) as any;
-  const accepts = Array.isArray(body.accepts) ? body.accepts : [];
-  const requirement =
-    accepts.find(
-      (option: any) =>
-        option.scheme === "exact" &&
-        option.maxAmountRequired === TARGET_TOPUP_AMOUNT_MICRO_USDC,
-    ) ?? accepts.find((option: any) => option.scheme === "exact");
-
-  if (!requirement) {
-    throw new Error("No supported payment requirement returned by server");
-  }
-
-  console.log(
-    `🔁 Balance low, auto top-up ${(
-      parseInt(requirement.maxAmountRequired, 10) / 1_000_000
-    ).toFixed(2)} USDC`,
-  );
-
-  const paymentPayload = await x402Client.createPaymentPayload(
-    wallet,
-    requirement,
-  );
-
-  const authHeaders = await createAuthHeaders();
-  const topupResponse = await fetch(`${BASE_URL}/v1/topup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-    },
-    body: JSON.stringify({
-      paymentPayload,
-      paymentRequirement: requirement,
-    }),
-  });
-
-  if (!topupResponse.ok) {
-    const errorText = await topupResponse.text();
-    throw new Error(`Top-up failed (${topupResponse.status}): ${errorText}`);
-  }
-
-  const topupResult = (await topupResponse.json()) as any;
-  console.log(
-    `✅ Top-up complete: +$${topupResult.amount_usd} (balance: $${topupResult.new_balance})`,
-  );
-
-  return x402Client.makeAuthenticatedRequest(
-    `${BASE_URL}/v1/completions`,
-    wallet,
-    signMessage,
-    requestInit,
-  );
-}
-
-async function ensureResponse(
-  prompt: string,
-  stream: boolean,
-): Promise<Response> {
-  const requestInit = await createRequestInit(prompt, stream);
-
-  let attempts = 0;
-  let response: Response;
-  const url = `${BASE_URL}/v1/completions`;
-
-  while (true) {
-    response = await x402Client.makeAuthenticatedRequest(
-      url,
-      wallet,
-      signMessage,
-      requestInit,
-    );
-
-    if (response.status !== 402) {
-      return response;
-    }
-
-    attempts += 1;
-    if (attempts > 3) {
-      throw new Error("Unable to settle payment after multiple attempts");
-    }
-
-    response = await settlePaymentAndRetry(response, requestInit);
-    if (response.status !== 402) {
-      return response;
-    }
-  }
 }
 
 async function handleStreamingResponse(response: Response) {
@@ -206,12 +74,13 @@ async function handleStreamingResponse(response: Response) {
 
       try {
         const parsed = JSON.parse(payload);
-        if (parsed.metadata) {
+        if (parsed.solforge_metadata) {
           metadataSummary = {
-            balanceRemaining: parsed.metadata.balance_remaining,
-            costUsd: parsed.metadata.cost_usd,
-            usage: parsed.metadata.usage,
-            finishReason: parsed.metadata.finish_reason,
+            balanceRemaining: parsed.solforge_metadata.balance_remaining,
+            costUsd: parsed.solforge_metadata.cost_usd,
+            usage: parsed.usage,
+            finishReason:
+              parsed.choices?.[0]?.finish_reason ?? metadataSummary?.finishReason ?? "stop",
           };
           continue;
         }
@@ -234,12 +103,13 @@ async function handleStreamingResponse(response: Response) {
       if (payload === "[DONE]") break;
       try {
         const parsed = JSON.parse(payload);
-        if (parsed.metadata) {
+        if (parsed.solforge_metadata) {
           metadataSummary = {
-            balanceRemaining: parsed.metadata.balance_remaining,
-            costUsd: parsed.metadata.cost_usd,
-            usage: parsed.metadata.usage,
-            finishReason: parsed.metadata.finish_reason,
+            balanceRemaining: parsed.solforge_metadata.balance_remaining,
+            costUsd: parsed.solforge_metadata.cost_usd,
+            usage: parsed.usage,
+            finishReason:
+              parsed.choices?.[0]?.finish_reason ?? metadataSummary?.finishReason ?? "stop",
           };
           continue;
         }
@@ -287,7 +157,14 @@ async function handleJsonResponse(response: Response) {
 }
 
 async function requestCompletion(prompt: string, stream = false) {
-  const response = await ensureResponse(prompt, stream);
+  const requestInit = await createRequestInit(prompt, stream);
+  const { response } = await fetchWithAutoTopup(
+    {
+      url: `${BASE_URL}/v1/completions`,
+      init: requestInit,
+    },
+    3,
+  );
 
   if (!response.ok) {
     const errText = await response.text();
@@ -311,4 +188,5 @@ if (!args[0]) {
 const [prompt, ...rest] = args;
 const stream = rest.includes("--stream");
 
+console.log(`🔑 Wallet: ${walletPublicKey}`);
 await requestCompletion(prompt, stream);
