@@ -38,6 +38,10 @@ declare module "sst" {
       "type": "sst.aws.Service"
       "url": string
     }
+    "SolforgeChat": {
+      "type": "sst.aws.Astro"
+      "url": string
+    }
     "SolforgeSh": {
       "type": "sst.cloudflare.Worker"
       "url": string

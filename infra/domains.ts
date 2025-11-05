@@ -9,4 +9,5 @@ export const domains = {
 	sh: `${SUB}install.${HOST}`,
 	aiService: `${SUB}ai.service.${HOST}`,
 	ai: `${SUB}ai.${HOST}`,
+	chat: `${SUB}chat.${HOST}`,
 };

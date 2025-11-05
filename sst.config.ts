@@ -22,6 +22,7 @@ export default $config({
 
     const { vpc } = await import("./infra/vpc");
     const { apiRouter, apiService } = await import("./infra/ai");
+    const { chatWebsite } = await import("./infra/chat");
 
     return {
       script: script.url,
@@ -29,6 +30,7 @@ export default $config({
       vpcId: vpc.id,
       apiRouter: apiRouter.url,
       apiService: apiService.url,
+      chatWebsite: chatWebsite.url,
     };
   },
 });
