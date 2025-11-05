@@ -7,6 +7,7 @@ import {
 	Loader2,
 	RotateCcw,
 } from "lucide-react";
+import { Toaster } from "sonner";
 import { Sidebar } from "./components/sidebar";
 import { ChatThread } from "./components/chat-thread";
 import { ChatClient } from "./lib/api";
@@ -118,6 +119,7 @@ function App() {
 
 	return (
 		<div className="flex h-screen w-full bg-background text-foreground">
+			<Toaster position="bottom-right" />
 			<Sidebar
 				sessions={sessions}
 				selectedSessionId={selectedSessionId}

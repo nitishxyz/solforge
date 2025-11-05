@@ -12,6 +12,7 @@ import {
 } from "./x402-client";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+import { toast } from "sonner";
 
 export interface WalletSigner {
 	publicKey: string;
@@ -111,37 +112,6 @@ export class ChatClient {
 		};
 	}
 
-	private async settlePayment(requirement: any): Promise<any> {
-		if (!this.walletAdapter) {
-			throw new Error("Wallet not configured");
-		}
-
-		const paymentPayload = await this.x402Client.createPaymentPayload(
-			this.walletAdapter,
-			requirement,
-		);
-
-		const authHeaders = await this.createAuthHeaders();
-		const topupResponse = await fetch(`${this.baseUrl}/v1/topup`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				...authHeaders,
-			},
-			body: JSON.stringify({
-				paymentPayload,
-				paymentRequirement: requirement,
-			}),
-		});
-
-		if (!topupResponse.ok) {
-			const errorText = await topupResponse.text();
-			throw new Error(`Top-up failed (${topupResponse.status}): ${errorText}`);
-		}
-
-		return topupResponse.json();
-	}
-
 	private async requestWithAutoTopup<T>(
 		path: string,
 		init: RequestInit = {},
@@ -161,7 +131,7 @@ export class ChatClient {
 					throw error;
 				}
 
-				// Try to settle payment
+				// Try to settle payment with toast notifications
 				const payload = error.payload || {};
 				const accepts = Array.isArray(payload.accepts) ? payload.accepts : [];
 				const requirement =
@@ -177,10 +147,65 @@ export class ChatClient {
 					);
 				}
 
-				const topupResult = await this.settlePayment(requirement);
-				console.log(
-					`✅ Top-up complete: +$${topupResult.amount_usd} (balance: $${topupResult.new_balance})`,
-				);
+				// Show toast with loading state
+				const toastId = toast.loading("Funding required...");
+
+				try {
+					// Update toast to show signing state
+					toast.loading("Signing transaction...", { id: toastId });
+
+					// Create payment payload (this involves signing)
+					if (!this.walletAdapter) {
+						throw new Error("Wallet not configured");
+					}
+
+					const paymentPayload = await this.x402Client.createPaymentPayload(
+						this.walletAdapter,
+						requirement,
+					);
+
+					// Update toast to show sending state
+					toast.loading("Sending transaction...", { id: toastId });
+
+					// Send the payment
+					const authHeaders = await this.createAuthHeaders();
+					const topupResponse = await fetch(`${this.baseUrl}/v1/topup`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							...authHeaders,
+						},
+						body: JSON.stringify({
+							paymentPayload,
+							paymentRequirement: requirement,
+						}),
+					});
+
+					if (!topupResponse.ok) {
+						const errorText = await topupResponse.text();
+						throw new Error(
+							`Top-up failed (${topupResponse.status}): ${errorText}`,
+						);
+					}
+
+					const topupResult = await topupResponse.json();
+
+					// Show success toast
+					toast.success(
+						`Payment complete: +$${topupResult.amount_usd} (balance: $${topupResult.new_balance})`,
+						{ id: toastId, duration: 3000 },
+					);
+
+					console.log(
+						`✅ Top-up complete: +$${topupResult.amount_usd} (balance: $${topupResult.new_balance})`,
+					);
+				} catch (paymentError: any) {
+					toast.error(`Payment failed: ${paymentError.message}`, {
+						id: toastId,
+						duration: 5000,
+					});
+					throw paymentError;
+				}
 
 				// Retry the request
 				continue;
@@ -287,87 +312,6 @@ export class ChatClient {
 				body: JSON.stringify(input),
 			},
 		);
-	}
-
-	async *sendMessageStream(
-		sessionId: string,
-		input: { content: string },
-	): AsyncGenerator<{
-		type: "userMessage" | "chunk" | "complete" | "error";
-		message?: any;
-		content?: string;
-		assistantMessage?: any;
-		session?: any;
-		error?: string;
-	}> {
-		const url = new URL(
-			`/v1/chat/sessions/${sessionId}/messages`,
-			this.baseUrl,
-		);
-
-		const headers = new Headers({
-			"content-type": "application/json",
-			...this.extraHeaders,
-		});
-
-		if (this.wallet) {
-			const authHeaders = await this.createAuthHeaders();
-			Object.entries(authHeaders).forEach(([key, value]) => {
-				headers.set(key, value);
-			});
-		}
-
-		const response = await fetch(url, {
-			method: "POST",
-			headers,
-			body: JSON.stringify({ ...input, stream: true }),
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			throw new Error(
-				errorData?.error?.message || `Request failed: ${response.status}`,
-			);
-		}
-
-		if (!response.body) {
-			throw new Error("No response body");
-		}
-
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder();
-		let buffer = "";
-
-		try {
-			while (true) {
-				const { done, value } = await reader.read();
-
-				if (done) break;
-
-				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split("\n");
-				buffer = lines.pop() || "";
-
-				for (const line of lines) {
-					if (line.startsWith("data: ")) {
-						const data = line.slice(6);
-
-						if (data === "[DONE]") {
-							return;
-						}
-
-						try {
-							const parsed = JSON.parse(data);
-							yield parsed;
-						} catch (e) {
-							console.error("Failed to parse SSE data:", data);
-						}
-					}
-				}
-			}
-		} finally {
-			reader.releaseLock();
-		}
 	}
 }
 
