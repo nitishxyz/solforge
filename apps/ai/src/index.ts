@@ -4,6 +4,7 @@ import { logger } from "hono/logger";
 import { config } from "./config";
 import { errorHandler } from "./middleware/error-handler";
 import chat from "./routes/chat";
+import chatSessions from "./routes/chat-sessions";
 import balance from "./routes/balance";
 import txRouter from "./routes/transactions";
 import models from "./routes/models";
@@ -24,6 +25,7 @@ app.get("/", (c) => {
 });
 
 app.route("/", chat);
+app.route("/", chatSessions);
 app.route("/", balance);
 app.route("/", txRouter);
 app.route("/", models);
