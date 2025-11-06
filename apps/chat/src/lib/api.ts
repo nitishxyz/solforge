@@ -313,6 +313,18 @@ export class ChatClient {
 			},
 		);
 	}
+
+	async getBalance(): Promise<{
+		wallet_address: string;
+		balance_usd: string;
+		total_spent: string;
+		total_topups: string;
+		request_count: number;
+		last_payment: string | null;
+		last_request: string | null;
+	}> {
+		return this.request("/v1/balance", { method: "GET" });
+	}
 }
 
 export type { ChatSession, ChatSessionSummary };

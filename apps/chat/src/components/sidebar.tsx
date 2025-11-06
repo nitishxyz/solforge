@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { Loader2, MessageSquare, Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import type { ChatSessionSummary } from "../lib/types";
 import { formatRelativeTime } from "../lib/time";
 
@@ -21,24 +21,20 @@ export function Sidebar({
 	creating,
 }: SidebarProps) {
 	return (
-		<aside className="flex h-full w-80 flex-col border-r border-sidebar-border bg-sidebar">
-			<div className="flex items-center justify-between px-4 py-4 border-b border-sidebar-border">
-				<div className="flex items-center gap-2 text-sm font-semibold text-sidebar-foreground">
-					<MessageSquare className="h-4 w-4" />
-					Sessions
-				</div>
+		<aside className="flex h-full w-64 flex-col border-r border-border bg-background">
+			<div className="h-14 border-b border-border px-4 flex items-center gap-2">
 				<button
 					type="button"
 					onClick={() => void onCreate()}
 					disabled={creating}
-					className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+					className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{creating ? (
-						<Loader2 className="h-3 w-3 animate-spin" />
+						<Loader2 className="h-4 w-4 animate-spin" />
 					) : (
-						<Plus className="h-3 w-3" />
+						<Plus className="h-4 w-4" />
 					)}
-					New
+					New Session
 				</button>
 			</div>
 

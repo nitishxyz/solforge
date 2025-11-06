@@ -91,11 +91,11 @@ export const MessageThread = memo(function MessageThread({
 			>
 				{/* Session Header - scrolls with content */}
 				{session && (
-					<div className="border-b border-border px-6 py-4">
+					<div className="h-14 border-b border-border px-6 flex items-center justify-between">
 						<div className="text-sm font-medium text-foreground">
 							{session.title?.trim() || session.model}
 						</div>
-						<div className="mt-1 text-xs text-muted-foreground">
+						<div className="text-xs text-muted-foreground">
 							{session.agent} · {session.provider} · {session.model}
 						</div>
 					</div>

@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-	AlertTriangle,
-	Check,
-	Copy,
-	Key,
-	Loader2,
-	RotateCcw,
-} from "lucide-react";
+import { AlertTriangle, Check, Copy, Key, Loader2 } from "lucide-react";
 import { Toaster } from "sonner";
+import { Header } from "./components/header";
 import { Sidebar } from "./components/sidebar";
 import { ChatThread } from "./components/chat-thread";
 import { ChatClient } from "./lib/api";
 import { useChat } from "./hooks/use-chat";
 import { useWallet } from "./hooks/use-wallet";
+import { getWalletUSDCBalance } from "./lib/wallet-balance";
 
 const DEFAULT_AGENT = import.meta.env.VITE_CHAT_AGENT ?? "solforge";
 const DEFAULT_PROVIDER = import.meta.env.VITE_CHAT_PROVIDER ?? "openai";
@@ -60,14 +55,51 @@ function App() {
 	} = useChat({ client });
 
 	const [creating, setCreating] = useState(false);
-	const [copiedPub, setCopiedPub] = useState(false);
 	const [copiedPriv, setCopiedPriv] = useState(false);
+	const [solforgeBalance, setSolforgeBalance] = useState<string | null>(null);
+	const [walletBalance, setWalletBalance] = useState<string | null>(null);
+	const [loadingBalance, setLoadingBalance] = useState(false);
 	const isWalletReady = Boolean(wallet) && !walletLoading;
 
 	useEffect(() => {
-		setCopiedPub(false);
 		setCopiedPriv(false);
 	}, [wallet?.publicKey]);
+
+	// Fetch balances when client and wallet are ready
+	useEffect(() => {
+		async function fetchBalances(isInitial = false) {
+			if (!client || !wallet) return;
+
+			// Only show loading state on initial fetch
+			if (isInitial) {
+				setLoadingBalance(true);
+			}
+
+			try {
+				// Fetch both balances in parallel for better performance
+				const [balance, walletUSDC] = await Promise.all([
+					client.getBalance(),
+					getWalletUSDCBalance(wallet.publicKey),
+				]);
+
+				setSolforgeBalance(balance.balance_usd);
+				setWalletBalance(walletUSDC);
+			} catch (err) {
+				console.error("Failed to fetch balances:", err);
+			} finally {
+				if (isInitial) {
+					setLoadingBalance(false);
+				}
+			}
+		}
+
+		// Initial fetch with loading state
+		fetchBalances(true);
+
+		// Refresh balances every 10 seconds without showing loading state
+		const interval = setInterval(() => fetchBalances(false), 10000);
+		return () => clearInterval(interval);
+	}, [client, wallet]);
 
 	async function handleCreateSession() {
 		setCreating(true);
@@ -98,72 +130,48 @@ function App() {
 		}
 	}
 
-	async function handleCopy(text: string, kind: "pub" | "priv") {
+	async function handleCopy(text: string) {
 		try {
 			await navigator.clipboard.writeText(text);
-			if (kind === "pub") {
-				setCopiedPub(true);
-				setTimeout(() => setCopiedPub(false), 2000);
-			} else {
-				setCopiedPriv(true);
-				setTimeout(() => setCopiedPriv(false), 2000);
-			}
+			setCopiedPriv(true);
+			setTimeout(() => setCopiedPriv(false), 2000);
 		} catch (error) {
 			console.error("Failed to copy", error);
 		}
 	}
 
-	const pubkeyLabel = wallet
-		? `${wallet.publicKey.slice(0, 4)}…${wallet.publicKey.slice(-4)}`
-		: "";
-
 	return (
-		<div className="flex h-screen w-full bg-background text-foreground">
+		<div className="flex h-screen w-full flex-col bg-background text-foreground">
 			<Toaster position="bottom-right" />
-			<Sidebar
-				sessions={sessions}
-				selectedSessionId={selectedSessionId}
-				onSelect={selectSession}
-				onCreate={handleCreateSession}
-				loading={loadingSessions || !isWalletReady}
-				creating={creating || !isWalletReady}
-			/>
 
-			<ChatThread
-				session={activeSession}
-				messages={messages}
-				loading={loadingThread || !isWalletReady}
-				sending={sending || !isWalletReady}
-				onSend={handleSendMessage}
-			/>
+			{wallet && (
+				<Header
+					walletAddress={wallet.publicKey}
+					solforgeBalance={solforgeBalance}
+					walletBalance={walletBalance}
+					loadingBalance={loadingBalance}
+					onRegenerateWallet={regenerate}
+				/>
+			)}
 
-			{wallet ? (
-				<div className="pointer-events-auto fixed right-6 top-6 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-lg">
-					<span className="text-[11px] font-semibold text-muted-foreground">
-						Wallet
-					</span>
-					<button
-						type="button"
-						onClick={() => void handleCopy(wallet.publicKey, "pub")}
-						className="flex items-center gap-1 rounded-md px-2 py-1 font-medium text-foreground transition hover:bg-accent"
-					>
-						<span className="font-mono text-[11px]">{pubkeyLabel}</span>
-						{copiedPub ? (
-							<Check className="h-3 w-3" />
-						) : (
-							<Copy className="h-3 w-3" />
-						)}
-					</button>
-					<button
-						type="button"
-						onClick={() => regenerate()}
-						className="flex items-center gap-1 rounded-md px-2 py-1 font-medium text-foreground transition hover:bg-accent"
-						title="Generate a new wallet"
-					>
-						<RotateCcw className="h-3 w-3" />
-					</button>
-				</div>
-			) : null}
+			<div className="flex flex-1 overflow-hidden">
+				<Sidebar
+					sessions={sessions}
+					selectedSessionId={selectedSessionId}
+					onSelect={selectSession}
+					onCreate={handleCreateSession}
+					loading={loadingSessions || !isWalletReady}
+					creating={creating || !isWalletReady}
+				/>
+
+				<ChatThread
+					session={activeSession}
+					messages={messages}
+					loading={loadingThread || !isWalletReady}
+					sending={sending || !isWalletReady}
+					onSend={handleSendMessage}
+				/>
+			</div>
 
 			{walletLoading && (
 				<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 text-sm text-muted-foreground">
@@ -194,7 +202,7 @@ function App() {
 								</code>
 								<button
 									type="button"
-									onClick={() => void handleCopy(wallet.secretKey, "priv")}
+									onClick={() => void handleCopy(wallet.secretKey)}
 									className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition hover:bg-primary/90"
 								>
 									{copiedPriv ? (
