@@ -48,7 +48,10 @@ export function Header({
 							<Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
 						) : (
 							<span className="font-mono font-semibold text-foreground">
-								${solforgeBalance ?? "0.00"}
+								$
+								{solforgeBalance
+									? parseFloat(solforgeBalance).toFixed(4)
+									: "0.0000"}
 							</span>
 						)}
 					</div>
@@ -60,7 +63,10 @@ export function Header({
 							<Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
 						) : (
 							<span className="font-mono font-semibold text-foreground">
-								${walletBalance ?? "0.00"}
+								$
+								{walletBalance
+									? parseFloat(walletBalance).toFixed(4)
+									: "0.0000"}
 							</span>
 						)}
 					</div>

@@ -313,7 +313,7 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
 				if (savedResponse.usage?.balanceRemaining !== undefined) {
 					if ((window as any).__updateSolforgeBalance) {
 						(window as any).__updateSolforgeBalance(
-							savedResponse.usage.balanceRemaining.toFixed(2),
+							savedResponse.usage.balanceRemaining.toString(),
 						);
 					}
 				}
