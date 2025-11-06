@@ -125,6 +125,16 @@ function createAuthenticatedFetch(chatClient: ChatClient): typeof fetch {
 						`✅ Top-up complete: +$${topupResult.amount_usd} (balance: $${topupResult.new_balance})`,
 					);
 
+					// Refetch wallet balance after payment
+					if ((window as any).__refetchWalletBalance) {
+						(window as any).__refetchWalletBalance();
+					}
+
+					// Update SolForge balance
+					if ((window as any).__updateSolforgeBalance) {
+						(window as any).__updateSolforgeBalance(topupResult.new_balance);
+					}
+
 					// Retry the original request
 					continue;
 				} catch (paymentError: any) {

@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^1.0.26",
     "@solana/web3.js": "^1.98.4",
+    "@tanstack/react-query": "^5.90.7",
     "ai": "^5.0.87",
     "bs58": "^6.0.0",
     "clsx": "^2.1.1",

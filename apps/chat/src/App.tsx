@@ -7,7 +7,8 @@ import { ChatThread } from "./components/chat-thread";
 import { ChatClient } from "./lib/api";
 import { useChat } from "./hooks/use-chat";
 import { useWallet } from "./hooks/use-wallet";
-import { getWalletUSDCBalance } from "./lib/wallet-balance";
+import { useWalletBalance } from "./hooks/use-wallet-balance";
+import { useSolforgeBalance } from "./hooks/use-solforge-balance";
 
 const DEFAULT_AGENT = import.meta.env.VITE_CHAT_AGENT ?? "solforge";
 const DEFAULT_PROVIDER = import.meta.env.VITE_CHAT_PROVIDER ?? "openai";
@@ -56,50 +57,33 @@ function App() {
 
 	const [creating, setCreating] = useState(false);
 	const [copiedPriv, setCopiedPriv] = useState(false);
-	const [solforgeBalance, setSolforgeBalance] = useState<string | null>(null);
-	const [walletBalance, setWalletBalance] = useState<string | null>(null);
-	const [loadingBalance, setLoadingBalance] = useState(false);
 	const isWalletReady = Boolean(wallet) && !walletLoading;
+
+	// Use custom hooks for balance management
+	const {
+		balance: solforgeBalance,
+		isLoading: loadingSolforgeBalance,
+		updateBalance: updateSolforgeBalance, // TODO: Call after streaming completes with new balance
+	} = useSolforgeBalance(client);
+
+	const {
+		balance: walletBalance,
+		isLoading: loadingWalletBalance,
+		refetch: refetchWalletBalance, // TODO: Call after payment transaction completes
+	} = useWalletBalance(wallet?.publicKey ?? null);
+
+	const loadingBalance = loadingSolforgeBalance || loadingWalletBalance;
+
+	// Expose balance update functions for future use
+	// These can be called from toast success handlers
+	useEffect(() => {
+		(window as any).__updateSolforgeBalance = updateSolforgeBalance;
+		(window as any).__refetchWalletBalance = refetchWalletBalance;
+	}, [updateSolforgeBalance, refetchWalletBalance]);
 
 	useEffect(() => {
 		setCopiedPriv(false);
 	}, [wallet?.publicKey]);
-
-	// Fetch balances when client and wallet are ready
-	useEffect(() => {
-		async function fetchBalances(isInitial = false) {
-			if (!client || !wallet) return;
-
-			// Only show loading state on initial fetch
-			if (isInitial) {
-				setLoadingBalance(true);
-			}
-
-			try {
-				// Fetch both balances in parallel for better performance
-				const [balance, walletUSDC] = await Promise.all([
-					client.getBalance(),
-					getWalletUSDCBalance(wallet.publicKey),
-				]);
-
-				setSolforgeBalance(balance.balance_usd);
-				setWalletBalance(walletUSDC);
-			} catch (err) {
-				console.error("Failed to fetch balances:", err);
-			} finally {
-				if (isInitial) {
-					setLoadingBalance(false);
-				}
-			}
-		}
-
-		// Initial fetch with loading state
-		fetchBalances(true);
-
-		// Refresh balances every 10 seconds without showing loading state
-		const interval = setInterval(() => fetchBalances(false), 10000);
-		return () => clearInterval(interval);
-	}, [client, wallet]);
 
 	async function handleCreateSession() {
 		setCreating(true);

@@ -292,10 +292,31 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
 					);
 				}
 
+				// Get response metadata from stream result (includes balance deduction)
+				const response = await streamResult.response;
+
+				// Check if balance was returned in the stream metadata
+				if ((response as any)?.solforge_metadata?.balance_remaining) {
+					const newBalance = (response as any).solforge_metadata
+						.balance_remaining;
+					if ((window as any).__updateSolforgeBalance) {
+						(window as any).__updateSolforgeBalance(newBalance);
+					}
+				}
+
 				// After streaming completes, save to database
 				const savedResponse = await client.sendMessage(selectedSessionId, {
 					content,
 				});
+
+				// Also update balance from saved response if available
+				if (savedResponse.usage?.balanceRemaining !== undefined) {
+					if ((window as any).__updateSolforgeBalance) {
+						(window as any).__updateSolforgeBalance(
+							savedResponse.usage.balanceRemaining.toFixed(2),
+						);
+					}
+				}
 
 				// Replace optimistic messages with real database messages
 				setMessages((prev) => {
