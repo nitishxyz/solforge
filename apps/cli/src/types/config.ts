@@ -34,9 +34,12 @@ export const AgiConfigSchema = z.object({
 	enabled: z.boolean().default(true),
 	port: z.number().int().min(1000).max(65535).default(3456),
 	host: z.string().default("127.0.0.1"),
-	provider: z.enum(["openrouter", "anthropic", "openai"]).optional(),
+	provider: z
+		.enum(["openrouter", "anthropic", "openai", "solforge"])
+		.optional(),
 	model: z.string().optional(),
 	apiKey: z.string().optional(),
+	walletPrivateKey: z.string().optional(),
 	agent: z.enum(["general", "build"]).optional().default("general"),
 });
 

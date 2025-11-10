@@ -25,9 +25,10 @@ export interface SolforgeConfig {
 		host: string;
 		domain?: string;
 		corsOrigins?: string[];
-		provider?: "openrouter" | "anthropic" | "openai";
+		provider?: "openrouter" | "anthropic" | "openai" | "solforge";
 		model?: string;
 		apiKey?: string;
+		walletPrivateKey?: string;
 		agent: "general" | "build";
 	};
 	bootstrap: {

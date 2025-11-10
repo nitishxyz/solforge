@@ -141,6 +141,7 @@ export async function runSetupWizard(configFile?: string) {
 	let agiProvider = base.agi?.provider;
 	let agiModel = base.agi?.model;
 	let agiApiKey = base.agi?.apiKey;
+	let agiWalletPrivateKey = base.agi?.walletPrivateKey;
 	let agiDomain = base.agi?.domain;
 
 	if (agiEnabled) {
@@ -161,15 +162,17 @@ export async function runSetupWizard(configFile?: string) {
 				{ value: "openrouter", label: "OpenRouter" },
 				{ value: "anthropic", label: "Anthropic" },
 				{ value: "openai", label: "OpenAI" },
+				{ value: "solforge", label: "Solforge" },
 			],
 			initialValue: agiProvider,
 		});
 		if (p.isCancel(providerResp)) cancelSetup();
-		agiProvider = providerResp as
-			| "openrouter"
-			| "anthropic"
-			| "openai"
-			| undefined;
+			agiProvider = providerResp as
+				| "openrouter"
+				| "anthropic"
+				| "openai"
+				| "solforge"
+				| undefined;
 
 		if (agiProvider) {
 			const modelResp = await p.text({
@@ -179,12 +182,22 @@ export async function runSetupWizard(configFile?: string) {
 			if (p.isCancel(modelResp)) cancelSetup();
 			agiModel = modelResp || undefined;
 
-			const apiKeyResp = await p.text({
-				message: `API key (leave blank to use ${agiProvider?.toUpperCase()}_API_KEY env var)`,
-				initialValue: agiApiKey ?? "",
-			});
-			if (p.isCancel(apiKeyResp)) cancelSetup();
-			agiApiKey = apiKeyResp || undefined;
+			if (agiProvider === "solforge") {
+				const walletResp = await p.text({
+					message:
+						"Solforge wallet private key (base58 - leave blank to use SOLFORGE_PRIVATE_KEY env var)",
+					initialValue: agiWalletPrivateKey ?? "",
+				});
+				if (p.isCancel(walletResp)) cancelSetup();
+				agiWalletPrivateKey = walletResp || undefined;
+			} else {
+				const apiKeyResp = await p.text({
+					message: `API key (leave blank to use ${agiProvider?.toUpperCase()}_API_KEY env var)`,
+					initialValue: agiApiKey ?? "",
+				});
+				if (p.isCancel(apiKeyResp)) cancelSetup();
+				agiApiKey = apiKeyResp || undefined;
+			}
 		}
 
 		const domainResp = await p.text({
@@ -209,6 +222,7 @@ export async function runSetupWizard(configFile?: string) {
 					...(agiProvider && { provider: agiProvider }),
 					...(agiModel && { model: agiModel }),
 					...(agiApiKey && { apiKey: agiApiKey }),
+					...(agiWalletPrivateKey && { walletPrivateKey: agiWalletPrivateKey }),
 					...(agiDomain && { domain: agiDomain }),
 					agent: base.agi?.agent ?? "general",
 				}

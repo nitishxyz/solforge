@@ -1,6 +1,10 @@
 import * as p from "@clack/prompts";
 import chalk from "chalk";
-import { BUILTIN_AGENTS, createEmbeddedApp } from "@agi-cli/server";
+import {
+	BUILTIN_AGENTS,
+	createEmbeddedApp,
+	type EmbeddedAppConfig,
+} from "@agi-cli/server";
 import { serveWebUI } from "@agi-cli/web-ui";
 import {
 	defaultConfig,
@@ -13,6 +17,13 @@ import { bootstrapEnvironment } from "./bootstrap";
 import { cancelSetup } from "./setup-utils";
 import { runSetupWizard } from "./setup-wizard";
 import { parseFlags } from "./utils/args";
+
+const PROVIDER_ENV_VARS = {
+	openrouter: "OPENROUTER_API_KEY",
+	anthropic: "ANTHROPIC_API_KEY",
+	openai: "OPENAI_API_KEY",
+	solforge: "SOLFORGE_PRIVATE_KEY",
+} as const;
 
 const CONFIG_PATH = "sf.config.json";
 
@@ -136,15 +147,26 @@ async function startAgiServer(
 	const provider = agiConfig.provider;
 	const model = agiConfig.model;
 	const agent = agiConfig.agent || "general";
+	const solforgePrivateKey =
+		agiConfig.walletPrivateKey || process.env.SOLFORGE_PRIVATE_KEY;
 
-	if (provider) {
-		const apiKey =
-			agiConfig.apiKey || process.env[`${provider.toUpperCase()}_API_KEY`];
+	if (provider === "solforge" && !solforgePrivateKey) {
+		console.log(
+			chalk.yellow(
+				"⚠️  AGI server is enabled with provider \"solforge\" but no wallet private key found. Set SOLFORGE_PRIVATE_KEY environment variable or add it to sf.config.json.",
+			),
+		);
+		return null;
+	}
+
+	if (provider && provider !== "solforge") {
+		const envVar = PROVIDER_ENV_VARS[provider];
+		const apiKey = agiConfig.apiKey || (envVar ? process.env[envVar] : undefined);
 
 		if (!apiKey) {
 			console.log(
 				chalk.yellow(
-					`⚠️  AGI server is enabled with provider "${provider}" but no API key found. Set ${provider.toUpperCase()}_API_KEY environment variable.`,
+					`⚠️  AGI server is enabled with provider "${provider}" but no API key found. Set ${envVar ?? `${provider.toUpperCase()}_API_KEY`} environment variable.`,
 				),
 			);
 			return null;
@@ -152,19 +174,7 @@ async function startAgiServer(
 	}
 
 	try {
-		type AppConfig = {
-			agents: {
-				general: typeof BUILTIN_AGENTS.general;
-				build: typeof BUILTIN_AGENTS.build;
-			};
-			corsOrigins?: string[];
-			provider?: "openrouter" | "anthropic" | "openai";
-			model?: string;
-			apiKey?: string;
-			agent?: "general" | "build";
-		};
-
-		const appConfig: AppConfig = {
+		const appConfig: EmbeddedAppConfig = {
 			agents: {
 				general: { ...BUILTIN_AGENTS.general },
 				build: { ...BUILTIN_AGENTS.build },
@@ -190,15 +200,22 @@ async function startAgiServer(
 		}
 
 		if (provider) {
-			appConfig.provider = provider as "openrouter" | "anthropic" | "openai";
+			appConfig.provider = provider;
 		}
 
 		if (model) {
 			appConfig.model = model;
 		}
 
-		if (agiConfig.apiKey) {
+		if (agiConfig.apiKey && provider !== "solforge") {
 			appConfig.apiKey = agiConfig.apiKey;
+		}
+
+		if (solforgePrivateKey) {
+			appConfig.auth = {
+				...(appConfig.auth ?? {}),
+				solforge: { type: "wallet", secret: solforgePrivateKey },
+			};
 		}
 
 		if (agent && agent !== "general") {

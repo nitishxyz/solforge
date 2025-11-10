@@ -85,6 +85,7 @@ export async function initCommand(): Promise<void> {
 					{ name: "OpenRouter", value: "openrouter" },
 					{ name: "Anthropic", value: "anthropic" },
 					{ name: "OpenAI", value: "openai" },
+					{ name: "Solforge", value: "solforge" },
 				],
 				default: undefined,
 			},
@@ -100,7 +101,16 @@ export async function initCommand(): Promise<void> {
 				name: "apiKey",
 				message: "API key (optional - uses env var if blank):",
 				default: "",
-				when: (answers: { provider?: string }) => !!answers.provider,
+				when: (answers: { provider?: string }) =>
+					!!answers.provider && answers.provider !== "solforge",
+			},
+			{
+				type: "password",
+				name: "walletPrivateKey",
+				message:
+					"Solforge wallet private key (base58 - uses SOLFORGE_PRIVATE_KEY env var if blank):",
+				mask: "*",
+				when: (answers: { provider?: string }) => answers.provider === "solforge",
 			},
 			{
 				type: "list",
@@ -121,6 +131,9 @@ export async function initCommand(): Promise<void> {
 			...(agiAnswers.provider && { provider: agiAnswers.provider }),
 			...(agiAnswers.model && { model: agiAnswers.model }),
 			...(agiAnswers.apiKey && { apiKey: agiAnswers.apiKey }),
+			...(agiAnswers.walletPrivateKey && {
+				walletPrivateKey: agiAnswers.walletPrivateKey,
+			}),
 			agent: agiAnswers.agent || "general",
 		};
 	}

@@ -11,8 +11,8 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@agi-cli/api": "^0.1.73",
-		"@agi-cli/web-sdk": "^0.1.95",
+		"@agi-cli/api": "^0.1.100",
+		"@agi-cli/web-sdk": "^0.1.100",
 		"@tanstack/react-query": "^5.90.2",
 		"@tanstack/react-router": "^1.132.47",
 		"@tanstack/router-devtools": "^1.132.50",
