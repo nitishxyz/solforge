@@ -18,7 +18,7 @@ export const apiService = new sst.aws.Service("SolforgeAiService", {
   },
   loadBalancer: {
     ports: [
-      { listen: "443/https", forward: "3030/http" },
+      { listen: "443/https", forward: "4000/http" },
       { listen: "80/http", redirect: "443/https" },
     ],
     domain: { name: domains.aiService, dns: sst.cloudflare.dns() },

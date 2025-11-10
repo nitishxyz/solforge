@@ -3,7 +3,7 @@ import { db } from "../../db";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { config } from "../config";
-import { createPaymentRequirements } from "../services/x402-payment";
+import { TOPUP_AMOUNTS, createPaymentRequirements } from "../services/x402-payment";
 
 export const balanceCheck: MiddlewareHandler = async (c, next) => {
   const walletAddress = c.get("walletAddress");
@@ -25,9 +25,16 @@ export const balanceCheck: MiddlewareHandler = async (c, next) => {
   const balance = parseFloat(user.balanceUsd);
 
   if (balance < config.minBalance) {
+    const deficit = Math.max(0, -balance);
+    const requestedAmounts: number[] =
+      deficit > 0
+        ? [Math.max(0.1, Number((deficit + 0.1).toFixed(2)))]
+        : [...TOPUP_AMOUNTS];
+
     const paymentRequirements = createPaymentRequirements(
       c.req.url,
       "Top-up required for API access",
+      requestedAmounts,
     );
 
     return c.json(

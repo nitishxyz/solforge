@@ -37,4 +37,5 @@ app.onError(errorHandler);
 export default {
   port: config.port,
   fetch: app.fetch,
+  idleTimeout: 60,
 };

@@ -32,21 +32,12 @@ export async function deductCost(
 
 		const oldBalance = parseFloat(user.balanceUsd);
 		const newBalance = oldBalance - cost;
+		const isOverdraft = newBalance < 0;
 
 		console.log("💳 Balance update:");
 		console.log("  Old balance:", oldBalance.toFixed(8));
 		console.log("  Cost:", cost.toFixed(8));
 		console.log("  New balance:", newBalance.toFixed(8));
-
-		if (newBalance < 0) {
-			console.error(
-				"❌ Insufficient balance. Required:",
-				cost.toFixed(8),
-				"Available:",
-				oldBalance.toFixed(8),
-			);
-			throw new Error("Insufficient balance");
-		}
 
 		await tx
 			.update(users)
@@ -72,6 +63,14 @@ export async function deductCost(
 		});
 
 		console.log("✅ Balance deduction complete");
+
+		if (isOverdraft) {
+			console.warn(
+				"⚠️ Balance overdraft:",
+				newBalance.toFixed(8),
+				"(user went negative)",
+			);
+		}
 
 		return { cost, newBalance };
 	});

@@ -5,7 +5,7 @@ const IS_DEVNET = true;
 export const config = {
   port: 4000,
   minBalance: 0.05,
-  markup: 1.15,
+  markup: 1.005,
   
   openai: {
     apiKey: Resource.OpenAiApiKey.value,

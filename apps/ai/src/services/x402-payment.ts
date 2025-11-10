@@ -1,10 +1,8 @@
 import { config } from "../config";
 
 const FACILITATOR_FEE_PAYER = "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4";
+export const MIN_TOPUP_AMOUNT = 0.1;
 export const TOPUP_AMOUNTS = [0.1, 1, 5, 10] as const;
-const TOPUP_AMOUNTS_IN_MICRO_USDC = new Set(
-  TOPUP_AMOUNTS.map((amount) => Math.round(amount * 1_000_000).toString()),
-);
 
 export interface PaymentRequirement {
   scheme: "exact";
@@ -81,7 +79,24 @@ export function createPaymentRequirements(
   description: string,
   amounts: readonly number[] = TOPUP_AMOUNTS,
 ): PaymentRequirement[] {
-  return amounts.map((amount) =>
+  const seen = new Set<number>();
+  const normalized: number[] = [];
+
+  for (const amount of amounts) {
+    const rounded = Number(amount.toFixed(2));
+    if (!Number.isFinite(rounded) || rounded < MIN_TOPUP_AMOUNT) {
+      continue;
+    }
+    if (seen.has(rounded)) {
+      continue;
+    }
+    seen.add(rounded);
+    normalized.push(rounded);
+  }
+
+  const source = normalized.length > 0 ? normalized : [...TOPUP_AMOUNTS];
+
+  return source.map((amount) =>
     createPaymentRequirement(
       resource,
       `${description} (${amount.toFixed(2)} USD)`,
@@ -139,5 +154,10 @@ export function usdcToUsd(usdcAmount: string): number {
 }
 
 export function isSupportedTopupAmount(usdcAmount: string): boolean {
-  return TOPUP_AMOUNTS_IN_MICRO_USDC.has(usdcAmount);
+  const usdAmount = usdcToUsd(usdcAmount);
+  if (!Number.isFinite(usdAmount)) {
+    return false;
+  }
+
+  return usdAmount >= MIN_TOPUP_AMOUNT;
 }

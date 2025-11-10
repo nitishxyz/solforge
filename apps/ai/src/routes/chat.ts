@@ -33,61 +33,67 @@ chat.post("/v1/chat/completions", walletAuth, balanceCheck, async (c) => {
   }
 
   if (result.type === "stream" && result.stream) {
-    const completionId = `chatcmpl-${Date.now()}`;
-    const created = Math.floor(Date.now() / 1000);
-    return stream(c, async (stream) => {
+    return stream(c, async (streamWriter) => {
       for await (const chunk of result.stream) {
-        const sseData = {
-          id: completionId,
-          object: "chat.completion.chunk",
-          created,
-          model: body.model,
-          choices: [
-            {
-              index: 0,
-              delta: { content: chunk },
-              finish_reason: null,
-            },
-          ],
-        };
-        await stream.write(`data: ${JSON.stringify(sseData)}\n\n`);
+        await streamWriter.write(chunk);
       }
-      let finishReason: string | null = null;
+
+      let finalChunkWritten = false;
+
       if (typeof result.finalize === "function") {
         const metadata = await result.finalize();
         if (metadata) {
-          finishReason = metadata.finishReason ?? "stop";
+          finalChunkWritten = true;
           const usage = {
             prompt_tokens: metadata.usage.inputTokens,
             completion_tokens: metadata.usage.outputTokens,
             total_tokens: metadata.usage.totalTokens,
           };
+
+          const basePayload =
+            metadata.finalEventPayload && typeof metadata.finalEventPayload === "object"
+              ? metadata.finalEventPayload
+              : {
+                  id: metadata.completionId,
+                  object: "chat.completion.chunk",
+                  created: metadata.created,
+                  model: metadata.model,
+                  choices: [
+                    {
+                      index: 0,
+                      delta: {},
+                      finish_reason: metadata.finishReason ?? "stop",
+                    },
+                  ],
+                };
+
           const finalChunk = {
-            id: completionId,
-            object: "chat.completion.chunk",
-            created,
-            model: body.model,
-            choices: [
-              {
-                index: 0,
-                delta: {},
-                finish_reason: finishReason,
-              },
-            ],
+            ...basePayload,
             usage,
             solforge_metadata: {
               balance_remaining: metadata.newBalance.toFixed(8),
               cost_usd: metadata.cost.toFixed(8),
             },
           };
-          await stream.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+
+          // Ensure choices reflect the final finish reason.
+          if (Array.isArray(finalChunk.choices)) {
+            finalChunk.choices = finalChunk.choices.map((choice: any, index: number) => ({
+              ...choice,
+              index: typeof choice.index === "number" ? choice.index : index,
+              finish_reason: metadata.finishReason ?? choice.finish_reason ?? "stop",
+            }));
+          }
+
+          await streamWriter.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
         }
       }
-      if (!finishReason) {
-        const finalChunk = {
-          id: completionId,
+
+      if (!finalChunkWritten) {
+        const fallbackChunk = {
+          id: `chatcmpl-${Date.now()}`,
           object: "chat.completion.chunk",
-          created,
+          created: Math.floor(Date.now() / 1000),
           model: body.model,
           choices: [
             {
@@ -97,9 +103,10 @@ chat.post("/v1/chat/completions", walletAuth, balanceCheck, async (c) => {
             },
           ],
         };
-        await stream.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+        await streamWriter.write(`data: ${JSON.stringify(fallbackChunk)}\n\n`);
       }
-      await stream.write("data: [DONE]\n\n");
+
+      await streamWriter.write("data: [DONE]\n\n");
     });
   } else {
     const unsafeResult = result as {

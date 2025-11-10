@@ -89,7 +89,19 @@ topup.post("/v1/topup", walletAuth, async (c) => {
   });
 
   if (existingLog) {
-    return c.json({ error: "Transaction already processed" }, 400);
+    const user = await db.query.users.findFirst({
+      where: eq(users.walletAddress, walletAddress),
+    });
+    const balanceValue = user ? parseFloat(user.balanceUsd) : 0;
+    return c.json({
+      success: true,
+      duplicate: true,
+      amount,
+      balance: balanceValue,
+      new_balance: balanceValue.toFixed(8),
+      amount_usd: amount.toFixed(2),
+      transaction: txSignature,
+    });
   }
 
   const result = await db.transaction(async (tx) => {
@@ -150,6 +162,7 @@ topup.post("/v1/topup", walletAuth, async (c) => {
   return c.json({
     success: true,
     amount,
+    balance: Number(result.newBalance),
     new_balance: result.newBalance.toFixed(8),
     amount_usd: amount.toFixed(2),
     transaction: txSignature,
