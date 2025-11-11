@@ -2,6 +2,12 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
 import { config } from "../config";
 import { deductCost } from "../services/balance-manager";
+import {
+  createChatStream,
+  mapFinishReason,
+  resolveUsage,
+  type UsageTotals,
+} from "./anthropic-utils";
 
 interface HandleAnthropicOptions {
   stream: boolean;
@@ -11,71 +17,23 @@ const anthropic = createAnthropic({
   apiKey: config.anthropic.apiKey,
 });
 
-type UsageTotals = {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
+type StreamFinalizeResult = {
+  usage: UsageTotals;
+  cost: number;
+  newBalance: number;
+  finishReason: string;
+  completionId: string;
+  model: string;
+  created: number;
+  finalEventPayload: any;
 };
 
-function resolveUsage(
-  usage: Awaited<ReturnType<typeof streamText>>["usage"],
-  steps: Awaited<ReturnType<typeof streamText>>["steps"] | undefined,
-): UsageTotals | null {
-  const lastStepUsage = steps && steps.length > 0 ? steps.at(-1)?.usage : undefined;
-
-  const inputTokens =
-    usage?.promptTokens ??
-    usage?.inputTokens ??
-    lastStepUsage?.inputTokens ??
-    lastStepUsage?.promptTokens;
-
-  const outputTokens =
-    usage?.completionTokens ??
-    usage?.outputTokens ??
-    lastStepUsage?.outputTokens ??
-    lastStepUsage?.completionTokens;
-
-  const totalTokens =
-    usage?.totalTokens ??
-    lastStepUsage?.totalTokens ??
-    (inputTokens != null && outputTokens != null
-      ? inputTokens + outputTokens
-      : undefined);
-
-  if (totalTokens == null) {
-    return null;
-  }
-
-  const round = (value: number | undefined) =>
-    value != null && Number.isFinite(value) ? Math.max(0, Math.round(value)) : undefined;
-
-  const sanitizedTotal = round(totalTokens);
-  if (sanitizedTotal == null) {
-    return null;
-  }
-
-  const roundedInput = round(inputTokens);
-  const roundedOutput = round(outputTokens);
-
-  const sanitizedInput =
-    roundedInput ??
-    (roundedOutput != null ? Math.max(0, sanitizedTotal - roundedOutput) : sanitizedTotal);
-
-  const sanitizedOutput =
-    roundedOutput ??
-    (sanitizedInput != null ? Math.max(0, sanitizedTotal - sanitizedInput) : sanitizedTotal);
-
-  return {
-    inputTokens: sanitizedInput ?? sanitizedTotal,
-    outputTokens: sanitizedOutput ?? sanitizedTotal,
-    totalTokens: sanitizedTotal,
-  };
-}
+const CHAT_OBJECT = "chat.completion";
 
 export async function handleAnthropic(
   walletAddress: string,
   body: any,
-  options: HandleAnthropicOptions
+  options: HandleAnthropicOptions,
 ) {
   const { stream } = options;
 
@@ -92,10 +50,23 @@ export async function handleAnthropic(
   });
 
   if (stream) {
+    const completionId = `chatcmpl-${Date.now()}`;
+    const created = Math.floor(Date.now() / 1000);
+
+    if (!result.textStream) {
+      throw new Error("Anthropic did not provide a stream");
+    }
+
+    const streamPayload = createChatStream(result.textStream, {
+      completionId,
+      created,
+      model: body.model,
+    });
+
     return {
-      stream: result.textStream,
+      stream: streamPayload,
       type: "stream" as const,
-      finalize: async () => {
+      finalize: async (): Promise<StreamFinalizeResult | null> => {
         try {
           const [usage, finishReason, steps] = await Promise.all([
             result.usage,
@@ -108,6 +79,7 @@ export async function handleAnthropic(
             return null;
           }
 
+          const mappedFinishReason = mapFinishReason(finishReason);
           const { cost, newBalance } = await deductCost(
             walletAddress,
             "anthropic",
@@ -117,14 +89,30 @@ export async function handleAnthropic(
               outputTokens: totals.outputTokens,
               totalTokens: totals.totalTokens,
             },
-            config.markup
+            config.markup,
           );
 
           return {
             usage: totals,
             cost,
             newBalance,
-            finishReason: finishReason ?? "stop",
+            finishReason: mappedFinishReason,
+            completionId,
+            model: body.model,
+            created,
+            finalEventPayload: {
+              id: completionId,
+              object: "chat.completion.chunk",
+              created,
+              model: body.model,
+              choices: [
+                {
+                  index: 0,
+                  delta: {},
+                  finish_reason: mappedFinishReason,
+                },
+              ],
+            },
           };
         } catch (error) {
           console.error("Failed to finalize Anthropic stream:", error);
@@ -146,6 +134,9 @@ export async function handleAnthropic(
     throw new Error("No usage data returned from Anthropic");
   }
 
+  const mappedFinishReason = mapFinishReason(finishReason);
+  const created = Math.floor(Date.now() / 1000);
+
   const { cost, newBalance } = await deductCost(
     walletAddress,
     "anthropic",
@@ -155,13 +146,13 @@ export async function handleAnthropic(
       outputTokens: totals.outputTokens,
       totalTokens: totals.totalTokens,
     },
-    config.markup
+    config.markup,
   );
 
   const anthropicResponse = {
     id: `msg-${Date.now()}`,
-    object: "chat.completion",
-    created: Math.floor(Date.now() / 1000),
+    object: CHAT_OBJECT,
+    created,
     model: body.model,
     choices: [
       {
@@ -170,7 +161,7 @@ export async function handleAnthropic(
           role: "assistant",
           content: text,
         },
-        finish_reason: finishReason ?? "stop",
+        finish_reason: mappedFinishReason,
       },
     ],
     usage: {

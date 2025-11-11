@@ -44,8 +44,8 @@ async function testFailingTransaction() {
 		const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 		console.log("   Blockhash:", latestBlockhash.blockhash, "\n");
 
-		console.log("4️⃣  Creating transfer for reasonable amount...");
-		const transferAmount = lamports(500_000n);
+		console.log("4️⃣  Creating transfer that should exceed balance...");
+		const transferAmount = lamports(2_000_000n);
 		console.log(
 			"   Trying to transfer:",
 			Number(transferAmount) / 1_000_000_000,

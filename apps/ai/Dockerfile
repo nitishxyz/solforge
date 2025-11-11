@@ -1,31 +1,18 @@
-FROM oven/bun:1.3.1-alpine AS builder
+FROM oven/bun:1.3.1
 
 WORKDIR /app
 
-# Copy workspace manifests
-COPY package.json bun.lock ./
-COPY apps/ai/package.json apps/ai/package.json
+# Copy the entire workspace (filtering handled by .dockerignore)
+COPY bun.lock package.json ./
+COPY apps ./apps
+COPY packages ./packages
 
-# Install only the ai workspace dependencies
+# Install only the AI workspace dependencies
 RUN bun install --frozen-lockfile --filter @solforge/ai
 
-# Copy the ai service source code
-COPY apps/ai ./apps/ai
-
-# Build the AI service into a single executable
-RUN bun build apps/ai/index.ts --compile --outfile /tmp/solforge-ai
-
-FROM alpine:3.19 AS runner
-
-RUN apk add --no-cache ca-certificates
-
-WORKDIR /app
-
-COPY --from=builder /tmp/solforge-ai ./solforge-ai
-
 ENV NODE_ENV=production \
-    PORT=3030
+    PORT=4000
 
-EXPOSE 3030
+EXPOSE 4000
 
-CMD ["./solforge-ai"]
+CMD ["bun", "apps/ai/index.ts"]
