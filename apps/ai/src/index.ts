@@ -12,9 +12,24 @@ import topup from "./routes/topup";
 import completions from "./routes/completions";
 
 const app = new Hono();
+const corsOptions = {
+  origin: "*",
+  allowMethods: [
+    "GET",
+    "HEAD",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+    "CONNECT",
+  ],
+  allowHeaders: ["*"],
+  exposeHeaders: ["*"],
+};
 
 app.use("*", logger());
-app.use("*", cors());
+app.use("*", cors(corsOptions));
 
 app.get("/", (c) => {
   return c.json({
