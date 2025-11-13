@@ -21,7 +21,7 @@ export const config = {
 
   payment: {
     companyWallet: Resource.PlatformWallet.value,
-    network: IS_DEVNET ? "solana-devnet" : "solana-mainnet",
+    network: IS_DEVNET ? "solana-devnet" : "solana",
     usdcMint: IS_DEVNET
       ? "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"  // Devnet USDC
       : "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Mainnet USDC

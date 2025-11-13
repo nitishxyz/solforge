@@ -233,7 +233,7 @@ x-cost-usd: 0.002
 HTTP 402 Payment Required
 x-payment-destination: <company_wallet_address>
 x-payment-amount: 1000000  (1 USDC in smallest units)
-x-payment-network: solana-mainnet
+x-payment-network: solana
 x-facilitator-url: https://facilitator.payai.network
 ```
 
@@ -440,7 +440,7 @@ export const balanceCheck: MiddlewareHandler = async (c, next) => {
     }, 402, {
       'x-payment-destination': COMPANY_WALLET_ADDRESS,
       'x-payment-amount': '1000000', // 1 USDC
-      'x-payment-network': 'solana-mainnet',
+      'x-payment-network': 'solana',
       'x-facilitator-url': 'https://facilitator.payai.network'
     });
   }
@@ -464,9 +464,9 @@ const topup = new Hono();
 // x402 payment endpoint
 topup.post('/topup/:amount',
   paymentMiddleware(COMPANY_WALLET_ADDRESS, {
-    '/topup/1': { price: '$1.00', network: 'solana-mainnet' },
-    '/topup/5': { price: '$5.00', network: 'solana-mainnet' },
-    '/topup/10': { price: '$10.00', network: 'solana-mainnet' },
+    '/topup/1': { price: '$1.00', network: 'solana' },
+    '/topup/5': { price: '$5.00', network: 'solana' },
+    '/topup/10': { price: '$10.00', network: 'solana' },
   }, {
     url: 'https://facilitator.payai.network'
   }),

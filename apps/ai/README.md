@@ -191,7 +191,7 @@ export const config = {
   markup: 1.15,              // 15% markup on provider costs
   
   payment: {
-    network: "solana-devnet", // or "solana-mainnet"
+    network: "solana-devnet", // or "solana"
     usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     companyWallet: Resource.PlatformWallet.value,
   },
