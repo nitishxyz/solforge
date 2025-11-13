@@ -10,11 +10,12 @@ import {
   signMessageWithKeypair,
   type WalletAdapter,
 } from "../../src/client/x402-client";
+import { Resource } from "sst";
 
 const WALLET_PRIVATE_KEY =
   "4HVvY6VJDPySX1RTmiCm1aWQVRu3sPYf4qex68VvbRP8hoLGUAWWdVLQx4gnsQf4QFe7pYAQz4VGWX9pEjFJzFkh";
 const BASE_URL = process.env.AI_PROXY_URL ?? "http://localhost:4000";
-const RPC_URL = process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
+const RPC_URL = Resource.SolanaRpcUrl.value ?? "https://api.devnet.solana.com";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
 
 class SimpleWalletAdapter implements WalletAdapter {

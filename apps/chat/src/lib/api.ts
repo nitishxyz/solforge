@@ -27,7 +27,7 @@ interface ChatClientConfig {
 }
 
 const DEFAULT_BASE_URL =
-	import.meta.env.VITE_AI_BASE_URL ?? "http://localhost:4000";
+	import.meta.env.AI_API_URL ?? "http://localhost:4000";
 const RPC_URL =
 	import.meta.env.VITE_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10

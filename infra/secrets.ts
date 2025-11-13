@@ -3,3 +3,4 @@ export const openAiApiKey = new sst.Secret("OpenAiApiKey");
 export const anthropicApiKey = new sst.Secret("AnthropicApiKey");
 export const googleAiApiKey = new sst.Secret("GoogleAiApiKey");
 export const platformWallet = new sst.Secret("PlatformWallet");
+export const solanaRpcUrl = new sst.Secret("SolanaRpcUrl");

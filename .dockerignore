@@ -12,3 +12,7 @@ infra
 .idea
 *.md
 !sf.config.json
+
+
+# sst
+.sst

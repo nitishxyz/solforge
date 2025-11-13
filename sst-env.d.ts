@@ -29,6 +29,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "SolanaRpcUrl": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "SolforgeAiApiRouter": {
       "type": "sst.aws.Router"
       "url": string
@@ -39,7 +43,7 @@ declare module "sst" {
       "url": string
     }
     "SolforgeChat": {
-      "type": "sst.aws.Astro"
+      "type": "sst.aws.StaticSite"
       "url": string
     }
     "SolforgeSh": {

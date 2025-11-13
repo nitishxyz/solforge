@@ -17,7 +17,7 @@ const DEFAULT_PROJECT_PATH =
 	import.meta.env.VITE_CHAT_PROJECT_PATH ?? "workspace";
 
 function App() {
-	const baseUrl = import.meta.env.VITE_AI_BASE_URL as string | undefined;
+	const baseUrl = import.meta.env.AI_API_URL as string | undefined;
 	const {
 		wallet,
 		loading: walletLoading,
