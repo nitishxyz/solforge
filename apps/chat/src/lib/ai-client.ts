@@ -4,8 +4,7 @@ import type { ChatMessage } from "./types";
 import type { ChatClient } from "./api";
 import { toast } from "sonner";
 
-const DEFAULT_BASE_URL =
-	import.meta.env.AI_API_URL ?? "http://localhost:4000";
+const DEFAULT_BASE_URL = import.meta.env.AI_API_URL ?? "https://ai.solforge.sh";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
 
 export interface AIClientConfig {

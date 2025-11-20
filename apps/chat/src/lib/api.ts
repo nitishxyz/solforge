@@ -26,10 +26,9 @@ interface ChatClientConfig {
 	headers?: Record<string, string>;
 }
 
-const DEFAULT_BASE_URL =
-	import.meta.env.AI_API_URL ?? "http://localhost:4000";
+const DEFAULT_BASE_URL = import.meta.env.AI_API_URL ?? "https://ai.solforge.sh";
 const RPC_URL =
-	import.meta.env.VITE_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
+	import.meta.env.VITE_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
 
 class SimpleWalletAdapter implements WalletAdapter {

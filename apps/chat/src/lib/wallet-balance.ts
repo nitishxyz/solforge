@@ -1,9 +1,10 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 
 const RPC_URL =
-	import.meta.env.VITE_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
-const SOLANA_NETWORK_ENV =
-	(import.meta.env.VITE_SOLANA_NETWORK ?? "solana-devnet").toLowerCase();
+	import.meta.env.VITE_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com";
+const SOLANA_NETWORK_ENV = (
+	import.meta.env.VITE_SOLANA_NETWORK ?? "solana"
+).toLowerCase();
 const RPC_NETWORK_HINT = inferNetworkFromRpc(RPC_URL);
 const RESOLVED_NETWORK =
 	RPC_NETWORK_HINT && RPC_NETWORK_HINT !== SOLANA_NETWORK_ENV
@@ -16,8 +17,7 @@ const DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 const isMainnet =
 	RESOLVED_NETWORK === "solana" || RESOLVED_NETWORK === "solana-mainnet";
 const DEFAULT_USDC_MINT = isMainnet ? MAINNET_USDC_MINT : DEVNET_USDC_MINT;
-const PRIMARY_USDC_MINT =
-	import.meta.env.VITE_USDC_MINT ?? DEFAULT_USDC_MINT;
+const PRIMARY_USDC_MINT = import.meta.env.VITE_USDC_MINT ?? DEFAULT_USDC_MINT;
 const FALLBACK_USDC_MINT =
 	PRIMARY_USDC_MINT === MAINNET_USDC_MINT
 		? DEVNET_USDC_MINT
