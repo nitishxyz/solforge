@@ -3,6 +3,7 @@ import { streamText } from "ai";
 import type { ChatMessage } from "./types";
 import type { ChatClient } from "./api";
 import { toast } from "./toast";
+import { fetchStream } from "./fetch-stream";
 
 // TODO: Move to env vars
 const DEFAULT_BASE_URL = "https://ai.solforge.sh";
@@ -17,7 +18,7 @@ export interface AIClientConfig {
  * Create a custom fetch function that adds authentication headers and handles 402
  */
 function createAuthenticatedFetch(chatClient: ChatClient): typeof fetch {
-    const baseFetch = globalThis.fetch;
+    const baseFetch = fetchStream as typeof fetch;
 
     return async (
         input: Parameters<typeof fetch>[0],
