@@ -22,6 +22,12 @@ export const apiService = new sst.aws.Service("SolforgeAiService", {
       { listen: "80/http", redirect: "443/https" },
     ],
     domain: { name: domains.aiService, dns: sst.cloudflare.dns() },
+    health: {
+      "4000/http": {
+        path: "/",
+        interval: "300 seconds"
+      }
+    }
   },
   dev: {
     directory: "apps/ai",

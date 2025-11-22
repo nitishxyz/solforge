@@ -28,8 +28,12 @@ interface ChatClientConfig {
     headers?: Record<string, string>;
 }
 
-// TODO: Move to env vars
-const DEFAULT_BASE_URL = "https://mac-air.li-piano.ts.net/ai/";
+const ENV = process.env.EXPO_PUBLIC_ENV;
+const DEFAULT_BASE_URL =
+    ENV === "preview" || ENV === "prod"
+        ? "https://ai.solforge.sh/"
+        : process.env.EXPO_PUBLIC_API_URL || "https://mac-air.li-piano.ts.net/ai/";
+
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
 
