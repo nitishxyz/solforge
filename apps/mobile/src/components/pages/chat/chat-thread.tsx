@@ -1,5 +1,6 @@
 import { Box, Text } from "@/src/components/ui/primitives";
-import { FlatList, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import { FlatList, TouchableOpacity, Platform } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Ionicons } from "@expo/vector-icons";
 import type { ChatMessage, ChatSession } from "@/src/lib/types";
 import { useRef, useEffect } from "react";
@@ -57,7 +58,6 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
         <KeyboardAvoidingView 
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
-            keyboardVerticalOffset={0}
         >
             <Box flex safeArea style={{ backgroundColor: theme.colors.background.default }}>
                 <LinearGradient
