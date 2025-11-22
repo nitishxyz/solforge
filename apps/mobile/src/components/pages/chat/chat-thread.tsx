@@ -92,6 +92,7 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
                     renderItem={renderMessage}
                     onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                     onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    showsVerticalScrollIndicator={false}
                 />
 
                 <LinearGradient
