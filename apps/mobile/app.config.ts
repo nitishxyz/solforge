@@ -12,6 +12,12 @@ const config = {
     slug: "solforge-chat",
     version: "1.0.0",
     orientation: "portrait",
+    updates: {
+      url: "https://u.expo.dev/84e64d78-ead4-4ff7-b347-e68ae9a1a9b2",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
+    },
     icon: "./assets/images/icon.png",
     scheme: scheme,
     userInterfaceStyle: "automatic",
