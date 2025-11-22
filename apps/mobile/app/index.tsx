@@ -2,6 +2,8 @@ import { Box, Text } from "@/src/components/ui/primitives";
 import { useWallet } from "@/src/hooks/use-wallet";
 import { useChat } from "@/src/hooks/use-chat";
 import { ChatClient } from "@/src/lib/api";
+import { useSolforgeBalance } from "@/src/hooks/use-solforge-balance";
+import { useUSDCBalance } from "@/src/hooks/use-usdc-balance";
 import { useMemo } from "react";
 import { ActivityIndicator } from "react-native";
 import { ChatList } from "@/src/components/pages/chat/chat-list";
@@ -22,6 +24,9 @@ export default function ChatListScreen() {
             },
         });
     }, [wallet]);
+
+    const { balance: solforgeBalance } = useSolforgeBalance(client);
+    const { data: usdcBalance } = useUSDCBalance(wallet?.publicKey ?? null);
 
     const {
         sessions,
@@ -67,6 +72,9 @@ export default function ChatListScreen() {
                 isCreating={isCreating}
                 onSelectSession={(id) => router.push(`/chat/${id}`)}
                 onCreateSession={handleCreateSession}
+                solforgeBalance={solforgeBalance}
+                usdcBalance={usdcBalance ?? null}
+                walletAddress={wallet?.publicKey}
             />
         </Box>
     );

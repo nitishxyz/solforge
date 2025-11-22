@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { ChatSessionSummary } from "@/src/lib/types";
 import { useRouter } from "expo-router";
 import { useUnistyles } from "react-native-unistyles";
+import { HomeHeader } from "./home-header";
 
 interface ChatListProps {
     sessions: ChatSessionSummary[];
@@ -12,9 +13,21 @@ interface ChatListProps {
     isCreating?: boolean;
     onSelectSession: (id: string) => void;
     onCreateSession: () => void;
+    solforgeBalance: string | null;
+    usdcBalance: number | null;
+    walletAddress?: string;
 }
 
-export function ChatList({ sessions, loading, isCreating, onSelectSession, onCreateSession }: ChatListProps) {
+export function ChatList({
+    sessions,
+    loading,
+    isCreating,
+    onSelectSession,
+    onCreateSession,
+    solforgeBalance,
+    usdcBalance,
+    walletAddress
+}: ChatListProps) {
     const router = useRouter();
     const { theme } = useUnistyles();
     const iconColor = theme.colors.text.default;
@@ -42,6 +55,15 @@ export function ChatList({ sessions, loading, isCreating, onSelectSession, onCre
             ) : (
                 <FlatList
                     data={sessions}
+                    ListHeaderComponent={
+                        <Box mb="sm">
+                            <HomeHeader
+                                solforgeBalance={solforgeBalance}
+                                usdcBalance={usdcBalance}
+                                walletAddress={walletAddress}
+                            />
+                        </Box>
+                    }
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <TouchableOpacity onPress={() => onSelectSession(item.id)}>
