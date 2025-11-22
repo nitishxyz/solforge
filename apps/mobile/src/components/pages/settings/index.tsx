@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, TouchableOpacity, FlatList } from "react-native";
 import { useState, useMemo, useEffect } from "react";
 import { ChatClient } from "@/src/lib/api";
-import { Transaction } from "@/src/lib/types";
+import { useTransactionsQuery, useSyncTransactionsMutation } from "@/src/hooks/use-transactions";
 
 const SUBSCRIPT_DIGITS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
 
@@ -47,8 +47,8 @@ export function SettingsPage() {
     const { wallet } = useWallet();
     const { data: balance, isLoading: loadingBalance, refetch } = useUSDCBalance(wallet?.publicKey ?? null);
     const [copied, setCopied] = useState(false);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [loadingTx, setLoadingTx] = useState(false);
+    
+    const { data: transactions = [], isLoading: loadingTx } = useTransactionsQuery();
 
     const client = useMemo(() => {
         if (!wallet) return null;
@@ -61,15 +61,13 @@ export function SettingsPage() {
         });
     }, [wallet]);
 
+    const { mutate: syncTransactions, isPending: isSyncing } = useSyncTransactionsMutation(client);
+
     useEffect(() => {
         if (client) {
-            setLoadingTx(true);
-            client.getTransactions()
-                .then(res => setTransactions(res.transactions))
-                .catch(console.error)
-                .finally(() => setLoadingTx(false));
+            syncTransactions();
         }
-    }, [client]);
+    }, [client, syncTransactions]);
 
     const copyAddress = async () => {
         if (wallet?.publicKey) {
@@ -109,7 +107,7 @@ export function SettingsPage() {
                         <Text size="lg" weight="bold">
                             {loadingBalance ? <ActivityIndicator size="small" /> : `${balance?.toFixed(2) ?? "0.00"} USDC`}
                         </Text>
-                        <TouchableOpacity onPress={() => refetch()}>
+                        <TouchableOpacity onPress={() => { refetch(); syncTransactions(); }}>
                             <Ionicons name="refresh" size={20} color="white" />
                         </TouchableOpacity>
                     </Box>
@@ -117,7 +115,10 @@ export function SettingsPage() {
             </Box>
 
             <Box>
-                <Text size="md" weight="bold">Transactions</Text>
+                <Box direction="row" alignItems="center" justifyContent="space-between">
+                    <Text size="md" weight="bold">Transactions</Text>
+                    {isSyncing && <ActivityIndicator size="small" />}
+                </Box>
             </Box>
         </Box>
     );
@@ -154,7 +155,7 @@ export function SettingsPage() {
                     </Box>
                 )}
                 ListEmptyComponent={
-                    loadingTx ? (
+                    (loadingTx || isSyncing) ? (
                         <Box p="lg" center>
                             <ActivityIndicator />
                         </Box>
