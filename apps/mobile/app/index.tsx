@@ -1,12 +1,5 @@
-import { Box, Text } from "@/src/components/ui/primitives";
+import { ChatPage } from "@/src/components/pages/chat";
 
 export default function Index() {
-  return (
-    <Box
-      flex
-      center
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </Box>
-  );
+  return <ChatPage />;
 }
