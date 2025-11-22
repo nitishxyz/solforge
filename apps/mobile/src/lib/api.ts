@@ -14,6 +14,7 @@ import {
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { toast } from "./toast";
+import { fetchStream } from "./fetch-stream";
 
 export interface WalletSigner {
     publicKey: string;
@@ -117,14 +118,15 @@ export class ChatClient {
         init: RequestInit = {},
         query?: Record<string, string | number | undefined>,
         maxAttempts = 3,
-    ): Promise<T> {
+        skipParse = false,
+    ): Promise<T | Response> {
         let attempts = 0;
 
         while (attempts < maxAttempts) {
             attempts++;
 
             try {
-                return await this.request<T>(path, init, query);
+                return await this.request<T>(path, init, query, skipParse);
             } catch (error: any) {
                 // If it's not a 402, rethrow
                 if (error.status !== 402 || attempts >= maxAttempts) {
@@ -222,7 +224,8 @@ export class ChatClient {
         path: string,
         init: RequestInit = {},
         query?: Record<string, string | number | undefined>,
-    ): Promise<T> {
+        skipParse = false,
+    ): Promise<T | Response> {
         const url = new URL(path.replace(/^\//, ""), this.baseUrl);
         if (query) {
             for (const [key, value] of Object.entries(query)) {
@@ -251,10 +254,19 @@ export class ChatClient {
             });
         }
 
-        const response = await fetch(url.toString(), {
+        // Use fetchStream if skipParse is true (implying streaming), otherwise standard fetch
+        const fetchFn = skipParse ? (fetchStream as typeof fetch) : fetch;
+        const response = await fetchFn(url.toString(), {
             ...init,
             headers,
         });
+
+        if (skipParse) {
+             if (!response.ok) {
+                 await parseResponse(response);
+             }
+             return response;
+        }
 
         return parseResponse<T>(response);
     }
@@ -270,7 +282,7 @@ export class ChatClient {
                 limit: params?.limit,
                 offset: params?.offset,
             },
-        );
+        ) as Promise<ListSessionsResponse>;
     }
 
     async createSession(input: {
@@ -286,7 +298,7 @@ export class ChatClient {
                 method: "POST",
                 body: JSON.stringify(input),
             },
-        );
+        ) as { session: ChatSession };
         return payload.session;
     }
 
@@ -301,7 +313,7 @@ export class ChatClient {
                 limit: params?.limit,
                 offset: params?.offset,
             },
-        );
+        ) as Promise<SessionDetailResponse>;
     }
 
     async sendMessage(
@@ -314,7 +326,32 @@ export class ChatClient {
                 method: "POST",
                 body: JSON.stringify(input),
             },
+        ) as Promise<SendMessageResponse>;
+    }
+
+    async sendMessageStream(
+        sessionId: string,
+        input: { content: string },
+    ): Promise<ReadableStream<Uint8Array>> {
+        const response = await this.requestWithAutoTopup<Response>(
+            `/v1/chat/sessions/${sessionId}/messages`,
+            {
+                method: "POST",
+                body: JSON.stringify({ ...input, stream: true }),
+            },
+            undefined,
+            3,
+            true,
         );
+
+        if (!response || !response.body) {
+            // This assumes standard Response class, but in RN/polyfill it might differ. 
+            // However fetchStream returns a Response-like object.
+            // Let's trust the types/polyfill.
+            throw new Error("Expected Response object");
+        }
+
+        return response.body;
     }
 
     async getBalance(): Promise<{
@@ -326,11 +363,19 @@ export class ChatClient {
         last_payment: string | null;
         last_request: string | null;
     }> {
-        return this.request("/v1/balance", { method: "GET" });
+        return this.request("/v1/balance", { method: "GET" }) as Promise<{
+            wallet_address: string;
+            balance_usd: string;
+            total_spent: string;
+            total_topups: string;
+            request_count: number;
+            last_payment: string | null;
+            last_request: string | null;
+        }>;
     }
 
     async getTransactions(): Promise<ListTransactionsResponse> {
-        return this.request("/v1/transactions", { method: "GET" });
+        return this.request("/v1/transactions", { method: "GET" }) as Promise<ListTransactionsResponse>;
     }
 }
 

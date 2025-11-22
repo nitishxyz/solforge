@@ -112,21 +112,22 @@ export class ChatClient {
 	}
 
 	private async requestWithAutoTopup<T>(
-		path: string,
-		init: RequestInit = {},
-		query?: Record<string, string | number | undefined>,
-		maxAttempts = 3,
-	): Promise<T> {
-		let attempts = 0;
+    path: string,
+    init: RequestInit = {},
+    query?: Record<string, string | number | undefined>,
+    maxAttempts = 3,
+    skipParse = false,
+  ): Promise<T | Response> {
+    let attempts = 0;
 
-		while (attempts < maxAttempts) {
-			attempts++;
+    while (attempts < maxAttempts) {
+      attempts++;
 
-			try {
-				return await this.request<T>(path, init, query);
-			} catch (error: any) {
-				// If it's not a 402, rethrow
-				if (error.status !== 402 || attempts >= maxAttempts) {
+      try {
+        return await this.request<T>(path, init, query, skipParse);
+      } catch (error: any) {
+        // If it's not a 402, rethrow
+        if (error.status !== 402 || attempts >= maxAttempts) {
 					throw error;
 				}
 
@@ -225,13 +226,14 @@ export class ChatClient {
 	}
 
 	private async request<T>(
-		path: string,
-		init: RequestInit = {},
-		query?: Record<string, string | number | undefined>,
-	): Promise<T> {
-		const url = new URL(path, this.baseUrl);
-		if (query) {
-			for (const [key, value] of Object.entries(query)) {
+    path: string,
+    init: RequestInit = {},
+    query?: Record<string, string | number | undefined>,
+    skipParse = false,
+  ): Promise<T | Response> {
+    const url = new URL(path, this.baseUrl);
+    if (query) {
+      for (const [key, value] of Object.entries(query)) {
 				if (value != null) {
 					url.searchParams.set(key, String(value));
 				}
@@ -251,89 +253,130 @@ export class ChatClient {
 		}
 
 		if (this.wallet) {
-			const authHeaders = await this.createAuthHeaders();
-			Object.entries(authHeaders).forEach(([key, value]) => {
-				headers.set(key, value);
-			});
-		}
+      const authHeaders = await this.createAuthHeaders();
+      Object.entries(authHeaders).forEach(([key, value]) => {
+        headers.set(key, value);
+      });
+    }
 
-		const response = await fetch(url, {
-			...init,
-			headers,
-		});
+    const response = await fetch(url, {
+      ...init,
+      headers,
+    });
 
-		return parseResponse<T>(response);
-	}
+    if (skipParse) {
+      if (!response.ok) {
+          await parseResponse(response); // Throw error from body
+      }
+      return response;
+    }
+
+    return parseResponse<T>(response);
+  }
 
 	async listSessions(params?: {
-		limit?: number;
-		offset?: number;
-	}): Promise<ListSessionsResponse> {
-		return this.requestWithAutoTopup<ListSessionsResponse>(
-			"/v1/chat/sessions",
-			{ method: "GET" },
-			{
-				limit: params?.limit,
-				offset: params?.offset,
-			},
-		);
-	}
+    limit?: number;
+    offset?: number;
+  }): Promise<ListSessionsResponse> {
+    return this.requestWithAutoTopup<ListSessionsResponse>(
+      "/v1/chat/sessions",
+      { method: "GET" },
+      {
+        limit: params?.limit,
+        offset: params?.offset,
+      },
+    ) as Promise<ListSessionsResponse>;
+  }
 
-	async createSession(input: {
-		title?: string | null;
-		agent: string;
-		provider: string;
-		model: string;
-		projectPath: string;
-	}): Promise<ChatSession> {
-		const payload = await this.requestWithAutoTopup<{ session: ChatSession }>(
-			"/v1/chat/sessions",
-			{
-				method: "POST",
-				body: JSON.stringify(input),
-			},
-		);
-		return payload.session;
-	}
+  async createSession(input: {
+    title?: string | null;
+    agent: string;
+    provider: string;
+    model: string;
+    projectPath: string;
+  }): Promise<ChatSession> {
+    const payload = await this.requestWithAutoTopup<{ session: ChatSession }>(
+      "/v1/chat/sessions",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    ) as { session: ChatSession };
+    return payload.session;
+  }
 
-	async getSession(
-		sessionId: string,
-		params?: { limit?: number; offset?: number },
-	): Promise<SessionDetailResponse> {
-		return this.requestWithAutoTopup<SessionDetailResponse>(
-			`/v1/chat/sessions/${sessionId}`,
-			{ method: "GET" },
-			{
-				limit: params?.limit,
-				offset: params?.offset,
-			},
-		);
-	}
+  async getSession(
+    sessionId: string,
+    params?: { limit?: number; offset?: number },
+  ): Promise<SessionDetailResponse> {
+    return this.requestWithAutoTopup<SessionDetailResponse>(
+      `/v1/chat/sessions/${sessionId}`,
+      { method: "GET" },
+      {
+        limit: params?.limit,
+        offset: params?.offset,
+      },
+    ) as Promise<SessionDetailResponse>;
+  }
 
 	async sendMessage(
-		sessionId: string,
-		input: { content: string },
-	): Promise<SendMessageResponse> {
-		return this.requestWithAutoTopup<SendMessageResponse>(
-			`/v1/chat/sessions/${sessionId}/messages`,
-			{
-				method: "POST",
-				body: JSON.stringify(input),
-			},
-		);
-	}
+    sessionId: string,
+    input: { content: string },
+  ): Promise<SendMessageResponse> {
+    return this.requestWithAutoTopup<SendMessageResponse>(
+      `/v1/chat/sessions/${sessionId}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    ) as Promise<SendMessageResponse>;
+  }
 
-	async getBalance(): Promise<{
-		wallet_address: string;
-		balance_usd: string;
-		total_spent: string;
-		total_topups: string;
-		request_count: number;
-		last_payment: string | null;
-		last_request: string | null;
-	}> {
-		return this.request("/v1/balance", { method: "GET" });
-	}
+  async sendMessageStream(
+    sessionId: string,
+    input: { content: string },
+  ): Promise<ReadableStream<Uint8Array>> {
+    const response = await this.requestWithAutoTopup<Response>(
+      `/v1/chat/sessions/${sessionId}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify({ ...input, stream: true }),
+      },
+      undefined,
+      3,
+      true,
+    );
+
+    if (!(response instanceof Response)) {
+      throw new Error("Expected Response object");
+    }
+
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+
+    return response.body;
+  }
+
+  async getBalance(): Promise<{
+    wallet_address: string;
+    balance_usd: string;
+    total_spent: string;
+    total_topups: string;
+    request_count: number;
+    last_payment: string | null;
+    last_request: string | null;
+  }> {
+    return this.request("/v1/balance", { method: "GET" }) as Promise<{
+      wallet_address: string;
+      balance_usd: string;
+      total_spent: string;
+      total_topups: string;
+      request_count: number;
+      last_payment: string | null;
+      last_request: string | null;
+    }>;
+  }
 }
 
 export type { ChatSession, ChatSessionSummary };

@@ -186,11 +186,13 @@ export async function sendChatMessage(
   walletAddress: string,
   sessionId: string,
   input: SendMessageInput,
+  options?: { stream?: boolean },
 ): Promise<SendMessageResult> {
   const session = await findSessionById(walletAddress, sessionId);
   ensureSessionOwnership(session);
 
   const now = new Date();
+  const isStream = Boolean(options?.stream);
 
   const userMessage = await insertMessage(
     {
@@ -235,11 +237,114 @@ export async function sendChatMessage(
           model: session.model,
           messages: providerMessages,
         },
-        { stream: false, responseFormat: "chat" },
+        { stream: isStream, responseFormat: "completion" },
       );
 
       if (result.type === "stream") {
-        throw new Error("Streaming responses are not supported for chat sessions");
+        let fullContent = "";
+        const streamIterator = result.stream;
+
+        const tapStream = async function* () {
+          for await (const chunk of streamIterator) {
+            fullContent += chunk;
+            yield chunk;
+          }
+        };
+
+        return {
+          type: "stream",
+          userMessage,
+          stream: tapStream(),
+          finalize: async () => {
+            const metadata = await result.finalize();
+            if (!metadata) {
+              throw new Error("Failed to finalize stream");
+            }
+
+            const assistantCreatedAt = new Date();
+            const latency = Date.now() - startTime;
+
+            const assistantMessage = await insertMessage(
+              {
+                sessionId: session.id,
+                role: "assistant",
+                status: "complete",
+                agent: session.agent,
+                provider: session.provider,
+                model: session.model,
+                createdAt: assistantCreatedAt,
+                completedAt: assistantCreatedAt,
+                latencyMs: latency,
+                promptTokens: metadata.usage.inputTokens,
+                completionTokens: metadata.usage.outputTokens,
+                totalTokens: metadata.usage.totalTokens,
+              },
+              [
+                {
+                  index: 0,
+                  type: "text",
+                  content: {
+                    type: "text",
+                    text: fullContent,
+                  },
+                  agent: session.agent,
+                  provider: session.provider,
+                  model: session.model,
+                  stepIndex: null,
+                },
+              ],
+            );
+
+            const totalInputTokens =
+              (session.totalInputTokens ?? 0) + metadata.usage.inputTokens;
+            const totalOutputTokens =
+              (session.totalOutputTokens ?? 0) + metadata.usage.outputTokens;
+            const totalToolTimeMs = (session.totalToolTimeMs ?? 0) + latency;
+
+            await updateSessionActivity(session.id, assistantCreatedAt, {
+              totalInputTokens,
+              totalOutputTokens,
+              totalCachedTokens: session.totalCachedTokens ?? null,
+              totalReasoningTokens: session.totalReasoningTokens ?? null,
+              totalToolTimeMs,
+              toolCounts: session.toolCounts ?? null,
+            });
+
+            if (!session.title) {
+              // Note: generating title requires another LLM call, we skip it in finalize for speed/cost or do it?
+              // The original code does it. Let's try to do it if possible, but maybe async?
+              // For now, let's keep it synchronous to the finalize call.
+              const title = await generateSessionTitle(walletAddress, session, [
+                ...providerMessages,
+                { role: "assistant", content: fullContent },
+              ]);
+              if (title) {
+                await updateSessionTitle(session.id, title);
+                session.title = title;
+              }
+            }
+
+            const updatedSession: ChatSession = {
+              ...session,
+              totalInputTokens,
+              totalOutputTokens,
+              totalToolTimeMs,
+              lastActiveAt: assistantCreatedAt.toISOString(),
+            };
+
+            return {
+              session: updatedSession,
+              assistantMessage,
+              usage: {
+                promptTokens: metadata.usage.inputTokens,
+                completionTokens: metadata.usage.outputTokens,
+                totalTokens: metadata.usage.totalTokens,
+                costUsd: metadata.cost,
+                balanceRemaining: metadata.newBalance,
+              },
+            };
+          },
+        };
       }
 
       const rawResponse = (result.response ?? {}) as any;
@@ -359,11 +464,111 @@ export async function sendChatMessage(
           model: session.model,
           messages: providerMessages,
         },
-        { stream: false },
+        { stream: isStream, responseFormat: "text" },
       );
 
       if (result.type === "stream") {
-        throw new Error("Streaming responses are not supported for chat sessions");
+        let fullContent = "";
+        const streamIterator = result.stream;
+
+        const tapStream = async function* () {
+          for await (const chunk of streamIterator) {
+            fullContent += chunk;
+            yield chunk;
+          }
+        };
+
+        return {
+          type: "stream",
+          userMessage,
+          stream: tapStream(),
+          finalize: async () => {
+            const metadata = await result.finalize();
+            if (!metadata) {
+              throw new Error("Failed to finalize stream");
+            }
+
+            const assistantCreatedAt = new Date();
+            const latency = Date.now() - startTime;
+
+            const assistantMessage = await insertMessage(
+              {
+                sessionId: session.id,
+                role: "assistant",
+                status: "complete",
+                agent: session.agent,
+                provider: session.provider,
+                model: session.model,
+                createdAt: assistantCreatedAt,
+                completedAt: assistantCreatedAt,
+                latencyMs: latency,
+                promptTokens: metadata.usage.inputTokens,
+                completionTokens: metadata.usage.outputTokens,
+                totalTokens: metadata.usage.totalTokens,
+              },
+              [
+                {
+                  index: 0,
+                  type: "text",
+                  content: {
+                    type: "text",
+                    text: fullContent,
+                  },
+                  agent: session.agent,
+                  provider: session.provider,
+                  model: session.model,
+                  stepIndex: null,
+                },
+              ],
+            );
+
+            const totalInputTokens =
+              (session.totalInputTokens ?? 0) + metadata.usage.inputTokens;
+            const totalOutputTokens =
+              (session.totalOutputTokens ?? 0) + metadata.usage.outputTokens;
+            const totalToolTimeMs = (session.totalToolTimeMs ?? 0) + latency;
+
+            await updateSessionActivity(session.id, assistantCreatedAt, {
+              totalInputTokens,
+              totalOutputTokens,
+              totalCachedTokens: session.totalCachedTokens ?? null,
+              totalReasoningTokens: session.totalReasoningTokens ?? null,
+              totalToolTimeMs,
+              toolCounts: session.toolCounts ?? null,
+            });
+
+            if (!session.title) {
+              const title = await generateSessionTitle(walletAddress, session, [
+                ...providerMessages,
+                { role: "assistant", content: fullContent },
+              ]);
+              if (title) {
+                await updateSessionTitle(session.id, title);
+                session.title = title;
+              }
+            }
+
+            const updatedSession: ChatSession = {
+              ...session,
+              totalInputTokens,
+              totalOutputTokens,
+              totalToolTimeMs,
+              lastActiveAt: assistantCreatedAt.toISOString(),
+            };
+
+            return {
+              session: updatedSession,
+              assistantMessage,
+              usage: {
+                promptTokens: metadata.usage.inputTokens,
+                completionTokens: metadata.usage.outputTokens,
+                totalTokens: metadata.usage.totalTokens,
+                costUsd: metadata.cost,
+                balanceRemaining: metadata.newBalance,
+              },
+            };
+          },
+        };
       }
 
       const rawResponse = (result.response ?? {}) as any;

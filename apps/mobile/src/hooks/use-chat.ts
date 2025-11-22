@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChatClient } from "../lib/api";
-import { createAIClient } from "../lib/ai-client";
 import type {
     ChatMessage,
     ChatSession,
@@ -190,51 +189,95 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
             setSending(true);
             setError(null);
 
+            let streamedContent = "";
+
             try {
-                const aiClient = createAIClient({ chatClient: client });
-                const conversationHistory = [...messages, optimisticUserMessage];
+                const stream = await client.sendMessageStream(selectedSessionId, { content });
+                const reader = stream.getReader();
+                // Ensure TextDecoder is available
+                const decoder = typeof TextDecoder !== "undefined" 
+                    ? new TextDecoder() 
+                    : { decode: (val: Uint8Array) => String.fromCharCode(...val) } as any; // Fallback if polyfill missing
+                let buffer = "";
+                let finalResponse: any = null;
+                let serverUserMessage: ChatMessage | null = null;
 
-                const streamResult = await aiClient.streamCompletion(
-                    conversationHistory,
-                    activeSession.model,
-                );
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                let streamedContent = "";
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop() || "";
 
-                for await (const chunk of streamResult.textStream) {
-                    streamedContent += chunk;
-                    setOptimisticMessages(prev =>
-                        prev.map(msg =>
-                            msg.id === optimisticAssistantMessage.id
-                                ? {
-                                    ...msg,
-                                    parts: [{
-                                        ...msg.parts[0],
-                                        content: { type: "text", text: streamedContent }
-                                    }]
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed || trimmed === "data: [DONE]") continue;
+                        if (trimmed.startsWith("data: ")) {
+                            try {
+                                const data = JSON.parse(trimmed.slice(6));
+
+                                if (data.type === "userMessage") {
+                                    serverUserMessage = data.message;
+                                    // Save user message to local DB as soon as we get confirmation
+                                    await saveMessageMutation.mutateAsync({ 
+                                        sessionId: selectedSessionId, 
+                                        message: data.message 
+                                    });
+                                } else if (data.type === "chunk") {
+                                    streamedContent += data.content;
+                                    setOptimisticMessages(prev =>
+                                        prev.map(msg =>
+                                            msg.id === optimisticAssistantMessage.id
+                                                ? {
+                                                    ...msg,
+                                                    parts: [{
+                                                        ...msg.parts[0],
+                                                        content: { type: "text", text: streamedContent }
+                                                    }]
+                                                }
+                                                : msg
+                                        )
+                                    );
+                                } else if (data.type === "complete") {
+                                    finalResponse = data;
+                                    
+                                    // Save assistant message to local DB
+                                    if (data.assistantMessage) {
+                                        await saveMessageMutation.mutateAsync({ 
+                                            sessionId: selectedSessionId, 
+                                            message: data.assistantMessage 
+                                        });
+                                    }
+                                    
+                                    // Note: we might want to update the session info too (tokens, cost), 
+                                    // but mobile use-chat-query seems to focus on messages.
+                                    // 'setActiveSession' can update the in-memory session state.
+                                    if (data.session) {
+                                        setActiveSession(data.session);
+                                    }
+                                } else if (data.type === "error") {
+                                    throw new Error(data.error);
                                 }
-                                : msg
-                        )
-                    );
+                            } catch (e) {
+                                console.error("Error parsing SSE:", e);
+                            }
+                        }
+                    }
                 }
-
-                const response = await streamResult.response;
-
-                // Save to server
-                const savedResponse = await client.sendMessage(selectedSessionId, { content });
-
-                // Save to DB (via mutation)
-                await saveMessageMutation.mutateAsync({ sessionId: selectedSessionId, message: savedResponse.userMessage });
-                if (savedResponse.assistantMessage) {
-                    await saveMessageMutation.mutateAsync({ sessionId: selectedSessionId, message: savedResponse.assistantMessage });
-                }
-
-                // Clear optimistic messages (will be replaced by DB messages)
+                
+                // Clear optimistic messages
                 setOptimisticMessages(prev =>
                     prev.filter(m => m.id !== optimisticUserMessage.id && m.id !== optimisticAssistantMessage.id)
                 );
 
-                return savedResponse;
+                // If we collected a response object that looks like the old return type, return it.
+                // Otherwise construct one.
+                return {
+                    session: activeSession, // simplified
+                    userMessage: serverUserMessage || optimisticUserMessage,
+                    assistantMessage: finalResponse?.assistantMessage,
+                };
 
             } catch (err) {
                 setOptimisticMessages(prev =>

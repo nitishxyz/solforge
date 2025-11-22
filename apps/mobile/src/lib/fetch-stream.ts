@@ -18,6 +18,7 @@ export function fetchStream(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
+    xhr.responseType = "text";
 
     headers.forEach((value, key) => {
       xhr.setRequestHeader(key, value);

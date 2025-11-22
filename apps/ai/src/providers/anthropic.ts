@@ -11,6 +11,7 @@ import {
 
 interface HandleAnthropicOptions {
   stream: boolean;
+  responseFormat?: "chat" | "text";
 }
 
 const anthropic = createAnthropic({
@@ -35,7 +36,7 @@ export async function handleAnthropic(
   body: any,
   options: HandleAnthropicOptions,
 ) {
-  const { stream } = options;
+  const { stream, responseFormat = "chat" } = options;
 
   const temperature =
     typeof body.temperature === "number" ? body.temperature : undefined;
@@ -57,7 +58,9 @@ export async function handleAnthropic(
       throw new Error("Anthropic did not provide a stream");
     }
 
-    const streamPayload = createChatStream(result.textStream, {
+    const streamPayload = responseFormat === "text" 
+      ? result.textStream 
+      : createChatStream(result.textStream, {
       completionId,
       created,
       model: body.model,
@@ -92,15 +95,9 @@ export async function handleAnthropic(
             config.markup,
           );
 
-          return {
-            usage: totals,
-            cost,
-            newBalance,
-            finishReason: mappedFinishReason,
-            completionId,
-            model: body.model,
-            created,
-            finalEventPayload: {
+          const finalPayload = responseFormat === "text" 
+            ? undefined
+            : {
               id: completionId,
               object: "chat.completion.chunk",
               created,
@@ -112,7 +109,17 @@ export async function handleAnthropic(
                   finish_reason: mappedFinishReason,
                 },
               ],
-            },
+            };
+
+          return {
+            usage: totals,
+            cost,
+            newBalance,
+            finishReason: mappedFinishReason,
+            completionId,
+            model: body.model,
+            created,
+            finalEventPayload: finalPayload,
           };
         } catch (error) {
           console.error("Failed to finalize Anthropic stream:", error);

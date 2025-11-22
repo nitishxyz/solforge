@@ -87,15 +87,33 @@ export interface SessionDetailResponse {
   messages: ChatMessage[];
 }
 
-export interface SendMessageResult {
-  session: ChatSession;
-  userMessage: ChatMessage;
-  assistantMessage: ChatMessage | null;
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-    costUsd: number;
-    balanceRemaining: number;
-  };
-}
+export type SendMessageResult =
+  | {
+      type?: "complete";
+      session: ChatSession;
+      userMessage: ChatMessage;
+      assistantMessage: ChatMessage | null;
+      usage?: {
+        promptTokens: number;
+        completionTokens: number;
+        totalTokens: number;
+        costUsd: number;
+        balanceRemaining: number;
+      };
+    }
+  | {
+      type: "stream";
+      userMessage: ChatMessage;
+      stream: AsyncIterable<string>;
+      finalize: () => Promise<{
+        session: ChatSession;
+        assistantMessage: ChatMessage;
+        usage: {
+          promptTokens: number;
+          completionTokens: number;
+          totalTokens: number;
+          costUsd: number;
+          balanceRemaining: number;
+        };
+      }>;
+    };

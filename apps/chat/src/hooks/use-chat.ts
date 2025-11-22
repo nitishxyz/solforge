@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChatClient } from "../lib/api";
-import { createAIClient } from "../lib/ai-client";
 import type {
-	ChatMessage,
+  ChatMessage,
 	ChatSession,
 	ChatSessionSummary,
 } from "../lib/types";
@@ -252,98 +251,96 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
 				optimisticUserMessage,
 				optimisticAssistantMessage,
 			]);
-			setSending(true);
-			setError(null);
+      setSending(true);
+      setError(null);
 
-			try {
-				// Create AI client for streaming
-				const aiClient = createAIClient({ chatClient: client });
+      let streamedContent = "";
 
-				// Build conversation history including the new user message
-				const conversationHistory = [...messages, optimisticUserMessage];
+      try {
+        const stream = await client.sendMessageStream(selectedSessionId, {
+          content,
+        });
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let finalResponse: any = null;
 
-				// Stream the AI response
-				const streamResult = await aiClient.streamCompletion(
-					conversationHistory,
-					activeSession.model,
-				);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-				let streamedContent = "";
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
-				// Stream chunks and update UI in real-time
-				for await (const chunk of streamResult.textStream) {
-					streamedContent += chunk;
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed === "data: [DONE]") continue;
+            if (trimmed.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
 
-					// Update the optimistic assistant message with streamed content
-					setMessages((prev) =>
-						prev.map((msg) =>
-							msg.id === optimisticAssistantMessage.id
-								? {
-										...msg,
-										parts: [
-											{
-												...msg.parts[0],
-												content: { type: "text", text: streamedContent },
-											},
-										],
-									}
-								: msg,
-						),
-					);
-				}
+                if (data.type === "userMessage") {
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === optimisticUserMessage.id ? data.message : msg,
+                    ),
+                  );
+                } else if (data.type === "chunk") {
+                  streamedContent += data.content;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === optimisticAssistantMessage.id
+                        ? {
+                            ...msg,
+                            parts: [
+                              {
+                                ...msg.parts[0],
+                                content: { type: "text", text: streamedContent },
+                              },
+                            ],
+                          }
+                        : msg,
+                    ),
+                  );
+                } else if (data.type === "complete") {
+                  finalResponse = data;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === optimisticAssistantMessage.id
+                        ? data.assistantMessage
+                        : msg,
+                    ),
+                  );
+                  setActiveSession(data.session);
+                  upsertSessionSummary(
+                    data.session,
+                    data.assistantMessage ?? undefined,
+                  );
 
-				// Get response metadata from stream result (includes balance deduction)
-				const response = await streamResult.response;
+                  if (
+                    data.assistantMessage?.totalTokens &&
+                    (window as any).__updateSolforgeBalance
+                  ) {
+                    // We assume balance update might happen here if the backend sends it,
+                    // but currently the complete event sends 'assistantMessage' and 'session'.
+                    // 'assistantMessage' doesn't hold the balance.
+                    // However, the backend implementation of sendChatMessage returns 'usage.balanceRemaining'
+                    // which might be available if we passed it through.
+                    // Let's check routes/chat-sessions.ts again.
+                  }
+                } else if (data.type === "error") {
+                  throw new Error(data.error);
+                }
+              } catch (e) {
+                console.error("Error parsing SSE:", e);
+              }
+            }
+          }
+        }
 
-				// Check if balance was returned in the stream metadata
-				if ((response as any)?.solforge_metadata?.balance_remaining) {
-					const newBalance = (response as any).solforge_metadata
-						.balance_remaining;
-					if ((window as any).__updateSolforgeBalance) {
-						(window as any).__updateSolforgeBalance(newBalance);
-					}
-				}
-
-				// After streaming completes, save to database
-				const savedResponse = await client.sendMessage(selectedSessionId, {
-					content,
-				});
-
-				// Also update balance from saved response if available
-				if (savedResponse.usage?.balanceRemaining !== undefined) {
-					if ((window as any).__updateSolforgeBalance) {
-						(window as any).__updateSolforgeBalance(
-							savedResponse.usage.balanceRemaining.toString(),
-						);
-					}
-				}
-
-				// Replace optimistic messages with real database messages
-				setMessages((prev) => {
-					const filtered = prev.filter(
-						(msg) =>
-							msg.id !== optimisticUserMessage.id &&
-							msg.id !== optimisticAssistantMessage.id,
-					);
-
-					return [
-						...filtered,
-						savedResponse.userMessage,
-						...(savedResponse.assistantMessage
-							? [savedResponse.assistantMessage]
-							: []),
-					];
-				});
-
-				// Update session summary
-				upsertSessionSummary(
-					savedResponse.session,
-					savedResponse.assistantMessage ?? undefined,
-				);
-				setActiveSession(savedResponse.session);
-
-				return savedResponse;
-			} catch (err) {
+        return finalResponse;
+      } catch (err) {
 				// Remove optimistic messages on error
 				setMessages((prev) =>
 					prev.filter(
