@@ -9,6 +9,9 @@ import { ActivityIndicator, TouchableOpacity, FlatList } from "react-native";
 import { useState, useMemo, useEffect } from "react";
 import { ChatClient } from "@/src/lib/api";
 import { useTransactionsQuery, useSyncTransactionsMutation } from "@/src/hooks/use-transactions";
+import { resetDatabase } from "@/src/db/reset";
+import { useQueryClear } from "@/src/providers/query-clear-provider";
+import { Alert } from "react-native";
 
 const SUBSCRIPT_DIGITS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
 
@@ -45,7 +48,8 @@ function formatCryptoAmount(amountStr: string): string {
 
 export function SettingsPage() {
     const router = useRouter();
-    const { wallet } = useWallet();
+    const { wallet, regenerate } = useWallet();
+    const { clearQueries } = useQueryClear();
     const { data: balance, isLoading: loadingBalance, refetch } = useUSDCBalance(wallet?.publicKey ?? null);
     const { data: transactions = [], isLoading: loadingTx } = useTransactionsQuery();
     const [copied, setCopied] = useState(false);
@@ -77,6 +81,34 @@ export function SettingsPage() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
+    };
+
+    const handleDeleteAccount = async () => {
+        Alert.alert(
+            "Delete Account",
+            "Are you sure you want to delete your account? This action cannot be undone. It will clear all your data and generate a new wallet.",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await resetDatabase();
+                            await clearQueries();
+                            await regenerate();
+                            router.replace("/");
+                        } catch (error) {
+                            console.error("Failed to reset account:", error);
+                            Alert.alert("Error", "Failed to delete account. Please try again.");
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const renderHeader = () => (
@@ -141,6 +173,20 @@ export function SettingsPage() {
                         <Box direction="row" alignItems="center" justifyContent="space-between">
                             <Text size="md">Export Private Key</Text>
                             <Ionicons name="chevron-forward" size={20} color="white" />
+                        </Box>
+                    </TouchableOpacity>
+                </Box>
+            </Box>
+
+            <Box>
+                <Box background="subtle" p="md" rounded="md" border="subtle" style={{ borderColor: 'rgba(255, 68, 68, 0.3)' }}>
+                    <Box mb="xs">
+                        <Text size="sm" style={{ color: '#ff4444' }}>Danger Zone</Text>
+                    </Box>
+                    <TouchableOpacity onPress={handleDeleteAccount}>
+                        <Box direction="row" alignItems="center" justifyContent="space-between">
+                            <Text size="md" style={{ color: '#ff4444' }}>Delete Account</Text>
+                            <Ionicons name="trash-outline" size={20} color="#ff4444" />
                         </Box>
                     </TouchableOpacity>
                 </Box>
