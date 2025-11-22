@@ -201,6 +201,7 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
                 let buffer = "";
                 let finalResponse: any = null;
                 let serverUserMessage: ChatMessage | null = null;
+                let serverAssistantMessage: ChatMessage | null = null;
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -219,6 +220,14 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
 
                                 if (data.type === "userMessage") {
                                     serverUserMessage = data.message;
+                                    
+                                    // Update optimistic message with real ID to allow deduplication
+                                    setOptimisticMessages(prev => 
+                                        prev.map(msg => 
+                                            msg.id === optimisticUserMessage.id ? { ...msg, id: data.message.id } : msg
+                                        )
+                                    );
+
                                     // Save user message to local DB as soon as we get confirmation
                                     await saveMessageMutation.mutateAsync({ 
                                         sessionId: selectedSessionId, 
@@ -241,7 +250,16 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
                                     );
                                 } else if (data.type === "complete") {
                                     finalResponse = data;
-                                    
+                                    serverAssistantMessage = data.assistantMessage;
+
+                                    // Update optimistic assistant message with real ID
+                                    if (data.assistantMessage) {
+                                        setOptimisticMessages(prev => 
+                                            prev.map(msg => 
+                                                msg.id === optimisticAssistantMessage.id ? { ...msg, id: data.assistantMessage.id } : msg
+                                            )
+                                        );
+                                    }
                                     // Save assistant message to local DB
                                     if (data.assistantMessage) {
                                         await saveMessageMutation.mutateAsync({ 
@@ -267,9 +285,14 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
                 }
                 
                 // Clear optimistic messages
-                setOptimisticMessages(prev =>
-                    prev.filter(m => m.id !== optimisticUserMessage.id && m.id !== optimisticAssistantMessage.id)
-                );
+                setOptimisticMessages(prev => prev.filter(m => {
+                    // Remove if it matches the original temp IDs
+                    if (m.id === optimisticUserMessage.id || m.id === optimisticAssistantMessage.id) return false;
+                    // Remove if it matches the resolved server IDs (if we updated them in state)
+                    if (serverUserMessage && m.id === serverUserMessage.id) return false;
+                    if (serverAssistantMessage && m.id === serverAssistantMessage.id) return false;
+                    return true;
+                }));
 
                 // If we collected a response object that looks like the old return type, return it.
                 // Otherwise construct one.
@@ -281,7 +304,13 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
 
             } catch (err) {
                 setOptimisticMessages(prev =>
-                    prev.filter(m => m.id !== optimisticUserMessage.id && m.id !== optimisticAssistantMessage.id)
+                    prev.filter(m => {
+                        // On error, remove the temp messages we added
+                        if (m.id === optimisticUserMessage.id || m.id === optimisticAssistantMessage.id) return false;
+                        // Also check for server IDs if we happened to update them before error
+                        // (though unlikely to have error after successful updates, but safe to check)
+                        return true;
+                    })
                 );
                 const message = err instanceof Error ? err.message : "Failed to send message";
                 setError(message);

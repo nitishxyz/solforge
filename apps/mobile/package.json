@@ -68,6 +68,7 @@
     "react-native-get-random-values": "^2.0.0",
     "react-native-keyboard-controller": "1.18.5",
     "react-native-keychain": "^10.0.0",
+    "react-native-markdown-display": "^7.0.2",
     "react-native-nitro-modules": "^0.31.9",
     "react-native-otp-entry": "^1.8.5",
     "react-native-pager-view": "6.9.1",

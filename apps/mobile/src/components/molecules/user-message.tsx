@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Icon } from "@/components/ui/primitives";
 import { Ionicons } from "@expo/vector-icons";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 
 interface UserMessageProps {
   content: string;
@@ -27,7 +28,7 @@ export const UserMessage = memo(function UserMessage({ content, createdAt }: Use
         </View>
         
         <View style={styles.bubble}>
-          <Text style={styles.messageText}>{content}</Text>
+          <MarkdownDisplay textColor={styles.messageText.color}>{content}</MarkdownDisplay>
         </View>
       </View>
       
@@ -80,13 +81,13 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   messageText: {
     fontFamily: theme.typography.family.sans,
-    fontSize: theme.typography.size.sm,
+    fontSize: theme.typography.size.lg,
     color: theme.colors.text.default,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   avatarContainer: {
     width: 32,

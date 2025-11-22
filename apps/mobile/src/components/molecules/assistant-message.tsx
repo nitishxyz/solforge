@@ -1,8 +1,17 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { View, Text } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Icon } from "@/components/ui/primitives";
 import { Ionicons } from "@expo/vector-icons";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withRepeat, 
+  withTiming, 
+  withSequence,
+  Easing 
+} from "react-native-reanimated";
 
 interface AssistantMessageProps {
   content: string;
@@ -29,6 +38,25 @@ export const AssistantMessage = memo(function AssistantMessage({
   provider,
   model
 }: AssistantMessageProps) {
+  const opacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    if (isLoading) {
+      opacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.4, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [isLoading]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value
+  }));
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -89,10 +117,10 @@ export const AssistantMessage = memo(function AssistantMessage({
         <View style={styles.contentWrapper}>
           {isLoading ? (
              <View style={styles.loadingContainer}>
-                 <Text style={styles.loadingText}>Thinking...</Text>
+                 <Animated.Text style={[styles.loadingText, animatedStyle]}>Thinking</Animated.Text>
              </View>
           ) : (
-            <Text style={styles.messageText}>{content}</Text>
+            <MarkdownDisplay textColor={styles.messageText.color}>{content}</MarkdownDisplay>
           )}
         </View>
       </View>
@@ -164,7 +192,7 @@ const styles = StyleSheet.create((theme) => ({
   line: {
       position: 'absolute',
       top: 0,
-      height: 16, // Extend only to the center of the first icon (paddingTop:4 + marginTop:2 + halfHeight:10 = 16)
+      height: 23, // Extend only to the center of the first icon (paddingTop:4 + marginTop:9 + halfHeight:10 = 23)
       width: 2,
       backgroundColor: theme.colors.chatAssistantBorder.base,
       opacity: 0.3,
@@ -177,29 +205,28 @@ const styles = StyleSheet.create((theme) => ({
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1, // On top of line
-      marginTop: 2, // Push down slightly
+      marginTop: 9, // Push down slightly
   },
   contentWrapper: {
     flex: 1,
-    paddingLeft: theme.spacing.sm,
-    paddingTop: 4, // Align text with mini icon
+    paddingLeft: 0,
+    paddingTop: 0, // Reduced top spacing for content
   },
   messageText: {
     fontFamily: theme.typography.family.sans,
-    fontSize: theme.typography.size.sm,
+    fontSize: theme.typography.size.lg,
     color: theme.colors.text.default,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   loadingContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.sm,
+      paddingTop: 11, // Align thinking text with lowered icon
   },
   loadingText: {
       fontFamily: theme.typography.family.sans,
-      fontSize: theme.typography.size.sm,
+      fontSize: theme.typography.size.lg,
       color: theme.colors.text.subtle,
-      fontStyle: 'italic',
   },
   avatarIcon: {
       color: theme.colors.chatAssistantText.base,
