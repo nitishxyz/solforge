@@ -11,7 +11,7 @@ export const chatWebsite = new sst.aws.StaticSite("SolforgeChat", {
 	},
 	environment: {
 		STAGE: process.env.STAGE || "prod",
-		AI_API_URL: `https://${domains.ai}`,
+		AI_API_URL: $app.stage === "prod" ? `https://${domains.ai}` : `http://localhost:4000`,
 		VITE_SOLANA_RPC_URL: solanaRpcUrl.value,
 		VITE_SOLANA_NETWORK: "solana",
 		VITE_USDC_MINT: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
