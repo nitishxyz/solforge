@@ -68,6 +68,13 @@ interface BaseColors {
   neutral: string;
   contrast: string;
   disabled: string;
+  chatUserBg: string;
+  chatUserBorder: string;
+  chatUserText: string;
+  chatAssistantBg: string;
+  chatAssistantBorder: string;
+  chatAssistantText: string;
+  chatAssistantPrimary: string;
 }
 
 interface ThemeColors {
