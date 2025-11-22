@@ -133,6 +133,20 @@ export function SettingsPage() {
             </Box>
 
             <Box>
+                <Box background="subtle" p="md" rounded="md" border="subtle">
+                    <Box mb="xs">
+                        <Text size="sm" mode="subtle">Security</Text>
+                    </Box>
+                    <TouchableOpacity onPress={() => router.push("/export-key")}>
+                        <Box direction="row" alignItems="center" justifyContent="space-between">
+                            <Text size="md">Export Private Key</Text>
+                            <Ionicons name="chevron-forward" size={20} color="white" />
+                        </Box>
+                    </TouchableOpacity>
+                </Box>
+            </Box>
+
+            <Box>
                 <Box direction="row" alignItems="center" justifyContent="space-between">
                     <Text size="md" weight="bold">Transactions</Text>
                     {isSyncing && <ActivityIndicator size="small" />}

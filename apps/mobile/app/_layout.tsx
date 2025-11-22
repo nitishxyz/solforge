@@ -18,6 +18,7 @@ function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="chat/[id]" />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="export-key" options={{ presentation: 'modal' }} />
       </Stack>
     </RootProvider>
   );
