@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Loader2 } from "lucide-react";
 
 interface MessageComposerProps {
 	onSubmit: (message: string) => Promise<void> | void;
@@ -31,17 +31,18 @@ export function MessageComposer({ onSubmit, disabled }: MessageComposerProps) {
 
 	async function handleSubmit(event?: React.FormEvent) {
 		event?.preventDefault();
-		if (!value.trim() || disabled || isSubmitting) {
+		if (!value.trim() || isSubmitting) {
 			return;
 		}
 
+		const messageToSend = value.trim();
+		setValue("");
+		if (textareaRef.current) {
+			textareaRef.current.style.height = "auto";
+		}
 		setIsSubmitting(true);
 		try {
-			await onSubmit(value.trim());
-			setValue("");
-			if (textareaRef.current) {
-				textareaRef.current.style.height = "auto";
-			}
+			await onSubmit(messageToSend);
 		} finally {
 			setIsSubmitting(false);
 			textareaRef.current?.focus();
@@ -64,10 +65,8 @@ export function MessageComposer({ onSubmit, disabled }: MessageComposerProps) {
 						value={value}
 						onChange={(e) => setValue(e.target.value)}
 						onKeyDown={handleKeyDown}
-						placeholder={
-							disabled ? "Select a session to start..." : "Type a message..."
-						}
-						disabled={disabled || isSubmitting}
+						placeholder="Type a message..."
+						disabled={false}
 						rows={1}
 						className="border-0 bg-transparent pl-3 pr-2 py-2 max-h-[200px] overflow-y-auto leading-normal resize-none scrollbar-hide text-base w-full text-foreground placeholder:text-muted-foreground outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 						style={{ height: "2.5rem" }}
@@ -75,14 +74,18 @@ export function MessageComposer({ onSubmit, disabled }: MessageComposerProps) {
 					<button
 						type="button"
 						onClick={() => handleSubmit()}
-						disabled={disabled || isSubmitting || !value.trim()}
+						disabled={disabled || isSubmitting}
 						className={`flex items-center justify-center w-10 h-10 rounded-full transition-all flex-shrink-0 ${
-							value.trim() && !disabled && !isSubmitting
+							(value.trim() || isSubmitting) && !disabled
 								? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-foreground"
 								: "bg-muted text-muted-foreground cursor-not-allowed"
 						}`}
 					>
-						<ArrowUp className="w-4 h-4" />
+						{isSubmitting ? (
+							<Loader2 className="w-4 h-4 animate-spin" />
+						) : (
+							<ArrowUp className="w-4 h-4" />
+						)}
 					</button>
 				</div>
 			</div>

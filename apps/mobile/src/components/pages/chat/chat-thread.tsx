@@ -1,12 +1,13 @@
 import { Box, Text } from "@/src/components/ui/primitives";
-import { Input } from "@/src/components/ui/primitives/input";
-import { FlatList, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, View } from "react-native";
+import { FlatList, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { ChatMessage, ChatSession } from "@/src/lib/types";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { UserMessage } from "@/src/components/molecules/user-message";
 import { AssistantMessage } from "@/src/components/molecules/assistant-message";
+import { MessageComposer } from "@/src/components/molecules/message-composer";
 import { useUnistyles } from "react-native-unistyles";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface ChatThreadProps {
     session: ChatSession | null;
@@ -17,7 +18,6 @@ interface ChatThreadProps {
 }
 
 export function ChatThread({ session, messages, sending, onBack, onSend }: ChatThreadProps) {
-    const [input, setInput] = useState("");
     const flatListRef = useRef<FlatList>(null);
     const { theme } = useUnistyles();
 
@@ -29,18 +29,6 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
             }, 100);
         }
     }, [messages]);
-
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        const content = input;
-        setInput("");
-        try {
-            await onSend(content);
-        } catch (e) {
-            console.error(e);
-            setInput(content);
-        }
-    };
 
     const renderMessage = ({ item }: { item: ChatMessage }) => {
         const content = item.parts.find(p => p.type === "text")?.content?.text || "";
@@ -66,73 +54,61 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
     };
 
     return (
-        <Box flex safeArea style={{ backgroundColor: theme.colors.background.default }}>
-            <Box 
-                direction="row" 
-                alignItems="center" 
-                p="md" 
-                style={{ 
-                    borderBottomWidth: 1, 
-                    borderBottomColor: theme.colors.border.subtle,
-                    backgroundColor: theme.colors.background.default 
-                }}
-            >
-                <TouchableOpacity onPress={onBack} style={{ padding: 4 }}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.text.default} />
-                </TouchableOpacity>
-                <Text size="lg" weight="bold" style={{ marginLeft: 16, color: theme.colors.text.default }} numberOfLines={1}>
-                    {session?.title || "Chat"}
-                </Text>
-            </Box>
-
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
-                renderItem={renderMessage}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            />
-
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : undefined} 
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-            >
-                <Box 
-                    p="md" 
-                    style={{ 
-                        borderTopWidth: 1, 
-                        borderTopColor: theme.colors.border.subtle,
-                        backgroundColor: theme.colors.background.default 
-                    }} 
-                    direction="row" 
-                    alignItems="center" 
-                    gap="sm"
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={0}
+        >
+            <Box flex safeArea style={{ backgroundColor: theme.colors.background.default }}>
+                <LinearGradient
+                    colors={[
+                        theme.colors.background.default,
+                        theme.colors.background.default,
+                        `${theme.colors.background.default}dd`,
+                        `${theme.colors.background.default}00`
+                    ]}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingTop: 44 }}
                 >
-                    <Input
-                        value={input}
-                        onChangeText={setInput}
-                        placeholder="Type a message..."
-                        onSubmitEditing={handleSend}
-                        returnKeyType="send"
-                        containerStyle={{ flex: 1 }}
-                        rightAccessory={
-                            <Input.Accessory onPress={handleSend} disabled={sending || !input.trim()}>
-                                {sending ? (
-                                    <ActivityIndicator size="small" color={theme.colors.brand} />
-                                ) : (
-                                    <Ionicons 
-                                        name="send" 
-                                        size={20} 
-                                        color={input.trim() ? theme.colors.brand : theme.colors.text.subtle} 
-                                    />
-                                )}
-                            </Input.Accessory>
-                        }
+                    <Box 
+                        direction="row" 
+                        alignItems="center" 
+                        p="md" 
+                        style={{ backgroundColor: 'transparent' }}
+                    >
+                        <TouchableOpacity onPress={onBack} style={{ padding: 4 }}>
+                            <Ionicons name="arrow-back" size={24} color={theme.colors.text.default} />
+                        </TouchableOpacity>
+                        <Text size="lg" weight="bold" style={{ marginLeft: 16, color: theme.colors.text.default }} numberOfLines={1}>
+                            {session?.title || "Chat"}
+                        </Text>
+                    </Box>
+                </LinearGradient>
+
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={{ padding: 16, paddingTop: 120, paddingBottom: 120 }}
+                    renderItem={renderMessage}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                />
+
+                <LinearGradient
+                    colors={[
+                        `${theme.colors.background.default}00`,
+                        `${theme.colors.background.default}dd`,
+                        theme.colors.background.default,
+                        theme.colors.background.default
+                    ]}
+                    style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 }}
+                >
+                    <MessageComposer 
+                        onSubmit={onSend}
+                        disabled={!session || sending}
                     />
-                </Box>
-            </KeyboardAvoidingView>
-        </Box>
+                </LinearGradient>
+            </Box>
+        </KeyboardAvoidingView>
     );
 }
