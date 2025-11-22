@@ -161,3 +161,21 @@ export function useSaveMessageMutation() {
         },
     });
 }
+
+export function useUpdateSessionMutation() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (session: ChatSession) => {
+            await db.update(sessions)
+                .set({
+                    title: session.title,
+                    updatedAt: new Date(),
+                })
+                .where(eq(sessions.id, session.id));
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        },
+    });
+}

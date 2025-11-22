@@ -11,6 +11,7 @@ import {
     useCreateSessionMutation,
     useSaveMessageMutation
 } from "./use-chat-query";
+import { useUpdateSessionMutation } from "./use-chat-query";
 
 interface UseChatOptions {
     client: ChatClient | null;
@@ -41,6 +42,7 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
     // Mutations
     const createSessionMutation = useCreateSessionMutation(client);
     const saveMessageMutation = useSaveMessageMutation();
+    const updateSessionMutation = useUpdateSessionMutation();
 
     // Local state for optimistic messages (streaming)
     const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([]);
@@ -273,6 +275,7 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
                                     // 'setActiveSession' can update the in-memory session state.
                                     if (data.session) {
                                         setActiveSession(data.session);
+                                        updateSessionMutation.mutate(data.session);
                                     }
                                 } else if (data.type === "error") {
                                     throw new Error(data.error);
@@ -319,7 +322,7 @@ export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOp
                 setSending(false);
             }
         },
-        [client, selectedSessionId, activeSession, messages, saveMessageMutation]
+        [client, selectedSessionId, activeSession, messages, saveMessageMutation, updateSessionMutation]
     );
 
     return {
