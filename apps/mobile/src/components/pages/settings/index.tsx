@@ -1,6 +1,7 @@
 import { Box, Text } from "@/src/components/ui/primitives";
 import { useWallet } from "@/src/hooks/use-wallet";
 import { useUSDCBalance } from "@/src/hooks/use-usdc-balance";
+import { useSolforgeBalance } from "@/src/hooks/use-solforge-balance";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
@@ -46,10 +47,9 @@ export function SettingsPage() {
     const router = useRouter();
     const { wallet } = useWallet();
     const { data: balance, isLoading: loadingBalance, refetch } = useUSDCBalance(wallet?.publicKey ?? null);
+    const { data: transactions = [], isLoading: loadingTx } = useTransactionsQuery();
     const [copied, setCopied] = useState(false);
     
-    const { data: transactions = [], isLoading: loadingTx } = useTransactionsQuery();
-
     const client = useMemo(() => {
         if (!wallet) return null;
         return new ChatClient({
@@ -60,6 +60,8 @@ export function SettingsPage() {
             },
         });
     }, [wallet]);
+
+    const { balance: solforgeBalance, isLoading: loadingSolforgeBalance, refetch: refetchSolforge } = useSolforgeBalance(client);
 
     const { mutate: syncTransactions, isPending: isSyncing } = useSyncTransactionsMutation(client);
 
@@ -107,8 +109,24 @@ export function SettingsPage() {
                         <Text size="lg" weight="bold">
                             {loadingBalance ? <ActivityIndicator size="small" /> : `${balance?.toFixed(2) ?? "0.00"} USDC`}
                         </Text>
-                        <TouchableOpacity onPress={() => { refetch(); syncTransactions(); }}>
-                            <Ionicons name="refresh" size={20} color="white" />
+                        <TouchableOpacity onPress={() => { refetch(); syncTransactions(); }} disabled={loadingBalance}>
+                            {loadingBalance ? <ActivityIndicator size="small" /> : <Ionicons name="refresh" size={20} color="white" />}
+                        </TouchableOpacity>
+                    </Box>
+                </Box>
+            </Box>
+
+            <Box>
+                <Box background="subtle" p="md" rounded="md" border="subtle">
+                    <Box mb="xs">
+                        <Text size="sm" mode="subtle">SolForge Balance</Text>
+                    </Box>
+                    <Box direction="row" alignItems="center" justifyContent="space-between">
+                        <Text size="lg" weight="bold">
+                            {loadingSolforgeBalance ? <ActivityIndicator size="small" /> : `$${solforgeBalance ?? "0.00"}`}
+                        </Text>
+                        <TouchableOpacity onPress={() => { refetchSolforge(); syncTransactions(); }} disabled={loadingSolforgeBalance}>
+                            {loadingSolforgeBalance ? <ActivityIndicator size="small" /> : <Ionicons name="refresh" size={20} color="white" />}
                         </TouchableOpacity>
                     </Box>
                 </Box>
