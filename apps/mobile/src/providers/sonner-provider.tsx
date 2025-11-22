@@ -4,6 +4,7 @@ import type {
   SonnerContextType,
   SonnerUpdate,
 } from "@/types/sonner";
+import { toast } from "@/src/lib/toast";
 
 const SonnerContext = createContext<SonnerContextType | null>(null);
 
@@ -43,6 +44,11 @@ export const SonnerProvider: React.FC<SonnerProviderProps> = ({ children }) => {
       ),
     );
   }, []);
+
+  // Initialize the static toast adapter
+  React.useEffect(() => {
+    toast.init(showSonner, updateSonner);
+  }, [showSonner, updateSonner]);
 
   const hideSonner = useCallback((id: string) => {
     setSonners((prev) => prev.filter((sonner) => sonner.id !== id));

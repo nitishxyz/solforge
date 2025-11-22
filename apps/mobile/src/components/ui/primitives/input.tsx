@@ -29,6 +29,7 @@ const InputContext = createContext<InputContextType>({
 
 export type InputProps = TextInputProps & {
   style?: StyleProp<TextStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
   size?: "sm" | "md" | "lg";
   variant?: "filled" | "outline";
   mode?: "secondary" | "warning" | "error" | "success" | "disabled";
@@ -130,6 +131,7 @@ const Input: React.FC<InputProps> & {
   Accessory: typeof Accessory;
 } = ({
   style,
+  containerStyle,
   size = "md",
   variant,
   mode,
@@ -170,7 +172,7 @@ const Input: React.FC<InputProps> & {
 
   return (
     <InputContext.Provider value={contextValue}>
-      <View style={styles.container}>
+      <View style={[styles.container, containerStyle]}>
         {leftAccessory && <View style={styles.accessory}>{leftAccessory}</View>}
         <TextInput
           style={[styles.base, style]}

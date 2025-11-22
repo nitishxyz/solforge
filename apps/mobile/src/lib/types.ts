@@ -75,6 +75,26 @@ export interface ChatSessionSummary extends ChatSession {
   };
 }
 
+export interface Transaction {
+  id: string;
+  type: "topup" | "deduction";
+  amount_usd: string;
+  tx_signature: string | null;
+  provider: string | null;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  balance_after: string;
+  created_at: string;
+}
+
+export interface ListTransactionsResponse {
+  transactions: Transaction[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface ListSessionsResponse {
   sessions: ChatSessionSummary[];
   pagination: {

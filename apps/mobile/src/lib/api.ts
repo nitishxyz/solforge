@@ -4,6 +4,7 @@ import type {
     ListSessionsResponse,
     SendMessageResponse,
     SessionDetailResponse,
+    ListTransactionsResponse,
 } from "./types";
 import {
     X402Client,
@@ -27,7 +28,7 @@ interface ChatClientConfig {
 }
 
 // TODO: Move to env vars
-const DEFAULT_BASE_URL = "https://ai.solforge.sh";
+const DEFAULT_BASE_URL = "https://mac-air.li-piano.ts.net/ai/";
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 const TARGET_TOPUP_AMOUNT_MICRO_USDC = "100000"; // $0.10
 
@@ -168,7 +169,8 @@ export class ChatClient {
 
                     // Send the payment
                     const authHeaders = await this.createAuthHeaders();
-                    const topupResponse = await fetch(`${this.baseUrl}/v1/topup`, {
+                    const topupUrl = new URL("v1/topup", this.baseUrl);
+                    const topupResponse = await fetch(topupUrl.toString(), {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -221,7 +223,7 @@ export class ChatClient {
         init: RequestInit = {},
         query?: Record<string, string | number | undefined>,
     ): Promise<T> {
-        const url = new URL(path, this.baseUrl);
+        const url = new URL(path.replace(/^\//, ""), this.baseUrl);
         if (query) {
             for (const [key, value] of Object.entries(query)) {
                 if (value != null) {
@@ -326,7 +328,10 @@ export class ChatClient {
     }> {
         return this.request("/v1/balance", { method: "GET" });
     }
+
+    async getTransactions(): Promise<ListTransactionsResponse> {
+        return this.request("/v1/transactions", { method: "GET" });
+    }
 }
 
 export type { ChatSession, ChatSessionSummary };
-

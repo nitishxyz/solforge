@@ -15,6 +15,7 @@ import {
 
 interface UseChatOptions {
     client: ChatClient | null;
+    sessionId?: string | null;
     autoSelectFirst?: boolean;
 }
 
@@ -26,8 +27,10 @@ interface CreateSessionInput {
     projectPath: string;
 }
 
-export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
-    const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+export function useChat({ client, sessionId, autoSelectFirst = true }: UseChatOptions) {
+    const [internalSessionId, setInternalSessionId] = useState<string | null>(null);
+    const selectedSessionId = sessionId ?? internalSessionId;
+
     const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -52,12 +55,12 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
     }, [dbMessages, optimisticMessages]);
 
     useEffect(() => {
-        if (autoSelectFirst && !selectedSessionId && sessions.length > 0) {
+        if (autoSelectFirst && !selectedSessionId && sessions.length > 0 && !sessionId) {
             const first = sessions[0];
-            setSelectedSessionId(first.id);
+            setInternalSessionId(first.id);
             setActiveSession(first);
         }
-    }, [sessions, autoSelectFirst, selectedSessionId]);
+    }, [sessions, autoSelectFirst, selectedSessionId, sessionId]);
 
     useEffect(() => {
         if (selectedSessionId) {
@@ -69,7 +72,7 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
     }, [selectedSessionId, sessions]);
 
     const selectSession = useCallback((sessionId: string) => {
-        setSelectedSessionId(sessionId);
+        setInternalSessionId(sessionId);
         setOptimisticMessages([]); // Clear previous optimistic messages
     }, []);
 
@@ -78,7 +81,7 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
             setError(null);
             try {
                 const session = await createSessionMutation.mutateAsync(input);
-                setSelectedSessionId(session.id);
+                setInternalSessionId(session.id);
                 setActiveSession(session);
                 setOptimisticMessages([]);
                 return session;
@@ -254,6 +257,7 @@ export function useChat({ client, autoSelectFirst = true }: UseChatOptions) {
         selectedSessionId,
         loadingSessions,
         loadingThread,
+        isCreating: createSessionMutation.isPending,
         sending,
         error,
         refreshSessions,

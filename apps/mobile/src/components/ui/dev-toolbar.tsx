@@ -7,6 +7,8 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { Button } from "./primitives/button";
 import { Text } from "./primitives/text";
+import db from "@/src/db";
+import { messages, sessions, users } from "@/src/db/schema";
 
 export const DevToolbar = () => {
   const { theme } = useUnistyles();
@@ -35,7 +37,9 @@ export const DevToolbar = () => {
   const clearDatabase = async () => {
     try {
       setIsLoading(true);
-      // Use the logout service's comprehensive database clearing
+      await db.delete(messages);
+      await db.delete(sessions);
+      await db.delete(users);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Success", "All database tables cleared");
     } catch (error) {
@@ -85,6 +89,10 @@ export const DevToolbar = () => {
           onPress: async () => {
             try {
               setIsLoading(true);
+              await db.delete(messages);
+              await db.delete(sessions);
+              await db.delete(users);
+              queryClient.clear();
               Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success,
               );

@@ -1,5 +1,5 @@
 import { RootProvider } from "@/providers/root-provider";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
@@ -14,7 +14,11 @@ function RootLayout() {
 
   return (
     <RootProvider>
-      <Slot />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="chat/[id]" />
+        <Stack.Screen name="settings" />
+      </Stack>
     </RootProvider>
   );
 }

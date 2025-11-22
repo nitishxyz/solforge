@@ -70,6 +70,7 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
                         placeholder="Type a message..."
                         onSubmitEditing={handleSend}
                         returnKeyType="send"
+                        containerStyle={{ flex: 1 }}
                         rightAccessory={
                             <Input.Accessory onPress={handleSend} disabled={sending || !input.trim()}>
                                 {sending ? (
