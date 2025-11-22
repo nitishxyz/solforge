@@ -310,3 +310,10 @@ export async function updateSessionActivity(
     .set(update)
     .where(eq(sessionsTable.id, sessionId));
 }
+
+export async function updateSessionTitle(
+  sessionId: string,
+  title: string,
+): Promise<void> {
+  await db.update(sessionsTable).set({ title }).where(eq(sessionsTable.id, sessionId));
+}

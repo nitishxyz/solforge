@@ -7,6 +7,7 @@ import {
   listSessions,
   loadLatestMessagePreview,
   updateSessionActivity,
+  updateSessionTitle,
 } from "./repository";
 import type {
   ChatMessage,
@@ -60,6 +61,53 @@ function serializeMessagesForProvider(messages: ChatMessage[]) {
       (entry): entry is { role: "system" | "user" | "assistant"; content: string } =>
         Boolean(entry && entry.content),
     );
+}
+
+async function generateSessionTitle(
+  walletAddress: string,
+  session: ChatSession,
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+): Promise<string | null> {
+  try {
+    const titleMessages = [
+      ...messages,
+      {
+        role: "user" as const,
+        content:
+          "Generate a concise title (max 6 words) for this chat. Return only the title text.",
+      },
+    ];
+
+    let result: any;
+    const body = {
+      model: session.model,
+      messages: titleMessages,
+      max_tokens: 50,
+    };
+
+    if (session.provider === "openai") {
+      result = await handleOpenAI(walletAddress, body, {
+        stream: false,
+        responseFormat: "chat",
+      });
+    } else if (session.provider === "anthropic") {
+      result = await handleAnthropic(walletAddress, body, { stream: false });
+    } else {
+      return null;
+    }
+
+    if (result.type === "complete") {
+      const raw = result.response as any;
+      const content = raw.choices?.[0]?.message?.content || "";
+      const title = content.trim().replace(/^["']|["']$/g, "");
+      return title.length > 0 && title.length < 100 ? title : null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Failed to generate session title:", error);
+    return null;
+  }
 }
 
 export async function createSessionForWallet(
@@ -271,6 +319,17 @@ export async function sendChatMessage(
         toolCounts: session.toolCounts ?? null,
       });
 
+      if (!session.title) {
+        const title = await generateSessionTitle(walletAddress, session, [
+          ...providerMessages,
+          { role: "assistant", content },
+        ]);
+        if (title) {
+          await updateSessionTitle(session.id, title);
+          session.title = title;
+        }
+      }
+
       const updatedSession: ChatSession = {
         ...session,
         totalInputTokens,
@@ -383,6 +442,17 @@ export async function sendChatMessage(
         totalToolTimeMs,
         toolCounts: session.toolCounts ?? null,
       });
+
+      if (!session.title) {
+        const title = await generateSessionTitle(walletAddress, session, [
+          ...providerMessages,
+          { role: "assistant", content },
+        ]);
+        if (title) {
+          await updateSessionTitle(session.id, title);
+          session.title = title;
+        }
+      }
 
       const updatedSession: ChatSession = {
         ...session,
