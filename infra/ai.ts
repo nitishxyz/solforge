@@ -27,7 +27,10 @@ export const apiService = new sst.aws.Service("SolforgeAiService", {
         path: "/",
         interval: "300 seconds"
       }
-    }
+    },
+    environment: {
+      STAGE: $app.stage,
+    },
   },
   dev: {
     directory: "apps/ai",

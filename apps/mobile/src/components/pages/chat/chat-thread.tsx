@@ -1,5 +1,5 @@
 import { Box, Text } from "@/src/components/ui/primitives";
-import { FlatList, TouchableOpacity, Platform } from "react-native";
+import { FlatList, TouchableOpacity, Platform, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Ionicons } from "@expo/vector-icons";
 import type { ChatMessage, ChatSession } from "@/src/lib/types";
@@ -21,15 +21,24 @@ interface ChatThreadProps {
 export function ChatThread({ session, messages, sending, onBack, onSend }: ChatThreadProps) {
     const flatListRef = useRef<FlatList>(null);
     const { theme } = useUnistyles();
+    const isAtBottom = useRef(true);
+    const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : null;
 
     // Auto-scroll when messages change
     useEffect(() => {
         if (messages.length > 0) {
+            isAtBottom.current = true;
             setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
         }
-    }, [messages]);
+    }, [messages.length, lastMessageId]);
+
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+        const paddingToBottom = 20;
+        isAtBottom.current = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+    };
 
     const renderMessage = ({ item }: { item: ChatMessage }) => {
         const content = item.parts.find(p => p.type === "text")?.content?.text || "";
@@ -90,8 +99,18 @@ export function ChatThread({ session, messages, sending, onBack, onSend }: ChatT
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={{ padding: 16, paddingTop: 120, paddingBottom: 120 }}
                     renderItem={renderMessage}
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                    onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                    onContentSizeChange={() => {
+                        if (isAtBottom.current) {
+                            flatListRef.current?.scrollToEnd({ animated: true });
+                        }
+                    }}
+                    onLayout={() => {
+                        if (isAtBottom.current) {
+                            flatListRef.current?.scrollToEnd({ animated: true });
+                        }
+                    }}
+                    onScroll={handleScroll}
+                    scrollEventThrottle={16}
                     showsVerticalScrollIndicator={false}
                     keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
                 />

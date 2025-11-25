@@ -3,10 +3,12 @@ import { X, Plus, Loader2, ExternalLink } from "lucide-react";
 import { useAgiStore } from "../stores/agiStore";
 import {
 	MessageThreadContainer,
-	ChatInputContainer,
 	SessionListContainer,
+	useCreateSession,
+	useSessions,
+	useConfig,
 } from "@agi-cli/web-sdk";
-import { useCreateSession, useSessions, useConfig } from "@agi-cli/web-sdk";
+import { ChatInputContainer } from "./chat/chat-input-container";
 import "./AgiSidebar.css";
 
 export function AgiSidebar({ userContext }: { userContext?: string }) {
