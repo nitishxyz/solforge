@@ -13,6 +13,9 @@ const cluster = new sst.aws.Cluster("SolforgeCluster", { vpc });
 export const apiService = new sst.aws.Service("SolforgeAiService", {
   cluster,
   link: [databaseUrl, openAiApiKey, anthropicApiKey, googleAiApiKey, platformWallet],
+  environment: {
+    STAGE: $app.stage || "prod",
+  },
   image: {
     dockerfile: "./apps/ai/Dockerfile",
   },
@@ -27,9 +30,6 @@ export const apiService = new sst.aws.Service("SolforgeAiService", {
         path: "/",
         interval: "300 seconds"
       }
-    },
-    environment: {
-      STAGE: $app.stage,
     },
   },
   dev: {
